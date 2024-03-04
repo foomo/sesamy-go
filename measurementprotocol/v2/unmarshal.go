@@ -25,7 +25,6 @@ const (
 type Data map[string]any
 
 func Marshal(input *Event) (url.Values, io.Reader, error) {
-
 	a, err := json.Marshal(input)
 	if err != nil {
 		return nil, nil, err
@@ -80,7 +79,6 @@ func Marshal(input *Event) (url.Values, io.Reader, error) {
 
 	return ret, reader, nil
 }
-
 
 func UnmarshalURLValues(input url.Values, output interface{}) error {
 	data := Data{}
@@ -147,7 +145,7 @@ func DecodeRegexValue(k string, v []string, r *regexp.Regexp, data Data, key str
 				v = []map[string]any{}
 			}
 			v = append(v, value)
-			data[key] = value
+			data[key] = v
 			return true, nil
 		}
 	}
@@ -157,7 +155,7 @@ func DecodeRegexValue(k string, v []string, r *regexp.Regexp, data Data, key str
 // DecodeObjectValue e.g. `idSKU_123456` = map["id"]="SKU_123456"
 func DecodeObjectValue(s string) (map[string]any, error) {
 	if len(s) == 0 {
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 	ret := map[string]any{}
 	for _, part := range strings.Split(s, "~") {
@@ -180,7 +178,7 @@ func EncodeObjectValue(s map[string]any) string {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	var ret []string
+	ret := make([]string, 0, len(keys))
 	for _, k := range keys {
 		ret = append(ret, k+fmt.Sprintf("%s", s[k]))
 	}

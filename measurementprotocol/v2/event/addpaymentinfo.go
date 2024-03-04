@@ -48,14 +48,14 @@ type AddPaymentInfo struct {
 }
 
 func (e *AddPaymentInfo) MPv2() *mpv2.Event {
-	items := make([]mpv2.Item, len(e.Items))
+	items := make([]*mpv2.Item, len(e.Items))
 	for i, item := range e.Items {
-		items[i] = *item.MPv2()
+		items[i] = item.MPv2()
 	}
 	return &mpv2.Event{
 		Currency: mp.SetString(e.Currency),
 		EventParameter: map[string]string{
-			mpv2.EventParameterCoupon.String(): e.Coupon,
+			mpv2.EventParameterCoupon.String():      e.Coupon,
 			mpv2.EventParameterPaymentType.String(): e.PaymentType,
 		},
 		EventParameterNumber: map[string]string{

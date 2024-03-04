@@ -146,7 +146,7 @@ type Event struct {
 	// Defines a parameter for the current Event
 	// Example: epn.plays_count: 42
 	EventParameterNumber map[string]string `json:"epn,omitempty" mapstructure:"epn,omitempty"`
-	// If the current event is set as a conversion on the admin interace the evfent will have this value present
+	// If the current event is set as a conversion on the admin interacted the evfent will have this value present
 	// Example: 1
 	IsConversion *string `json:"_c,omitempty" mapstructure:"_c,omitempty"`
 	// External Event
@@ -181,7 +181,7 @@ type Event struct {
 	// If the "_ga_THYNGSTER" cookie last session time value is older than 1800 seconds, the current event will have this value present. This will internally create a new "session_start" event on GA4. If this event is also a conversion the value will be "2" if not, will be "1"
 	// Example: 1|2
 	SessionStart *string `json:"_ss,omitempty" mapstructure:"_ss,omitempty"`
-	// This seems to be related to the ServerSide hits, it's 0 if the FPLC Cookie is not present and to the current value if it's comming from a Cross Domain linker
+	// This seems to be related to the ServerSide hits, it's 0 if the FPLC Cookie is not present and to the current value if it's coming from a Cross Domain linker
 	// Example: bVhVicbfiSXaGNxeawKaPlDQc9QXPD6bKcsn36Elden6wZNb7Q5X1iXlkTVP5iP3H3y76cgM3UIgHCaRsYfPoyLGlbiIYMPRjvnUU7KWbdWLagodzxjrlPnvaRZJkw
 	FirstPartyLinkerCookie *string `json:"_fplc,omitempty" mapstructure:"_fplc,omitempty"`
 	// If the current user has a GA4 session cookie, but not a GA (_ga) client id cookie, this parameter will be added to the hit
@@ -202,7 +202,7 @@ type Event struct {
 	// Example: JPY
 	Currency *string `json:"cu,omitempty" mapstructure:"cu,omitempty"`
 	// Example:
-	Items []Item `json:"pr,omitempty" mapstructure:"pr,omitempty"`
+	Items []*Item `json:"pr,omitempty" mapstructure:"pr,omitempty"`
 	// Promotion Impression/Click Tracking. Promotion Id
 	// Example: summer-offer
 	PromotionID *string `json:"pi,omitempty" mapstructure:"pi,omitempty"`
@@ -211,10 +211,10 @@ type Event struct {
 	PromotionName *string `json:"pn,omitempty" mapstructure:"pn,omitempty"`
 	// Promotion Impression/Click Tracking. Creative Name
 	// Example: red-car
-	CreativeName *string `json:"cn,omitempty" mapstructure:"cn,omitempty"`
+	// CreativeName *string `json:"cn,omitempty" mapstructure:"cn,omitempty"`
 	// Promotion Impression/Click Tracking. Promotion Slot / Position
 	// Example: slide-3
-	CreativeSlot *string `json:"cs,omitempty" mapstructure:"cs,omitempty"`
+	// CreativeSlot *string `json:"cs,omitempty" mapstructure:"cs,omitempty"`
 	// Google Place ID: Refer to: https://developers.google.com/maps/documentation/places/web-service/place-id . Seems to be inherited from Firebase, not sure about the current use on GA4
 	// Example: ChIJiyj437sx3YAR9kUWC8QkLzQ
 	LocationID *string `json:"lo,omitempty" mapstructure:"lo,omitempty"`
@@ -254,12 +254,10 @@ type Event struct {
 	PrivacySandboxCookieDeprecationLabel *string `json:"pscdl,omitempty" mapstructure:"pscdl,omitempty"`
 	// A timestamp measuring the difference between the moment this parameter gets populated and the moment the navigation started on that particular page.
 	TFD *string `json:"tfd,omitempty" mapstructure:"tfd,omitempty"`
-	SST *SST `json:"sst,omitempty" mapstructure:"sst,omitempty"`
+	SST *SST    `json:"sst,omitempty" mapstructure:"sst,omitempty"`
 	PAE *string `json:"pae,omitempty" mapstructure:"pae,omitempty"`
 
 	// --- Unresolved ---
 
 	Unknown map[string]any `json:"-" mapstructure:",remain"`
 }
-
-

@@ -28,11 +28,11 @@ var (
 
 type (
 	Subscriber struct {
-		l                *zap.Logger
-		uuidFunc         func() string
-		messages         chan *message.Message
-		middlewares      []SubscriberMiddleware
-		closed           bool
+		l           *zap.Logger
+		uuidFunc    func() string
+		messages    chan *message.Message
+		middlewares []SubscriberMiddleware
+		closed      bool
 	}
 	SubscriberOption     func(*Subscriber)
 	SubscriberHandler    func(l *zap.Logger, r *http.Request, event *mpv2.Event) error
@@ -60,7 +60,7 @@ func SubscriberWithLogger(fields ...zap.Field) SubscriberOption {
 		o.middlewares = append(o.middlewares, func(next SubscriberHandler) SubscriberHandler {
 			return func(l *zap.Logger, r *http.Request, event *mpv2.Event) error {
 				fields = append(fields, zap.String("event_name", mp.GetDefault(event.EventName, "-").String()))
-				if labeler, ok := log.LabelerFromRequest(r);ok {
+				if labeler, ok := log.LabelerFromRequest(r); ok {
 					labeler.Add(fields...)
 				}
 				return next(l.With(fields...), r, event)

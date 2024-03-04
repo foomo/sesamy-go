@@ -1,6 +1,6 @@
 package gtm
 
 const (
-	HeaderUUID     = "Message-Uuid"
-	ProviderName   = "gtm"
+	HeaderUUID   = "Message-Uuid"
+	ProviderName = "gtm"
 )

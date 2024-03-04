@@ -57,7 +57,6 @@ func (c *Client) HTTPClient() *http.Client {
 // ------------------------------------------------------------------------------------------------
 
 func (c *Client) Send(ctx context.Context, event *Event) error {
-
 	values, body, err := Marshal(event)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshall event")
@@ -90,4 +89,3 @@ func (c *Client) Send(ctx context.Context, event *Event) error {
 
 	return nil
 }
-

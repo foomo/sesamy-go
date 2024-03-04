@@ -83,7 +83,7 @@ func Get[T any](v *T) T {
 }
 
 func GetDefault[T any](v *T, fallback T) T {
-	if v ==  nil {
+	if v == nil {
 		return fallback
 	}
 	return *v

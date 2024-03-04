@@ -1,12 +1,9 @@
 package gtm
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 
-	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	mpv2 "github.com/foomo/sesamy/measurementprotocol/v2"
 	"github.com/pkg/errors"
@@ -19,7 +16,6 @@ var (
 
 type (
 	Publisher struct {
-		//l                  watermill.LoggerAdapter
 		url                string
 		client             *http.Client
 		marshalMessageFunc MarshalMessageFunc
@@ -77,7 +73,6 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 	}
 
 	for _, msg := range messages {
-
 		var event *mpv2.Event
 		if err := json.Unmarshal(msg.Payload, &event); err != nil {
 			return err
@@ -88,32 +83,40 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 			return err
 		}
 
-		u := p.url + "?" + values.Encode() + "&richsstsse"
+		var richsstsse bool
+		if values.Has("richsstsse") {
+			values.Del("richsstsse")
+			richsstsse = true
+		}
 
-		req, err := http.NewRequestWithContext(msg.Context(), "POST", u, body)
+		u := p.url + "?"
+
+		if richsstsse {
+			u += "&richsstsse"
+		}
+
+		req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, u, body)
+		if err != nil {
+			return errors.Wrap(err, "failed to create request")
+		}
 
 		for s, s2 := range msg.Metadata {
 			req.Header.Set(s, s2)
 		}
 
-		//req, err := p.marshalMessageFunc(topic, msg)
-		if err != nil {
-			return errors.Wrapf(err, "cannot marshal message %s", msg.UUID)
-		}
+		// logFields := watermill.LogFields{
+		// 	"uuid":     msg.UUID,
+		// 	"provider": ProviderName,
+		// }
 
-		logFields := watermill.LogFields{
-			"uuid":     msg.UUID,
-			"provider": ProviderName,
-		}
-
-		//p.l.Trace("Publishing message", logFields)
+		// p.l.Trace("Publishing message", logFields)
 
 		resp, err := p.client.Do(req)
 		if err != nil {
 			return errors.Wrapf(err, "publishing message %s failed", msg.UUID)
 		}
 
-		if err = p.handleResponseBody(resp, logFields); err != nil {
+		if err = p.handleResponseBody(resp); err != nil {
 			return err
 		}
 
@@ -121,7 +124,7 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 			return errors.Wrap(ErrErrorResponse, resp.Status)
 		}
 
-		//p.l.Trace("Message published", logFields)
+		// p.l.Trace("Message published", logFields)
 	}
 
 	return nil
@@ -140,40 +143,26 @@ func (p *Publisher) Close() error {
 // ~ Private methods
 // ------------------------------------------------------------------------------------------------
 
-func (p *Publisher) handleResponseBody(resp *http.Response, logFields watermill.LogFields) error {
+func (p *Publisher) handleResponseBody(resp *http.Response) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < http.StatusBadRequest {
 		return nil
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return errors.Wrap(err, "could not read response body")
-	}
+	// body, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return errors.Wrap(err, "could not read response body")
+	// }
 
-	logFields = logFields.Add(watermill.LogFields{
-		"http_status":   resp.StatusCode,
-		"http_response": string(body),
-	})
-	//p.l.Info("Server responded with error", logFields)
+	// logFields = logFields.Add(watermill.LogFields{
+	//	"http_status":   resp.StatusCode,
+	//	"http_response": string(body),
+	// })
+	// p.l.Info("Server responded with error", logFields)
 
 	return nil
 }
 
 // MarshalMessageFunc transforms the message into a HTTP request to be sent to the specified url.
 type MarshalMessageFunc func(url string, msg *message.Message) (*http.Request, error)
-
-// DefaultMarshalMessageFunc transforms the message into a HTTP POST request.
-// It encodes the UUID and Metadata in request headers.
-func DefaultMarshalMessageFunc(url string, msg *message.Message) (*http.Request, error) {
-
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(msg.Payload))
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set(HeaderUUID, msg.UUID)
-
-	return req, nil
-}
