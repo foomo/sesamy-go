@@ -15,7 +15,7 @@ type Item struct {
 	CategoryHierarchy4 string
 	CategoryHierarchy5 string
 	Price              string
-	Quantity           string
+	Quantity           float64
 	Variant            string
 	Coupon             string
 	Discount           float64
@@ -37,7 +37,7 @@ func (e *Item) MPv2() *mpv2.Item {
 		CategoryHierarchy4: mp.SetString(e.CategoryHierarchy4),
 		CategoryHierarchy5: mp.SetString(e.CategoryHierarchy5),
 		Price:              mp.SetString(e.Price),
-		Quantity:           mp.SetString(e.Quantity),
+		Quantity:           mp.SetFloat64(e.Quantity),
 		Variant:            mp.SetString(e.Variant),
 		Coupon:             mp.SetString(e.Coupon),
 		Discount:           mp.SetFloat64(e.Discount),
