@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	mpv2 "github.com/foomo/sesamy/measurementprotocol/v2"
+	mpv2 "github.com/foomo/sesamy-go/measurementprotocol/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

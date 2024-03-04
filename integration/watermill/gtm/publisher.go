@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ThreeDotsLabs/watermill/message"
-	mpv2 "github.com/foomo/sesamy/measurementprotocol/v2"
+	mpv2 "github.com/foomo/sesamy-go/measurementprotocol/v2"
 	"github.com/pkg/errors"
 )
 

@@ -1,15 +1,16 @@
-package v2
+package watermill
 
 import (
 	"encoding/json"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	mpv2 "github.com/foomo/sesamy-go/measurementprotocol/v2"
 	"github.com/pkg/errors"
 )
 
-func MessageEventHandler(eventHandler func(event *Event, msg *message.Message) error) func(msg *message.Message) ([]*message.Message, error) {
+func MessageEventHandler(eventHandler func(event *mpv2.Event, msg *message.Message) error) func(msg *message.Message) ([]*message.Message, error) {
 	return func(msg *message.Message) ([]*message.Message, error) {
-		var event *Event
+		var event *mpv2.Event
 		if err := json.Unmarshal(msg.Payload, &event); err != nil {
 			return nil, errors.Wrap(err, "failed to unmarshal event")
 		}

@@ -1,8 +1,8 @@
 package event
 
 import (
-	mp "github.com/foomo/sesamy/measurementprotocol"
-	mpv2 "github.com/foomo/sesamy/measurementprotocol/v2"
+	mp "github.com/foomo/sesamy-go/measurementprotocol"
+	mpv2 "github.com/foomo/sesamy-go/measurementprotocol/v2"
 )
 
 type Item struct {

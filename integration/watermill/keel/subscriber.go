@@ -11,10 +11,10 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/foomo/keel/net/http/log"
+	keellog "github.com/foomo/keel/net/http/log"
 	keelhttputils "github.com/foomo/keel/utils/net/http"
-	mp "github.com/foomo/sesamy/measurementprotocol"
-	mpv2 "github.com/foomo/sesamy/measurementprotocol/v2"
+	mp "github.com/foomo/sesamy-go/measurementprotocol"
+	mpv2 "github.com/foomo/sesamy-go/measurementprotocol/v2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -60,7 +60,7 @@ func SubscriberWithLogger(fields ...zap.Field) SubscriberOption {
 		o.middlewares = append(o.middlewares, func(next SubscriberHandler) SubscriberHandler {
 			return func(l *zap.Logger, r *http.Request, event *mpv2.Event) error {
 				fields = append(fields, zap.String("event_name", mp.GetDefault(event.EventName, "-").String()))
-				if labeler, ok := log.LabelerFromRequest(r); ok {
+				if labeler, ok := keellog.LabelerFromRequest(r); ok {
 					labeler.Add(fields...)
 				}
 				return next(l.With(fields...), r, event)
@@ -164,7 +164,7 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, event *mpv2.Event) e
 	}
 
 	msg := message.NewMessage(s.uuidFunc(), payload)
-	if labeler, ok := log.LabelerFromRequest(r); ok {
+	if labeler, ok := keellog.LabelerFromRequest(r); ok {
 		labeler.Add(zap.String("message_id", msg.UUID))
 	}
 

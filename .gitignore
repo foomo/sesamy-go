@@ -1,6 +1,7 @@
 .*
 *.log
 *.out
+/tmp/
 !.github/
 !.husky/
 !.editorconfig
@@ -8,4 +9,5 @@
 !.golangci.yml
 !.goreleaser.yml
 !.husky.yaml
-/tmp/
+go.work
+go.work.sum
