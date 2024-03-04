@@ -1,0 +1,66 @@
+package event
+
+import (
+	mp "github.com/foomo/sesamy/measurementprotocol"
+	mpv2 "github.com/foomo/sesamy/measurementprotocol/v2"
+)
+
+/*
+AddShippingInfo https://developers.google.com/tag-platform/gtagjs/reference/events#add_shipping_info
+
+	gtag('event', 'add_payment_info', {
+		currency: 'USD',
+		value: 30.03,
+		coupon: 'SUMMER_FUN',
+		shipping_tier: 'Ground',
+		items: [
+			{
+				item_id: 'SKU_12345',
+				item_name: 'Stan and Friends Tee',
+				affiliation: 'Google Store',
+				coupon: 'SUMMER_FUN',
+				discount: 2.22,
+				index: 5,
+				item_brand: 'Google',
+				item_category: 'Apparel',
+				item_category2: 'Adult',
+				item_category3: 'Shirts',
+				item_category4: 'Crew',
+				item_category5: 'Short sleeve',
+				item_list_id: 'related_products',
+				item_list_name: 'Related products',
+				item_variant: 'green',
+				location_id: 'ChIJIQBpAG2ahYAR_6128GcTUEo',
+				price: 10.01,
+				quantity: 3
+			}
+		]
+	});
+
+Query: v=2&tid=G-PZ5ELRCR31&gtm=45je42t1v9177778896z89175355532za220&_p=1709357665402&_dbg=1&gcd=13l3l3l3l1&npa=0&dma_cps=sypham&dma=1&cid=1220643501.1708014725&ul=en-us&sr=3840x1600&_fplc=0&ur=DE-BY&uaa=arm&uab=64&uafvl=Chromium%3B122.0.6261.69%7CNot(A%253ABrand%3B24.0.0.0%7CGoogle%2520Chrome%3B122.0.6261.69&uamb=0&uam=&uap=macOS&uapv=14.3.1&uaw=0&are=1&pscdl=noapi&_eu=IA&sst.uc=DE&sst.etld=google.de&sst.gcsub=region1&sst.gcd=13l3l3l3l1&sst.tft=1709357665402&_s=10&cu=USD&sid=1709529821&sct=9&seg=0&dl=https%3A%2F%2Fsniffer.local.bestbytes.net%2F%3Fgtm_debug%3D1709357665301&dr=https%3A%2F%2Ftagassistant.google.com%2F&dt=Server%20Side%20Tracking%20Prototype%20(codename%3A%20sniffer)&en=add_payment_info&_ss=1&pr1=idSKU_12345~nmStan%20and%20Friends%20Tee~afGoogle%20Store~cpSUMMER_FUN~ds2.22~lp5~brGoogle~caApparel~c2Adult~c3Shirts~c4Crew~c5Short%20sleeve~lirelated_products~lnRelated%20products~vagreen~loChIJIQBpAG2ahYAR_6128GcTUEo~pr10.01~qt3&epn.value=30.03&ep.coupon=SUMMER_FUN&ep.shipping_tier=Ground&tfd=137238301&richsstsse
+*/
+type AddShippingInfo struct {
+	Currency    string
+	Value       float64
+	Coupon      string
+	ShippingTier string
+	Items       []*Item
+}
+
+func (e *AddShippingInfo) MPv2() *mpv2.Event {
+	items := make([]mpv2.Item, len(e.Items))
+	for i, item := range e.Items {
+		items[i] = *item.MPv2()
+	}
+	return &mpv2.Event{
+		Currency: mp.SetString(e.Currency),
+		EventParameter: map[string]string{
+			mpv2.EventParameterCoupon.String(): e.Coupon,
+			mpv2.EventParameterShippingTier.String(): e.ShippingTier,
+		},
+		EventParameterNumber: map[string]string{
+			mpv2.EventParameterNumberValue.String(): *mp.SetFloat64(e.Value),
+		},
+		Items: items,
+	}
+}

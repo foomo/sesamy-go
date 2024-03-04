@@ -1,0 +1,11 @@
+.*
+*.log
+*.out
+!.github/
+!.husky/
+!.editorconfig
+!.gitignore
+!.golangci.yml
+!.goreleaser.yml
+!.husky.yaml
+/tmp/
