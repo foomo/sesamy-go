@@ -1,4 +1,4 @@
-package watermill
+package measurementprotocol
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func MessageEventHandler(eventHandler func(event *mpv2.Event, msg *message.Message) error) func(msg *message.Message) ([]*message.Message, error) {
+func EventHandler(eventHandler func(event *mpv2.Event, msg *message.Message) error) func(msg *message.Message) ([]*message.Message, error) {
 	return func(msg *message.Message) ([]*message.Message, error) {
 		var event *mpv2.Event
 		if err := json.Unmarshal(msg.Payload, &event); err != nil {
