@@ -1,4 +1,4 @@
-package measurementprotocol
+package v2
 
 import (
 	"encoding/json"
