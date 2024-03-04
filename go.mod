@@ -1,6 +1,6 @@
 module github.com/foomo/sesamy-go
 
-go 1.22.0
+go 1.21
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.3.5
