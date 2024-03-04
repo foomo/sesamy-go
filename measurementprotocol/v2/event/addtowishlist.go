@@ -48,11 +48,11 @@ func (e *AddToWishlist) MPv2() *mpv2.Event {
 	for i, item := range e.Items {
 		items[i] = item.MPv2()
 	}
+	eventParameterNumber := map[string]string{}
+	mp.AddStringMap(eventParameterNumber, mpv2.EventParameterNumberValue.String(), mp.SetFloat64(e.Value))
 	return &mpv2.Event{
-		Currency: mp.SetString(e.Currency),
-		EventParameterNumber: map[string]string{
-			mpv2.EventParameterNumberValue.String(): *mp.SetFloat64(e.Value),
-		},
-		Items: items,
+		Currency:             mp.SetString(e.Currency),
+		EventParameterNumber: mp.SetStringMap(eventParameterNumber),
+		Items:                items,
 	}
 }

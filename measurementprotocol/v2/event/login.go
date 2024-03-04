@@ -19,9 +19,9 @@ type Login struct {
 }
 
 func (e *Login) MPv2() *mpv2.Event {
+	eventParameter := map[string]string{}
+	mp.AddStringMap(eventParameter, mpv2.EventParameterMethod.String(), mp.SetString(e.Method))
 	return &mpv2.Event{
-		EventParameter: map[string]string{
-			mpv2.EventParameterMethod.String(): *mp.SetString(e.Method),
-		},
+		EventParameter: mp.SetStringMap(eventParameter),
 	}
 }

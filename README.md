@@ -1,4 +1,4 @@
-# Sesamy
+# Sesamy Go SDK
 
 [![Build Status](https://github.com/foomo/sesamy-go/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/foomo/sesamy-go/actions/workflows/test.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/foomo/sesamy-go)](https://goreportcard.com/report/github.com/foomo/sesamy-go)

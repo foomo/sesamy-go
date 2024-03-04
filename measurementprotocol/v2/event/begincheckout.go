@@ -50,14 +50,14 @@ func (e *BeginCheckout) MPv2() *mpv2.Event {
 	for i, item := range e.Items {
 		items[i] = item.MPv2()
 	}
+	eventParameter := map[string]string{}
+	mp.AddStringMap(eventParameter, mpv2.EventParameterCoupon.String(), mp.SetString(e.Coupon))
+	eventParameterNumber := map[string]string{}
+	mp.AddStringMap(eventParameterNumber, mpv2.EventParameterNumberValue.String(), mp.SetFloat64(e.Value))
 	return &mpv2.Event{
-		Currency: mp.SetString(e.Currency),
-		EventParameter: map[string]string{
-			mpv2.EventParameterCoupon.String(): e.Coupon,
-		},
-		EventParameterNumber: map[string]string{
-			mpv2.EventParameterNumberValue.String(): *mp.SetFloat64(e.Value),
-		},
-		Items: items,
+		Currency:             mp.SetString(e.Currency),
+		EventParameter:       mp.SetStringMap(eventParameter),
+		EventParameterNumber: mp.SetStringMap(eventParameterNumber),
+		Items:                items,
 	}
 }

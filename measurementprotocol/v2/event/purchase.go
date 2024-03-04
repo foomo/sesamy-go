@@ -56,17 +56,17 @@ func (e *Purchase) MPv2() *mpv2.Event {
 	for i, item := range e.Items {
 		items[i] = item.MPv2()
 	}
+	eventParameter := map[string]string{}
+	mp.AddStringMap(eventParameter, mpv2.EventParameterTransactionID.String(), mp.SetString(e.TransactionID))
+	mp.AddStringMap(eventParameter, mpv2.EventParameterCoupon.String(), mp.SetString(e.Coupon))
+	eventParameterNumber := map[string]string{}
+	mp.AddStringMap(eventParameterNumber, mpv2.EventParameterNumberValue.String(), mp.SetFloat64(e.Value))
+	mp.AddStringMap(eventParameterNumber, mpv2.EventParameterNumberShipping.String(), mp.SetFloat64(e.Shipping))
+	mp.AddStringMap(eventParameterNumber, mpv2.EventParameterNumberTax.String(), mp.SetFloat64(e.Tax))
 	return &mpv2.Event{
-		Currency: mp.SetString(e.Currency),
-		EventParameter: map[string]string{
-			mpv2.EventParameterTransactionID.String(): *mp.SetFloat64(e.Value),
-			mpv2.EventParameterCoupon.String():        *mp.SetFloat64(e.Value),
-		},
-		EventParameterNumber: map[string]string{
-			mpv2.EventParameterNumberValue.String():    *mp.SetFloat64(e.Value),
-			mpv2.EventParameterNumberShipping.String(): *mp.SetFloat64(e.Value),
-			mpv2.EventParameterNumberTax.String():      *mp.SetFloat64(e.Value),
-		},
-		Items: items,
+		Currency:             mp.SetString(e.Currency),
+		EventParameter:       mp.SetStringMap(eventParameter),
+		EventParameterNumber: mp.SetStringMap(eventParameterNumber),
+		Items:                items,
 	}
 }

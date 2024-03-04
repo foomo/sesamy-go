@@ -78,6 +78,20 @@ func SetBool(v bool) *string {
 	return Set("1")
 }
 
+func SetStringMap(v map[string]string) map[string]string {
+	if len(v) == 0 {
+		return nil
+	}
+	return v
+}
+
+func AddStringMap(t map[string]string, k string, v *string) {
+	if v == nil {
+		return
+	}
+	t[k] = *v
+}
+
 func Get[T any](v *T) T {
 	return *v
 }

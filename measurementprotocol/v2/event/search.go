@@ -19,9 +19,9 @@ type Search struct {
 }
 
 func (e *Search) MPv2() *mpv2.Event {
+	eventParameter := map[string]string{}
+	mp.AddStringMap(eventParameter, mpv2.EventParameterSearchTerm.String(), mp.SetString(e.SearchTerm))
 	return &mpv2.Event{
-		EventParameter: map[string]string{
-			mpv2.EventParameterSearchTerm.String(): *mp.SetString(e.SearchTerm),
-		},
+		EventParameter: mp.SetStringMap(eventParameter),
 	}
 }
