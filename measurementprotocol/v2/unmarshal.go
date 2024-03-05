@@ -25,6 +25,13 @@ const (
 type Data map[string]any
 
 func Marshal(input *Event) (url.Values, io.Reader, error) {
+	var richsstsse bool
+	// NOTE: `richsstsse` seems to be last parameter in the query to let's ensure it stays that way
+	if input.Richsstsse != nil {
+		richsstsse = true
+		input.Richsstsse = nil
+	}
+
 	a, err := json.Marshal(input)
 	if err != nil {
 		return nil, nil, err
@@ -66,13 +73,22 @@ func Marshal(input *Event) (url.Values, io.Reader, error) {
 
 	var body []string
 	var reader io.Reader
-	for len(ret.Encode()) > 2048 {
+	maxQueryLength := 2048 //
+	if richsstsse {
+		maxQueryLength -= len("&richsstsse")
+	}
+	for len(ret.Encode()) > maxQueryLength {
 		for s, i := range ret {
 			ret.Del(s)
 			body = append(body, s+"="+i[0])
 			break
 		}
 	}
+
+	if richsstsse {
+		ret.Add("richsstsse", "")
+	}
+
 	if len(body) > 0 {
 		reader = bytes.NewReader([]byte(strings.Join(body, "&")))
 	}

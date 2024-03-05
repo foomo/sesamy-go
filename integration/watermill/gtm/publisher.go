@@ -2,6 +2,7 @@ package gtm
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -83,19 +84,20 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 			return err
 		}
 
+		// NOTE: `richsstsse` seems to be last parameter in the query to let's ensure it stays that way
 		var richsstsse bool
 		if values.Has("richsstsse") {
-			values.Del("richsstsse")
 			richsstsse = true
+			values.Del("richsstsse")
 		}
 
-		u := p.url + "?"
+		url := fmt.Sprintf("%s?%s", p.url, values.Encode())
 
 		if richsstsse {
-			u += "&richsstsse"
+			url += "&richsstsse"
 		}
 
-		req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, u, body)
+		req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, url, body)
 		if err != nil {
 			return errors.Wrap(err, "failed to create request")
 		}
