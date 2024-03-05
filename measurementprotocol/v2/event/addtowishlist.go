@@ -51,6 +51,7 @@ func (e *AddToWishlist) MPv2() *mpv2.Event {
 	eventParameterNumber := map[string]string{}
 	mp.AddStringMap(eventParameterNumber, mpv2.EventParameterNumberValue.String(), mp.SetFloat64(e.Value))
 	return &mpv2.Event{
+		EventName:            mp.Set(mpv2.EventNameAddToWishlist),
 		Currency:             mp.SetString(e.Currency),
 		EventParameterNumber: mp.SetStringMap(eventParameterNumber),
 		Items:                items,

@@ -22,6 +22,7 @@ func (e *Search) MPv2() *mpv2.Event {
 	eventParameter := map[string]string{}
 	mp.AddStringMap(eventParameter, mpv2.EventParameterSearchTerm.String(), mp.SetString(e.SearchTerm))
 	return &mpv2.Event{
+		EventName:      mp.Set(mpv2.EventNameSearch),
 		EventParameter: mp.SetStringMap(eventParameter),
 	}
 }

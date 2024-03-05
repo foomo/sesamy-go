@@ -22,6 +22,7 @@ func (e *Login) MPv2() *mpv2.Event {
 	eventParameter := map[string]string{}
 	mp.AddStringMap(eventParameter, mpv2.EventParameterMethod.String(), mp.SetString(e.Method))
 	return &mpv2.Event{
+		EventName:      mp.Set(mpv2.EventNameLogin),
 		EventParameter: mp.SetStringMap(eventParameter),
 	}
 }

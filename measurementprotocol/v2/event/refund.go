@@ -64,6 +64,7 @@ func (e *Refund) MPv2() *mpv2.Event {
 	mp.AddStringMap(eventParameterNumber, mpv2.EventParameterNumberShipping.String(), mp.SetFloat64(e.Shipping))
 	mp.AddStringMap(eventParameterNumber, mpv2.EventParameterNumberTax.String(), mp.SetFloat64(e.Tax))
 	return &mpv2.Event{
+		EventName:            mp.Set(mpv2.EventNameRefund),
 		Currency:             mp.SetString(e.Currency),
 		EventParameter:       mp.SetStringMap(eventParameter),
 		EventParameterNumber: mp.SetStringMap(eventParameterNumber),

@@ -1,9 +1,10 @@
 package v2
 
 import (
-	"context"
 	"io"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -11,11 +12,19 @@ import (
 
 type (
 	Client struct {
-		l          *zap.Logger
-		url        string
-		httpClient *http.Client
+		l               *zap.Logger
+		url             string
+		cookies         []string
+		richsstsse      string
+		trackingID      string
+		measurementID   string
+		protocolVersion string
+		httpClient      *http.Client
+		middlewares     []ClientMiddleware
 	}
-	ClientOption func(*Client)
+	ClientOption     func(*Client)
+	ClientHandler    func(r *http.Request, event *Event) error
+	ClientMiddleware func(next ClientHandler) ClientHandler
 )
 
 // ------------------------------------------------------------------------------------------------
@@ -28,15 +37,30 @@ func ClientWithHTTPClient(v *http.Client) ClientOption {
 	}
 }
 
+func ClientWithCookies(v ...string) ClientOption {
+	return func(o *Client) {
+		o.cookies = append(o.cookies, v...)
+	}
+}
+
+func ClientWithMiddlewares(v ...ClientMiddleware) ClientOption {
+	return func(o *Client) {
+		o.middlewares = append(o.middlewares, v...)
+	}
+}
+
 // ------------------------------------------------------------------------------------------------
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
 
-func NewClient(l *zap.Logger, url string, opts ...ClientOption) *Client {
+func NewClient(l *zap.Logger, url, trackingID string, opts ...ClientOption) *Client {
 	inst := &Client{
-		l:          l,
-		url:        url,
-		httpClient: http.DefaultClient,
+		l:               l,
+		url:             url,
+		cookies:         []string{"gtm_auth", "gtm_debug", "gtm_preview"},
+		trackingID:      trackingID,
+		protocolVersion: "2",
+		httpClient:      http.DefaultClient,
 	}
 	for _, opt := range opts {
 		opt(inst)
@@ -56,14 +80,62 @@ func (c *Client) HTTPClient() *http.Client {
 // ~ Public methods
 // ------------------------------------------------------------------------------------------------
 
-func (c *Client) Send(ctx context.Context, event *Event) error {
+func (c *Client) Send(r *http.Request, event *Event) error {
+	yes := "1"
+
+	// set default values
+	event.TrackingID = &c.trackingID
+	event.Richsstsse = &c.richsstsse
+	event.ProtocolVersion = &c.protocolVersion
+
+	event.IgnoreReferrer = &yes
+
+	{ // set referrer parameter
+		if referrer, err := url.Parse(r.Referer()); err != nil {
+			c.l.With(zap.Error(err)).Warn("failed to parse referrer")
+		} else {
+			event.DocumentLocation = &referrer.Path
+			event.DocumentHostname = &referrer.Host
+		}
+	}
+
+	{ // TODO check
+		if value, _ := r.Cookie("gtm_debug"); value != nil {
+			event.IsDebug = &yes
+		}
+	}
+
+	{ // set client id
+		if value, _ := r.Cookie("_ga"); value != nil {
+			clientID := strings.TrimPrefix(value.Value, "GA1.1.")
+			event.ClientID = &clientID
+		}
+	}
+
+	{ // pass through cookies
+		for _, value := range c.cookies {
+			if cookie, _ := r.Cookie(value); cookie != nil {
+				r.Header.Add("Cookie", cookie.String())
+			}
+		}
+	}
+
+	next := c.SendRaw
+	for _, middleware := range c.middlewares {
+		next = middleware(next)
+	}
+
+	return next(r, event)
+}
+
+func (c *Client) SendRaw(r *http.Request, event *Event) error {
 	values, body, err := Marshal(event)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshall event")
 	}
 
 	req, err := http.NewRequestWithContext(
-		ctx,
+		r.Context(),
 		http.MethodPost,
 		c.url+"?"+values.Encode(),
 		body,

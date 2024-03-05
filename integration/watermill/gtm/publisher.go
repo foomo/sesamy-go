@@ -115,7 +115,7 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 
 		resp, err := p.client.Do(req)
 		if err != nil {
-			return errors.Wrapf(err, "publishing message %s failed", msg.UUID)
+			return errors.Wrapf(err, "failed to publish message: %s", msg.UUID)
 		}
 
 		if err = p.handleResponseBody(resp); err != nil {
