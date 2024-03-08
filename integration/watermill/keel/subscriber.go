@@ -138,7 +138,7 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// unmarshal event
 	var event *mpv2.Event
-	if err := mpv2.UnmarshalURLValues(values, &event); err != nil {
+	if err := mpv2.Decode(values, &event); err != nil {
 		keelhttputils.InternalServerError(l, w, r, errors.Wrap(err, "failed to marshal url values"))
 		return
 	}

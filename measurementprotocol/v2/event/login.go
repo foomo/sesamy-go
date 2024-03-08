@@ -15,14 +15,14 @@ Login - Send this event to signify that a user has logged in to your website or 
 Reference: https://developers.google.com/tag-platform/gtagjs/reference/events#login
 */
 type Login struct {
-	Method string
+	Method string `json:"method,omitempty"`
 }
 
-func (e *Login) MPv2() *mpv2.Event {
+func (e *Login) MarshalMPv2() (*mpv2.Event, error) {
 	eventParameter := map[string]string{}
 	mp.AddStringMap(eventParameter, mpv2.EventParameterMethod.String(), mp.SetString(e.Method))
 	return &mpv2.Event{
 		EventName:      mp.Set(mpv2.EventNameLogin),
 		EventParameter: mp.SetStringMap(eventParameter),
-	}
+	}, nil
 }

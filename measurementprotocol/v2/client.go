@@ -1,6 +1,7 @@
 package v2
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -129,7 +130,7 @@ func (c *Client) Send(r *http.Request, event *Event) error {
 }
 
 func (c *Client) SendRaw(r *http.Request, event *Event) error {
-	values, body, err := Marshal(event)
+	values, body, err := Encode(event)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshall event")
 	}
@@ -137,7 +138,7 @@ func (c *Client) SendRaw(r *http.Request, event *Event) error {
 	req, err := http.NewRequestWithContext(
 		r.Context(),
 		http.MethodPost,
-		c.url+"?"+values.Encode(),
+		fmt.Sprintf("%s?%s", c.url, EncodeValues(values)),
 		body,
 	)
 	if err != nil {

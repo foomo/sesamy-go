@@ -79,25 +79,12 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 			return err
 		}
 
-		values, body, err := mpv2.Marshal(event)
+		values, body, err := mpv2.Encode(event)
 		if err != nil {
 			return err
 		}
 
-		// NOTE: `richsstsse` seems to be last parameter in the query to let's ensure it stays that way
-		var richsstsse bool
-		if values.Has("richsstsse") {
-			richsstsse = true
-			values.Del("richsstsse")
-		}
-
-		url := fmt.Sprintf("%s?%s", p.url, values.Encode())
-
-		if richsstsse {
-			url += "&richsstsse"
-		}
-
-		req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, url, body)
+		req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, fmt.Sprintf("%s?%s", p.url, mpv2.EncodeValues(values)), body)
 		if err != nil {
 			return errors.Wrap(err, "failed to create request")
 		}
