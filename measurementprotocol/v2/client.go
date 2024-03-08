@@ -137,7 +137,7 @@ func (c *Client) SendRaw(r *http.Request, event *Event) error {
 		return errors.Wrap(err, "failed to create request")
 	}
 
-	// copy headers
+	// TODO valiate: copy headers
 	req.Header = r.Header.Clone()
 
 	// forward cookies
