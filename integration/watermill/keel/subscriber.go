@@ -174,14 +174,14 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, event *mpv2.Event) e
 	for name, headers := range r.Header {
 		msg.Metadata.Set(name, strings.Join(headers, ","))
 	}
-
-	if cookies := r.Cookies(); len(cookies) > 0 {
-		values := make([]string, len(cookies))
-		for i, cookie := range r.Cookies() {
-			values[i] = cookie.String()
-		}
-		msg.Metadata.Set("Cookies", strings.Join(values, "; "))
-	}
+	//
+	// if cookies := r.Cookies(); len(cookies) > 0 {
+	// 	values := make([]string, len(cookies))
+	// 	for i, cookie := range r.Cookies() {
+	// 		values[i] = cookie.String()
+	// 	}
+	// 	msg.Metadata.Set("Cookie", strings.Join(values, "; "))
+	// }
 
 	for k, v := range msg.Metadata {
 		l = l.With(zap.String(k, v))
