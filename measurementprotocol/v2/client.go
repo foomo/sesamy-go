@@ -113,14 +113,6 @@ func (c *Client) Send(r *http.Request, event *Event) error {
 		}
 	}
 
-	{ // pass through cookies
-		for _, value := range c.cookies {
-			if cookie, _ := r.Cookie(value); cookie != nil {
-				r.Header.Add("Cookie", cookie.String())
-			}
-		}
-	}
-
 	next := c.SendRaw
 	for _, middleware := range c.middlewares {
 		next = middleware(next)
@@ -143,6 +135,13 @@ func (c *Client) SendRaw(r *http.Request, event *Event) error {
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
+	}
+
+	// forward cookies
+	for _, cookie := range c.cookies {
+		if value, _ := r.Cookie(cookie); value != nil {
+			req.AddCookie(value)
+		}
 	}
 
 	resp, err := c.httpClient.Do(req)
