@@ -59,7 +59,7 @@ func SubscriberWithLogger(fields ...zap.Field) SubscriberOption {
 	return func(o *Subscriber) {
 		o.middlewares = append(o.middlewares, func(next SubscriberHandler) SubscriberHandler {
 			return func(l *zap.Logger, r *http.Request, event *mpv2.Event) error {
-				fields = append(fields, zap.String("event_name", mp.GetDefault(event.EventName, "-").String()))
+				fields := append(fields, zap.String("event_name", mp.GetDefault(event.EventName, "-").String()))
 				if labeler, ok := keellog.LabelerFromRequest(r); ok {
 					labeler.Add(fields...)
 				}
@@ -101,9 +101,6 @@ func NewSubscriber(l *zap.Logger, opts ...SubscriberOption) *Subscriber {
 func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var values url.Values
 
-	// local logger
-	l := s.l
-
 	switch r.Method {
 	case http.MethodGet:
 		values = r.URL.Query()
@@ -132,14 +129,14 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			values = r.URL.Query()
 		}
 	default:
-		keelhttputils.ServerError(l, w, r, http.StatusMethodNotAllowed, errors.New(http.StatusText(http.StatusMethodNotAllowed)))
+		keelhttputils.ServerError(s.l, w, r, http.StatusMethodNotAllowed, errors.New(http.StatusText(http.StatusMethodNotAllowed)))
 		return
 	}
 
 	// unmarshal event
 	var event *mpv2.Event
 	if err := mpv2.Decode(values, &event); err != nil {
-		keelhttputils.InternalServerError(l, w, r, errors.Wrap(err, "failed to marshal url values"))
+		keelhttputils.InternalServerError(s.l, w, r, errors.Wrap(err, "failed to marshal url values"))
 		return
 	}
 
@@ -150,8 +147,8 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// run handler
-	if err := next(l, r, event); err != nil {
-		keelhttputils.InternalServerError(l, w, r, err)
+	if err := next(s.l, r, event); err != nil {
+		keelhttputils.InternalServerError(s.l, w, r, err)
 		return
 	}
 }
