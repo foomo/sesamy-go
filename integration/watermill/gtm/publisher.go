@@ -96,7 +96,7 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 					val := strings.Split(s3, "=")
 					req.AddCookie(&http.Cookie{
 						Name:  val[0],
-						Value: val[1],
+						Value: strings.Join(val[1:], "="),
 					})
 				}
 			} else {
