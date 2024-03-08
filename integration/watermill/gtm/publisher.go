@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	mpv2 "github.com/foomo/sesamy-go/measurementprotocol/v2"
@@ -90,7 +91,17 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 		}
 
 		for s, s2 := range msg.Metadata {
-			req.Header.Set(s, s2)
+			if s == "Cookie" {
+				for _, s3 := range strings.Split(s2, "; ") {
+					val := strings.Split(s3, "=")
+					req.AddCookie(&http.Cookie{
+						Name:  val[0],
+						Value: val[1],
+					})
+				}
+			} else {
+				req.Header.Set(s, s2)
+			}
 		}
 
 		// logFields := watermill.LogFields{
