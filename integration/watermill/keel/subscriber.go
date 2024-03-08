@@ -175,6 +175,14 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, event *mpv2.Event) e
 		msg.Metadata.Set(name, strings.Join(headers, ","))
 	}
 
+	if cookies := r.Cookies(); len(cookies) > 0 {
+		values := make([]string, len(cookies))
+		for i, cookie := range r.Cookies() {
+			values[i] = cookie.String()
+		}
+		msg.Metadata.Set("Cookies", strings.Join(values, "; "))
+	}
+
 	for k, v := range msg.Metadata {
 		l = l.With(zap.String(k, v))
 	}
@@ -190,13 +198,13 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, event *mpv2.Event) e
 	// wait for ACK
 	select {
 	case <-msg.Acked():
-		l.Debug("message acked")
+		l.Info("message acked")
 		return nil
 	case <-msg.Nacked():
-		l.Debug("message nacked")
+		l.Info("message nacked")
 		return ErrMessageNacked
 	case <-r.Context().Done():
-		l.Debug("message cancled")
+		l.Info("message cancled")
 		return ErrContextCanceled
 	}
 }
