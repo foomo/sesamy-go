@@ -137,6 +137,9 @@ func (c *Client) SendRaw(r *http.Request, event *Event) error {
 		return errors.Wrap(err, "failed to create request")
 	}
 
+	// copy headers
+	req.Header = r.Header.Clone()
+
 	// forward cookies
 	for _, cookie := range c.cookies {
 		if value, _ := r.Cookie(cookie); value != nil {

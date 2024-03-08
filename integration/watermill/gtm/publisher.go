@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -110,6 +111,10 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 		// }
 
 		// p.l.Trace("Publishing message", logFields)
+
+		r, _ := httputil.DumpRequestOut(req, true)
+		fmt.Println("--> Outgoing publish")
+		fmt.Println(string(r))
 
 		resp, err := p.client.Do(req)
 		if err != nil {
