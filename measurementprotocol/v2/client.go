@@ -121,6 +121,14 @@ func (c *Client) Send(r *http.Request, event *Event) error {
 	return next(r, event)
 }
 
+func (c *Client) SendType(r *http.Request, event Marshler) error {
+	e, err := event.MarshalMPv2()
+	if err != nil {
+		return err
+	}
+	return c.Send(r, e)
+}
+
 func (c *Client) SendRaw(r *http.Request, event *Event) error {
 	values, body, err := Encode(event)
 	if err != nil {
