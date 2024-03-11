@@ -64,9 +64,9 @@ const (
 	// EventParameterItemCategory3 The third hierarchical category in which you classified an item
 	EventParameterItemCategory3 EventParameter = "item_category3"
 	// EventParameterItemCategory4 The fourth hierarchical category in which you classified an item
-	EventParameterItemCategory4 EventParameter = "Item_category4"
+	EventParameterItemCategory4 EventParameter = "item_category4"
 	// EventParameterItemCategory5 The fifth hierarchical category in which you classified an item
-	EventParameterItemCategory5 EventParameter = "Item_category5"
+	EventParameterItemCategory5 EventParameter = "item_category5"
 	// EventParameterItemID The ID that you specify for an item
 	EventParameterItemID EventParameter = "item_id"
 	// EventParameterItemListID The name of the list in which an item was presented to a user
