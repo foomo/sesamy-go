@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -16,7 +14,6 @@ type (
 		l               *zap.Logger
 		url             string
 		cookies         []string
-		richsstsse      string
 		trackingID      string
 		measurementID   string
 		protocolVersion string
@@ -66,6 +63,15 @@ func NewClient(l *zap.Logger, url, trackingID string, opts ...ClientOption) *Cli
 	for _, opt := range opts {
 		opt(inst)
 	}
+	inst.middlewares = append(inst.middlewares,
+		MiddlewareRichsstsse,
+		MiddlewareTrackingID(inst.trackingID),
+		MiddlewarIgnoreReferrer("1"),
+		MiddlewarProtocolVersion("2"),
+		MiddlewarDebug,
+		MiddlewarClientID,
+		MiddlewarDocument,
+	)
 	return inst
 }
 
@@ -82,42 +88,10 @@ func (c *Client) HTTPClient() *http.Client {
 // ------------------------------------------------------------------------------------------------
 
 func (c *Client) Send(r *http.Request, event *Event) error {
-	yes := "1"
-
-	// set default values
-	event.TrackingID = &c.trackingID
-	event.Richsstsse = &c.richsstsse
-	event.ProtocolVersion = &c.protocolVersion
-
-	event.IgnoreReferrer = &yes
-
-	{ // set referrer parameter
-		if referrer, err := url.Parse(r.Referer()); err != nil {
-			c.l.With(zap.Error(err)).Warn("failed to parse referrer")
-		} else {
-			event.DocumentLocation = &referrer.Path
-			event.DocumentHostname = &referrer.Host
-		}
-	}
-
-	{ // TODO check
-		if value, _ := r.Cookie("gtm_debug"); value != nil {
-			event.IsDebug = &yes
-		}
-	}
-
-	{ // set client id
-		if value, _ := r.Cookie("_ga"); value != nil {
-			clientID := strings.TrimPrefix(value.Value, "GA1.1.")
-			event.ClientID = &clientID
-		}
-	}
-
 	next := c.SendRaw
 	for _, middleware := range c.middlewares {
 		next = middleware(next)
 	}
-
 	return next(r, event)
 }
 

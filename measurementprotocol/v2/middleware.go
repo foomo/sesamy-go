@@ -1,0 +1,74 @@
+package v2
+
+import (
+	"net/http"
+	"net/url"
+	"strings"
+)
+
+func MiddlewareRichsstsse(next ClientHandler) ClientHandler {
+	v := ""
+	return func(r *http.Request, event *Event) error {
+		event.Richsstsse = &v
+		return nil
+	}
+}
+
+func MiddlewareTrackingID(v string) ClientMiddleware {
+	return func(next ClientHandler) ClientHandler {
+		return func(r *http.Request, event *Event) error {
+			event.TrackingID = &v
+			return nil
+		}
+	}
+}
+
+func MiddlewarProtocolVersion(v string) ClientMiddleware {
+	return func(next ClientHandler) ClientHandler {
+		return func(r *http.Request, event *Event) error {
+			event.ProtocolVersion = &v
+			return nil
+		}
+	}
+}
+
+func MiddlewarIgnoreReferrer(v string) ClientMiddleware {
+	return func(next ClientHandler) ClientHandler {
+		return func(r *http.Request, event *Event) error {
+			event.IgnoreReferrer = &v
+			return nil
+		}
+	}
+}
+
+func MiddlewarDebug(next ClientHandler) ClientHandler {
+	v := "1"
+	return func(r *http.Request, event *Event) error {
+		if value, _ := r.Cookie("gtm_debug"); value != nil {
+			event.IsDebug = &v
+		}
+		return nil
+	}
+}
+
+func MiddlewarClientID(next ClientHandler) ClientHandler {
+	return func(r *http.Request, event *Event) error {
+		if value, _ := r.Cookie("_ga"); value != nil {
+			clientID := strings.TrimPrefix(value.Value, "GA1.1.")
+			event.ClientID = &clientID
+		}
+		return nil
+	}
+}
+
+func MiddlewarDocument(next ClientHandler) ClientHandler {
+	return func(r *http.Request, event *Event) error {
+		if referrer, err := url.Parse(r.Referer()); err != nil {
+			return err
+		} else {
+			event.DocumentLocation = &referrer.Path
+			event.DocumentHostname = &referrer.Host
+		}
+		return nil
+	}
+}
