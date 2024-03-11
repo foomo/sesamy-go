@@ -15,10 +15,10 @@ const (
 	EventParameterFirebaseScreen EventParameter = "firebase_screen"
 	// EventParameterFirebaseScreenClass The current screen’s class name
 	EventParameterFirebaseScreenClass EventParameter = "firebase_screen_class"
-	// EventParameterFirebaseScreenId A random identifier for the current screen
-	EventParameterFirebaseScreenId EventParameter = "firebase_screen_id"
-	// EventParameterMessageId The Firebase Cloud Messaging or Firebase In-App Messaging message identifier, which is unique per message campaign
-	EventParameterMessageId EventParameter = "message_id"
+	// EventParameterFirebaseScreenID A random identifier for the current screen
+	EventParameterFirebaseScreenID EventParameter = "firebase_screen_id"
+	// EventParameterMessageID The Firebase Cloud Messaging or Firebase In-App Messaging message identifier, which is unique per message campaign
+	EventParameterMessageID EventParameter = "message_id"
 	// EventParameterMessageName The Firebase Cloud Messaging or Firebase In-App Messaging message name
 	EventParameterMessageName EventParameter = "message_name"
 	// EventParameterMessageType The Firebase Cloud Messaging message notification type
@@ -41,8 +41,8 @@ const (
 	EventParameterCurrency EventParameter = "currency"
 	// EventParameterShippingTier The shipping tier selected for delivery of a purchased item
 	EventParameterShippingTier EventParameter = "shipping_tier"
-	// EventParameterTransactionId The unique identifier of a transaction
-	EventParameterTransactionId EventParameter = "transaction_id"
+	// EventParameterTransactionID The unique identifier of a transaction
+	EventParameterTransactionID EventParameter = "transaction_id"
 	// EventParameterValue The monetary value of the event
 	EventParameterValue EventParameter = "value"
 	// EventParameterAffiliation A product affiliation to designate a supplying company or brick and mortar store location
@@ -67,24 +67,24 @@ const (
 	EventParameterItemCategory4 EventParameter = "Item_category4"
 	// EventParameterItemCategory5 The fifth hierarchical category in which you classified an item
 	EventParameterItemCategory5 EventParameter = "Item_category5"
-	// EventParameterItemId The ID that you specify for an item
-	EventParameterItemId EventParameter = "item_id"
-	// EventParameterItemListId The name of the list in which an item was presented to a user
-	EventParameterItemListId EventParameter = "item_list_id"
+	// EventParameterItemID The ID that you specify for an item
+	EventParameterItemID EventParameter = "item_id"
+	// EventParameterItemListID The name of the list in which an item was presented to a user
+	EventParameterItemListID EventParameter = "item_list_id"
 	// EventParameterItemListName The ID of the list in which an item was presented to a user
 	EventParameterItemListName EventParameter = "item_list_name"
 	// EventParameterItemName The name of the event that contains the parameter group
 	EventParameterItemName EventParameter = "item_name"
 	// EventParameterItemVariant The item variant or unique code or description (e.g., XS, S, M, L for size; Red, Blue, Green, Black for color) for additional item details or options
 	EventParameterItemVariant EventParameter = "item_variant"
-	// EventParameterLocationId The physical location associated with the item (e.g. the physical store location)
-	EventParameterLocationId EventParameter = "location_id"
-	// EventParameterPromotionId The ID of the promotion associated with an event
-	EventParameterPromotionId EventParameter = "promotion_id"
+	// EventParameterLocationID The physical location associated with the item (e.g. the physical store location)
+	EventParameterLocationID EventParameter = "location_id"
+	// EventParameterPromotionID The ID of the promotion associated with an event
+	EventParameterPromotionID EventParameter = "promotion_id"
 	// EventParameterPromotionName The name of the promotion associated with an event
 	EventParameterPromotionName EventParameter = "promotion_name"
-	// EventParameterAchievementId The ID of an achievement that was unlocked in a game
-	EventParameterAchievementId EventParameter = "achievement_id"
+	// EventParameterAchievementID The ID of an achievement that was unlocked in a game
+	EventParameterAchievementID EventParameter = "achievement_id"
 	// EventParameterCharacter The name of a character in a game
 	EventParameterCharacter EventParameter = "character"
 	// EventParameterLevelName The name of the level in a game
@@ -97,14 +97,14 @@ const (
 	EventParameterFileName EventParameter = "file_name"
 	// EventParameterFormDestination The URL to which a form is being submitted
 	EventParameterFormDestination EventParameter = "form_destination"
-	// EventParameterFormId The HTML id attribution of the <form> DOM element
-	EventParameterFormId EventParameter = "form_id"
+	// EventParameterFormID The HTML id attribution of the <form> DOM element
+	EventParameterFormID EventParameter = "form_id"
 	// EventParameterFormName The HTML name attribute of the <form> DOM element
 	EventParameterFormName EventParameter = "form_name"
 	// EventParameterFormSubmitText The text of the submit button, if present
 	EventParameterFormSubmitText EventParameter = "form_submit_text"
-	// EventParameterGroupId The ID of a group
-	EventParameterGroupId EventParameter = "group_id"
+	// EventParameterGroupID The ID of a group
+	EventParameterGroupID EventParameter = "group_id"
 	// EventParameterLanguage The language setting of a user’s browser or device, displayed as the ISO 639 language code
 	EventParameterLanguage EventParameter = "language"
 	// EventParameterPercentScrolled The percentage down the page that the user scrolled
@@ -115,16 +115,16 @@ const (
 	EventParameterLinkClasses EventParameter = "link_classes"
 	// EventParameterLinkDomain The destination domain of an outbound link or file download
 	EventParameterLinkDomain EventParameter = "link_domain"
-	// EventParameterLinkId The ID for an outbound link or file download
-	EventParameterLinkId EventParameter = "link_id"
+	// EventParameterLinkID The ID for an outbound link or file download
+	EventParameterLinkID EventParameter = "link_id"
 	// EventParameterLinkUrl The full URL for an outbound link or file download
 	EventParameterLinkUrl EventParameter = "link_url"
 	// EventParameterOutbound Indicates whether a click was on an outbound link
 	EventParameterOutbound EventParameter = "outbound"
 	// EventParameterContentGroup The content group associated with a page or screen
 	EventParameterContentGroup EventParameter = "content_group"
-	// EventParameterContentId An ID for an article of content that a user interacted with
-	EventParameterContentId EventParameter = "content_id"
+	// EventParameterContentID An ID for an article of content that a user interacted with
+	EventParameterContentID EventParameter = "content_id"
 	// EventParameterContentType The type of content that a user interacted with
 	EventParameterContentType EventParameter = "content_type"
 	// EventParameterPageLocation The complete URL of the webpage that someone visited on your website
@@ -141,8 +141,8 @@ const (
 	EventParameterAdPlatform EventParameter = "ad_platform"
 	// EventParameterAdSource The source network that served an advertisement
 	EventParameterAdSource EventParameter = "ad_source"
-	// EventParameterAdUnitId The unique identifier for an ad unit
-	EventParameterAdUnitId EventParameter = "ad_unit_id"
+	// EventParameterAdUnitID The unique identifier for an ad unit
+	EventParameterAdUnitID EventParameter = "ad_unit_id"
 	// EventParameterAdUnitName The name you choose for an ad unit
 	EventParameterAdUnitName EventParameter = "ad_unit_name"
 	// EventParameterVideoProvider The source of an embedded video
@@ -154,9 +154,8 @@ const (
 
 	// Additional undocumented parameters
 
-	EventParameterMethod        EventParameter = "method"
-	EventParameterPaymentType   EventParameter = "payment_type"
-	EventParameterTransactionID EventParameter = "transaction_id"
+	EventParameterMethod      EventParameter = "method"
+	EventParameterPaymentType EventParameter = "payment_type"
 )
 
 func (s EventParameter) String() string {
