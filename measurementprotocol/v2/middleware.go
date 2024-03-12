@@ -18,7 +18,7 @@ func MiddlewareTrackingID(v string) ClientMiddleware {
 	return func(next ClientHandler) ClientHandler {
 		return func(r *http.Request, event *Event) error {
 			event.TrackingID = &v
-			return nil
+			return next(r, event)
 		}
 	}
 }
@@ -27,7 +27,7 @@ func MiddlewarProtocolVersion(v string) ClientMiddleware {
 	return func(next ClientHandler) ClientHandler {
 		return func(r *http.Request, event *Event) error {
 			event.ProtocolVersion = &v
-			return nil
+			return next(r, event)
 		}
 	}
 }
@@ -36,7 +36,7 @@ func MiddlewarIgnoreReferrer(v string) ClientMiddleware {
 	return func(next ClientHandler) ClientHandler {
 		return func(r *http.Request, event *Event) error {
 			event.IgnoreReferrer = &v
-			return nil
+			return next(r, event)
 		}
 	}
 }
@@ -47,7 +47,7 @@ func MiddlewarDebug(next ClientHandler) ClientHandler {
 		if value, _ := r.Cookie("gtm_debug"); value != nil {
 			event.IsDebug = &v
 		}
-		return nil
+		return next(r, event)
 	}
 }
 
@@ -57,7 +57,7 @@ func MiddlewarClientID(next ClientHandler) ClientHandler {
 			clientID := strings.TrimPrefix(value.Value, "GA1.1.")
 			event.ClientID = &clientID
 		}
-		return nil
+		return next(r, event)
 	}
 }
 
@@ -69,6 +69,6 @@ func MiddlewarDocument(next ClientHandler) ClientHandler {
 			event.DocumentLocation = &referrer.Path
 			event.DocumentHostname = &referrer.Host
 		}
-		return nil
+		return next(r, event)
 	}
 }

@@ -12,7 +12,8 @@ import (
 type (
 	Client struct {
 		l               *zap.Logger
-		url             string
+		path            string
+		host            string
 		cookies         []string
 		trackingID      string
 		measurementID   string
@@ -35,6 +36,12 @@ func ClientWithHTTPClient(v *http.Client) ClientOption {
 	}
 }
 
+func ClientWithPath(v string) ClientOption {
+	return func(o *Client) {
+		o.path = v
+	}
+}
+
 func ClientWithCookies(v ...string) ClientOption {
 	return func(o *Client) {
 		o.cookies = append(o.cookies, v...)
@@ -51,10 +58,11 @@ func ClientWithMiddlewares(v ...ClientMiddleware) ClientOption {
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
 
-func NewClient(l *zap.Logger, url, trackingID string, opts ...ClientOption) *Client {
+func NewClient(l *zap.Logger, host, trackingID string, opts ...ClientOption) *Client {
 	inst := &Client{
 		l:               l,
-		url:             url,
+		host:            host,
+		path:            "/g/collect",
 		cookies:         []string{"gtm_auth", "gtm_debug", "gtm_preview"},
 		trackingID:      trackingID,
 		protocolVersion: "2",
@@ -87,32 +95,32 @@ func (c *Client) HTTPClient() *http.Client {
 // ~ Public methods
 // ------------------------------------------------------------------------------------------------
 
-func (c *Client) Send(r *http.Request, event *Event) error {
-	next := c.SendRaw
+func (c *Client) Send(r *http.Request, event Marshler) error {
+	e, err := event.MarshalMPv2()
+	if err != nil {
+		return err
+	}
+	return c.SendEvent(r, e)
+}
+
+func (c *Client) SendEvent(r *http.Request, event *Event) error {
+	next := c.SendRawEvent
 	for _, middleware := range c.middlewares {
 		next = middleware(next)
 	}
 	return next(r, event)
 }
 
-func (c *Client) SendType(r *http.Request, event Marshler) error {
-	e, err := event.MarshalMPv2()
-	if err != nil {
-		return err
-	}
-	return c.Send(r, e)
-}
-
-func (c *Client) SendRaw(r *http.Request, event *Event) error {
+func (c *Client) SendRawEvent(r *http.Request, event *Event) error {
 	values, body, err := Encode(event)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshall event")
+		return errors.Wrap(err, "failed to encode event")
 	}
 
 	req, err := http.NewRequestWithContext(
 		r.Context(),
 		http.MethodPost,
-		fmt.Sprintf("%s?%s", c.url, EncodeValues(values)),
+		fmt.Sprintf("%s%s?%s", c.host, c.path, EncodeValues(values)),
 		body,
 	)
 	if err != nil {
