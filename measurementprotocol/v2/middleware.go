@@ -80,7 +80,7 @@ func MiddlewarDocument(next ClientHandler) ClientHandler {
 		if referrer, err := url.Parse(r.Referer()); err != nil {
 			return err
 		} else {
-			location := referrer.RequestURI()
+			location := referrer.String()
 			event.DocumentLocation = &location
 			event.DocumentHostname = &referrer.Host
 		}
