@@ -10,7 +10,7 @@ func MiddlewareRichsstsse(next ClientHandler) ClientHandler {
 	v := ""
 	return func(r *http.Request, event *Event) error {
 		event.Richsstsse = &v
-		return nil
+		return next(r, event)
 	}
 }
 
