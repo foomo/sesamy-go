@@ -66,8 +66,8 @@ func MiddlewarSessionID(trackingID string) ClientMiddleware {
 	return func(next ClientHandler) ClientHandler {
 		return func(r *http.Request, event *Event) error {
 			if value, _ := r.Cookie("_ga_" + trackingID); value != nil {
-				if value := strings.Split(strings.TrimPrefix(value.Value, "GA1.1."), "."); len(value) > 0 {
-					event.SessionID = &value[0]
+				if value := strings.Split(value.Value, "."); len(value) > 3 {
+					event.SessionID = &value[2]
 				}
 			}
 			return next(r, event)
