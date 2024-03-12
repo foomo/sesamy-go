@@ -61,10 +61,11 @@ func MiddlewarClientID(next ClientHandler) ClientHandler {
 	}
 }
 
-func MiddlewarSessionID(measurementID string) ClientMiddleware {
+func MiddlewarSessionID(trackingID string) ClientMiddleware {
+	trackingID = strings.Split(trackingID, "-")[1]
 	return func(next ClientHandler) ClientHandler {
 		return func(r *http.Request, event *Event) error {
-			if value, _ := r.Cookie("_ga_" + measurementID); value != nil {
+			if value, _ := r.Cookie("_ga_" + trackingID); value != nil {
 				if value := strings.Split(strings.TrimPrefix(value.Value, "GA1.1."), "."); len(value) > 0 {
 					event.SessionID = &value[0]
 				}
