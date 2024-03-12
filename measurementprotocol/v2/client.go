@@ -16,7 +16,6 @@ type (
 		host            string
 		cookies         []string
 		trackingID      string
-		measurementID   string
 		protocolVersion string
 		httpClient      *http.Client
 		middlewares     []ClientMiddleware
@@ -78,7 +77,7 @@ func NewClient(l *zap.Logger, host, trackingID string, opts ...ClientOption) *Cl
 		MiddlewarProtocolVersion("2"),
 		MiddlewarDebug,
 		MiddlewarClientID,
-		MiddlewarSessionID(inst.measurementID),
+		MiddlewarSessionID(inst.trackingID),
 		MiddlewarDocument,
 	)
 	return inst
