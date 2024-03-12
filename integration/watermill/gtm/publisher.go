@@ -22,7 +22,8 @@ var (
 type (
 	Publisher struct {
 		l                  *zap.Logger
-		url                string
+		host               string
+		path               string
 		client             *http.Client
 		marshalMessageFunc PublisherMarshalMessageFunc
 		closed             bool
@@ -36,10 +37,11 @@ type (
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
 
-func NewPublisher(l *zap.Logger, url string, opts ...PublisherOption) *Publisher {
+func NewPublisher(l *zap.Logger, host string, opts ...PublisherOption) *Publisher {
 	inst := &Publisher{
 		l:      l,
-		url:    url,
+		host:   host,
+		path:   "/g/collect",
 		client: http.DefaultClient,
 	}
 	for _, opt := range opts {
@@ -51,6 +53,12 @@ func NewPublisher(l *zap.Logger, url string, opts ...PublisherOption) *Publisher
 // ------------------------------------------------------------------------------------------------
 // ~ Options
 // ------------------------------------------------------------------------------------------------
+
+func PublisherWithPath(v string) PublisherOption {
+	return func(o *Publisher) {
+		o.path = v
+	}
+}
 
 func PublisherWithClient(v *http.Client) PublisherOption {
 	return func(o *Publisher) {
@@ -92,7 +100,7 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 			return err
 		}
 
-		req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, fmt.Sprintf("%s?%s", p.url, mpv2.EncodeValues(values)), body)
+		req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, fmt.Sprintf("%s%s?%s", p.host, p.path, mpv2.EncodeValues(values)), body)
 		if err != nil {
 			return errors.Wrap(err, "failed to create request")
 		}
