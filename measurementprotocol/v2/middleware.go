@@ -61,12 +61,26 @@ func MiddlewarClientID(next ClientHandler) ClientHandler {
 	}
 }
 
+func MiddlewarSessionID(measurementID string) ClientMiddleware {
+	return func(next ClientHandler) ClientHandler {
+		return func(r *http.Request, event *Event) error {
+			if value, _ := r.Cookie("_ga_" + measurementID); value != nil {
+				if value := strings.Split(strings.TrimPrefix(value.Value, "GA1.1."), "."); len(value) > 0 {
+					event.SessionID = &value[0]
+				}
+			}
+			return next(r, event)
+		}
+	}
+}
+
 func MiddlewarDocument(next ClientHandler) ClientHandler {
 	return func(r *http.Request, event *Event) error {
 		if referrer, err := url.Parse(r.Referer()); err != nil {
 			return err
 		} else {
-			event.DocumentLocation = &referrer.Path
+			location := referrer.RequestURI()
+			event.DocumentLocation = &location
 			event.DocumentHostname = &referrer.Host
 		}
 		return next(r, event)

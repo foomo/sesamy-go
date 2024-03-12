@@ -78,6 +78,7 @@ func NewClient(l *zap.Logger, host, trackingID string, opts ...ClientOption) *Cl
 		MiddlewarProtocolVersion("2"),
 		MiddlewarDebug,
 		MiddlewarClientID,
+		MiddlewarSessionID(inst.measurementID),
 		MiddlewarDocument,
 	)
 	return inst
