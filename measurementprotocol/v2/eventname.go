@@ -22,6 +22,7 @@ const (
 	EventNameSearch             EventName = "search"
 	EventNameSelectContent      EventName = "select_content"
 	EventNameSelectItem         EventName = "select_item"
+	EventNameSelectPromotion    EventName = "select_promotion"
 	EventNameShare              EventName = "share"
 	EventNameSignUp             EventName = "sign_up"
 	EventNameSpendVirtualMoney  EventName = "spend_virtual_money"
