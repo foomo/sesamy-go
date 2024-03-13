@@ -45,4 +45,16 @@ type Item struct {
 	Affiliation *string `json:"af,omitempty" mapstructure:"af,omitempty"`
 	// Example: ChIJIQBpAG2ahYAR_6128GcTUEo
 	LocationID *string `json:"lo,omitempty" mapstructure:"lo,omitempty"`
+	// The name of the promotional creative.
+	// Example: summer_banner2
+	CreativeName *string `json:"cn,omitempty" mapstructure:"cn,omitempty"`
+	// The name of the promotional creative slot associated with the item.
+	// Example: featured_app_1
+	CreativeSlot *string `json:"cs,omitempty" mapstructure:"cs,omitempty"`
+	// The ID of the promotion associated with the item.
+	// Example: P_12345
+	PromotionID *string `json:"pi,omitempty" mapstructure:"pi,omitempty"`
+	// The name of the promotion associated with the item.
+	// Example: Summer Sale
+	PromotionName *string `json:"pn,omitempty" mapstructure:"pn,omitempty"`
 }
