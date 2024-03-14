@@ -1,13 +1,5 @@
 package v2
 
-/*
-*
-
-	promotion_id: "pi",
-	promotion_name: "pn",
-	creative_name: "cn",
-	creative_slot: "cs",
-*/
 type Item struct {
 	// Example: 12345
 	ID *string `json:"id,omitempty" mapstructure:"id,omitempty"`
