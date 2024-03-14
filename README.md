@@ -14,14 +14,9 @@ Make a pull request...
 
 Distributed under MIT License, please see license file within the code for more details.
 
-## Open tasks
+## Glossary
 
--- Add Typescript file in events folder
--- Commands to generate typescript
-
-## Terms
-
-As some terms for Google Analytics and GTM events can be confusing we want to clarify the following terms that are used in this README:
+As some terms for Google Analytics and GTM events and ressources can be confusing we want to clarify the following definitions that are used in this README:
 
 - Google Tag Manager: A configuration interface for different kind of containers (Web, Server etc.). The server container configuration is represented by a Tagging server
 - Web container: This is a tagging container hosted by Google and can be configured via the Google Tag Manager
@@ -30,7 +25,7 @@ As some terms for Google Analytics and GTM events can be confusing we want to cl
 - "/g/collect" aka "Measurement Protocol V2" request: This is a GET request done by the gtag.js script installed on your website and going to the tagging server. Before Google Tag Manager, this request would have gone directly to Google Analytics.
 - "/mp/collect" request: This is a different way of sending events from the website to the tagging server via a POST request including a JSON body defined here: https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference?client_type=gtag#payload
 
-## Sesamy
+## How does it work
 
 Sesamy-go is a Windmill (https://watermill.io/) powered Google Analytics web tracking event processor that decodes and unmarshals incoming measurement protocol requests on a website into a `mpv2.Event`. Those requests are sent by the gtag.js script, that is loaded via the gtm.js script installed on a website.
 
@@ -194,8 +189,10 @@ func (e *AddToCart) MarshalMPv2() (*mpv2.Event, error)
 
 <br>
 
-> **_IMPORTANT:_** If you adopt existing or add new events, the configuration in the Web container needs to be adopted in Google Tag Manager as well. Otherwise that those events and parameters are not received in Google Analytics. These adoptations can be done manually or programmatically via the Sesamy CLI (https://github.com/foomo/sesamy-cli)
+> **_IMPORTANT:_** If you adopt existing or add new events, the configuration in the Web container needs to be adopted in Google Tag Manager as well. Otherwise those events and parameters are not received in Google Analytics. These adoptations can be done manually or programmatically via the Sesamy CLI (https://github.com/foomo/sesamy-cli)
 
 ## Sesamy-gtm helm chart
+
+https://artifacthub.io/packages/helm/foomo/sesamy-gtm
 
 This contains the standard preview and the tagging server from Google. Additionally, if you want to introduce enrichment functionalities you also need to use the "collect" chart as a proxy between your website and the Google tag manager server container. As a consequence it needs a main.go that is than build by the "collect" helm chart. This chart exposes a "/g/collect" path so that all events triggered by your website are sent to your service instead of directly to the standard Google Tagging Container.
