@@ -14,6 +14,11 @@ Make a pull request...
 
 Distributed under MIT License, please see license file within the code for more details.
 
+## Open tasks
+
+-- Add Typescript file in events folder
+-- Commands to generate typescript
+
 ## Terms
 
 As some terms for Google Analytics and GTM events can be confusing we want to clarify the following terms that are used in this README:
@@ -149,7 +154,7 @@ func main () {
 
 ## Example: Add an enrichment handler
 
-In order to enricht event data before it is sent to the server container you can add an enrichment handler in the pipeline
+In order to enricht event data before it is sent to the server container you can add an enrichment handler in the pipeline. With the `watermillmpv2.EventHandler` gives you access to the event objedct as well as the original message.
 
 ```go
   // main.go
