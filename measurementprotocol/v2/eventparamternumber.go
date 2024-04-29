@@ -17,7 +17,8 @@ const (
 	// EventParameterNumberShipping The shipping cost associated with a transaction
 	EventParameterNumberShipping EventParameterNumber = "shipping"
 	// EventParameterNumberTax The tax cost associated with a transaction
-	EventParameterNumberTax EventParameterNumber = "tax"
+	EventParameterNumberTax             EventParameterNumber = "tax"
+	EventParameterNumberPercentScrolled EventParameterNumber = "percent_scrolled"
 )
 
 func (s EventParameterNumber) String() string {
