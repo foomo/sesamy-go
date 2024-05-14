@@ -9,8 +9,8 @@ import (
 	"github.com/foomo/sesamy-go/encoding/gtag"
 	"github.com/foomo/sesamy-go/encoding/gtagencode"
 	"github.com/foomo/sesamy-go/encoding/mpv2"
-	"github.com/foomo/sesamy-go/encoding/mpv2/params"
 	"github.com/foomo/sesamy-go/encoding/mpv2encode"
+	"github.com/foomo/sesamy-go/event/params"
 	"github.com/stretchr/testify/require"
 )
 
