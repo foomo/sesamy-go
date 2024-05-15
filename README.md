@@ -6,6 +6,10 @@
 
 > **Se**rver **S**ide T**a**g **M**anagement **S**ystem
 
+## References
+
+- [Event naming rules](https://support.google.com/analytics/answer/13316687)
+
 ## How to Contribute
 
 Make a pull request...

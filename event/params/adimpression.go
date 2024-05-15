@@ -1,10 +1,15 @@
 package params
 
+import (
+	"github.com/foomo/gostandards/iso4217"
+)
+
 // AdImpression https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference/events#ad_impression
 type AdImpression struct {
-	AdPlatform string `json:"ad_platform,omitempty" mapstructure:"ad_platform"`
-	AdSource   string `json:"ad_source,omitempty" mapstructure:"ad_source"`
-	AdFormat   string `json:"ad_format,omitempty" mapstructure:"ad_format"`
-	AdUnitName string `json:"ad_unit_name,omitempty" mapstructure:"ad_unit_name"`
-	Currency   string `json:"currency,omitempty" mapstructure:"currency"`
+	AdPlatform string           `json:"ad_platform,omitempty"`
+	AdSource   string           `json:"ad_source,omitempty"`
+	AdFormat   string           `json:"ad_format,omitempty"`
+	AdUnitName string           `json:"ad_unit_name,omitempty"`
+	Currency   iso4217.Currency `json:"currency,omitempty"`
+	Value      float64          `json:"value,omitempty"`
 }

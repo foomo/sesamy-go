@@ -1,6 +1,6 @@
 package params
 
-// UnlockArchievement https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference/events#unlock_achievement
-type UnlockArchievement struct {
-	ArchievementName string `json:"archievement_name"`
+// UnlockAchievement https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference/events#unlock_achievement
+type UnlockAchievement struct {
+	ArchievementID string `json:"achievement_id"`
 }
