@@ -19,7 +19,7 @@ type Item struct {
 	ItemName      string  `json:"item_name,omitempty"`
 	ItemVariant   string  `json:"item_variant,omitempty"`
 	LocationID    string  `json:"location_id,omitempty"`
-	Price         string  `json:"price,omitempty"`
+	Price         float64 `json:"price,omitempty"`
 	PromotionID   string  `json:"promotion_id,omitempty"`
 	PromotionName string  `json:"promotion_name,omitempty"`
 	Quantity      float64 `json:"quantity,omitempty"`
