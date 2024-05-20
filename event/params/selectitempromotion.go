@@ -4,7 +4,7 @@ package params
 type SelectPromotion[Item any] struct {
 	CreativeName  string `json:"creative_name,omitempty"`
 	CreativeSlot  string `json:"creative_slot,omitempty"`
-	PromotionID   string `json:"item_list_id,omitempty"`
-	PromotionName string `json:"item_list_name,omitempty"`
+	PromotionID   string `json:"promotion_id,omitempty"`
+	PromotionName string `json:"promotion_name,omitempty"`
 	Items         []Item `json:"items,omitempty"`
 }
