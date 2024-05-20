@@ -14,7 +14,7 @@ type Item struct {
 	ItemCategory4 string  `json:"item_category4,omitempty"`
 	ItemCategory5 string  `json:"item_category5,omitempty"`
 	ItemID        string  `json:"item_id,omitempty"`
-	ItemListID    string  `json:"listId,omitempty"`
+	ItemListID    string  `json:"item_list_id,omitempty"`
 	ItemListName  string  `json:"item_list_name,omitempty"`
 	ItemName      string  `json:"item_name,omitempty"`
 	ItemVariant   string  `json:"item_variant,omitempty"`
