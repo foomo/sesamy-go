@@ -8,5 +8,5 @@ import (
 type UnlockAchievement sesamy.Event[params.UnlockAchievement]
 
 func NewUnlockArchievement(p params.UnlockAchievement) UnlockAchievement {
-	return UnlockAchievement(sesamy.NewEvent(sesamy.EventNameUnlockArchievement, p))
+	return UnlockAchievement(sesamy.NewEvent(sesamy.EventNameUnlockAchievement, p))
 }
