@@ -2,11 +2,11 @@ package event
 
 import (
 	"github.com/foomo/sesamy-go/pkg/event/params"
-	sesamy2 "github.com/foomo/sesamy-go/pkg/sesamy"
+	"github.com/foomo/sesamy-go/pkg/sesamy"
 )
 
-type LevelEnd sesamy2.Event[params.LevelEnd]
+type LevelEnd sesamy.Event[params.LevelEnd]
 
 func NewLevelEnd(p params.LevelEnd) LevelEnd {
-	return LevelEnd(sesamy2.NewEvent(sesamy2.EventNameLevelEnd, p))
+	return LevelEnd(sesamy.NewEvent(sesamy.EventNameLevelEnd, p))
 }

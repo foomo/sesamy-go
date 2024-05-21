@@ -2,11 +2,11 @@ package event
 
 import (
 	"github.com/foomo/sesamy-go/pkg/event/params"
-	sesamy2 "github.com/foomo/sesamy-go/pkg/sesamy"
+	"github.com/foomo/sesamy-go/pkg/sesamy"
 )
 
-type TutorialComplete sesamy2.Event[params.TutorialComplete]
+type TutorialComplete sesamy.Event[params.TutorialComplete]
 
 func NewTutorialComplete(p params.TutorialComplete) TutorialComplete {
-	return TutorialComplete(sesamy2.NewEvent(sesamy2.EventNameTutorialComplete, p))
+	return TutorialComplete(sesamy.NewEvent(sesamy.EventNameTutorialComplete, p))
 }

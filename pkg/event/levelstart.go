@@ -2,11 +2,11 @@ package event
 
 import (
 	"github.com/foomo/sesamy-go/pkg/event/params"
-	sesamy2 "github.com/foomo/sesamy-go/pkg/sesamy"
+	"github.com/foomo/sesamy-go/pkg/sesamy"
 )
 
-type LevelStart sesamy2.Event[params.LevelStart]
+type LevelStart sesamy.Event[params.LevelStart]
 
 func NewLevelStart(p params.LevelStart) LevelStart {
-	return LevelStart(sesamy2.NewEvent(sesamy2.EventNameLevelStart, p))
+	return LevelStart(sesamy.NewEvent(sesamy.EventNameLevelStart, p))
 }
