@@ -9,7 +9,7 @@ import (
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/foomo/sesamy-go/encoding/mpv2"
+	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )

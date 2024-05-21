@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/foomo/sesamy-go/encoding/gtag"
+	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
