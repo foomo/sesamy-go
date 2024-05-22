@@ -16,13 +16,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	ErrMissingEventName = errors.New("missing event name")
-	ErrContextCanceled  = errors.New("request stopped without ACK received")
-	ErrMessageNacked    = errors.New("message nacked")
-	ErrClosed           = errors.New("subscriber already closed")
-)
-
 type (
 	Subscriber struct {
 		l           *zap.Logger
@@ -49,33 +42,6 @@ func SubscriberWithUUIDFunc(v func() string) SubscriberOption {
 func SubscriberWithMiddlewares(v ...SubscriberMiddleware) SubscriberOption {
 	return func(o *Subscriber) {
 		o.middlewares = append(o.middlewares, v...)
-	}
-}
-
-func SubscriberWithLogger(fields ...zap.Field) SubscriberOption {
-	return func(o *Subscriber) {
-		o.middlewares = append(o.middlewares, func(next SubscriberHandler) SubscriberHandler {
-			return func(l *zap.Logger, r *http.Request, event *gtag.Payload) error {
-				fields := append(fields, zap.String("event_name", gtag.GetDefault(event.EventName, "-").String()))
-				// if labeler, ok := keellog.LabelerFromRequest(r); ok {
-				// 	labeler.Add(fields...)
-				// }
-				return next(l.With(fields...), r, event)
-			}
-		})
-	}
-}
-
-func SubscriberWithRequireEventName() SubscriberOption {
-	return func(o *Subscriber) {
-		o.middlewares = append(o.middlewares, func(next SubscriberHandler) SubscriberHandler {
-			return func(l *zap.Logger, r *http.Request, event *gtag.Payload) error {
-				if event.EventName == nil {
-					return ErrMissingEventName
-				}
-				return next(l, r, event)
-			}
-		})
 	}
 }
 
@@ -134,6 +100,12 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var payload *gtag.Payload
 	if err := gtag.Decode(values, &payload); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// validate
+	if payload.EventName.String() == "" {
+		http.Error(w, "missing event name", http.StatusBadRequest)
 		return
 	}
 

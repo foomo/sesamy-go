@@ -5,20 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-)
-
-var (
-	ErrMissingEventName = errors.New("missing event name")
-	ErrContextCanceled  = errors.New("request stopped without ACK received")
-	ErrMessageNacked    = errors.New("message nacked")
-	ErrClosed           = errors.New("subscriber already closed")
 )
 
 type (
@@ -50,37 +42,6 @@ func SubscriberWithMiddlewares(v ...SubscriberMiddleware) SubscriberOption {
 	}
 }
 
-func SubscriberWithLogger(fields ...zap.Field) SubscriberOption {
-	return func(o *Subscriber) {
-		o.middlewares = append(o.middlewares, func(next SubscriberHandler) SubscriberHandler {
-			return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
-				fields := append(fields,
-					zap.String("user_id", payload.UserID),
-					zap.String("client_id", payload.ClientID),
-					zap.Time("timestamp", time.UnixMicro(payload.TimestampMicros)),
-				)
-				// if labeler, ok := keellog.LabelerFromRequest(r); ok {
-				// 	labeler.Add(fields...)
-				// }
-				return next(l.With(fields...), r, payload)
-			}
-		})
-	}
-}
-
-// func SubscriberWithRequireEventName() SubscriberOption {
-// 	return func(o *Subscriber) {
-// 		o.middlewares = append(o.middlewares, func(next SubscriberHandler) SubscriberHandler {
-// 			return func(l *zap.Logger, r *http.Request, event *mpv2.Payload[any]) error {
-// 				if event.EventName == nil {
-// 					return ErrMissingEventName
-// 				}
-// 				return next(l, r, event)
-// 			}
-// 		})
-// 	}
-// }
-
 // ------------------------------------------------------------------------------------------------
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
@@ -109,6 +70,18 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	// validate required fields
+	if len(payload.Events) == 0 {
+		http.Error(w, "missing events", http.StatusBadRequest)
+		return
+	}
+	for _, event := range payload.Events {
+		if event.Name == "" {
+			http.Error(w, "missing event name", http.StatusBadRequest)
+			return
+		}
 	}
 
 	// compose middlewares

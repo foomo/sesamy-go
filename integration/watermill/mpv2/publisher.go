@@ -12,11 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
-	ErrErrorResponse   = errors.New("server responded with error status")
-	ErrPublisherClosed = errors.New("publisher is closed")
-)
-
 type (
 	Publisher struct {
 		l                  *zap.Logger
