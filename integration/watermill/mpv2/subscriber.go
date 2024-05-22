@@ -97,27 +97,21 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Subscriber) handle(l *zap.Logger, r *http.Request, event *mpv2.Payload[any]) error {
+func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
 	// marshal message payload
-	payload, err := json.Marshal(event)
+	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal payload")
 	}
 
-	msg := message.NewMessage(s.uuidFunc(), payload)
+	msg := message.NewMessage(s.uuidFunc(), jsonPayload)
 	l = l.With(zap.String("message_id", msg.UUID))
-	// if labeler, ok := keellog.LabelerFromRequest(r); ok {
-	// 	labeler.Add(zap.String("message_id", msg.UUID))
-	// }
-	// if event.EventName != nil {
-	// 	msg.Metadata.Set(MetadataEventName, gtag.Get(event.EventName).String())
-	// }
 
 	// TODO filter headers?
 	for name, headers := range r.Header {
 		msg.Metadata.Set(name, strings.Join(headers, ","))
 	}
-	//
+
 	// if cookies := r.Cookies(); len(cookies) > 0 {
 	// 	values := make([]string, len(cookies))
 	// 	for i, cookie := range r.Cookies() {
