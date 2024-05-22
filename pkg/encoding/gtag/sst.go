@@ -17,4 +17,6 @@ type SST struct {
 	TFT *string `json:"tft,omitempty" gtag:"tft,omitempty"`
 	// Example: 13l3l3l3l1
 	GCD *string `json:"gcd,omitempty" gtag:"gcd,omitempty"`
+	// Example: 0
+	UDE *string `json:"ude,omitempty" gtag:"ude,omitempty"`
 }

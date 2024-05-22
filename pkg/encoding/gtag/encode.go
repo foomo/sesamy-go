@@ -8,34 +8,49 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mitchellh/mapstructure"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/pkg/errors"
 )
 
-func Encode(input *Payload) (url.Values, io.Reader, error) {
+func Encode(payload *Payload) (url.Values, io.Reader, error) {
 	var richsstsse bool
 	// NOTE: `richsstsse` seems to be last parameter in the query to let's ensure it stays that way
-	if input.Richsstsse != nil {
+	if payload.Richsstsse != nil {
 		richsstsse = true
-		input.Richsstsse = nil
+		payload.Richsstsse = nil
 	}
 
-	remain := input.Remain
-	input.Remain = nil
+	remain := payload.Remain
+	payload.Remain = nil
 
 	data := Data{}
-	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:               &data,
-		TagName:              "gtag",
-		IgnoreUntaggedFields: true,
-		Squash:               true,
-	})
+	var json = jsoniter.Config{
+		TagKey:                        "gtag",
+		EscapeHTML:                    false,
+		MarshalFloatWith6Digits:       true, // will lose precession
+		ObjectFieldMustBeSimpleString: true, // do not unescape object field
+	}.Froze()
+
+	jsonBytes, err := json.Marshal(&payload)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to weakly decode query")
+		return nil, nil, errors.Wrap(err, "failed to marshall payload")
 	}
-	if err := decoder.Decode(input); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to weakly decode query")
+	if err := json.Unmarshal(jsonBytes, &data); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to unmarshall payload")
 	}
+
+	// decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+	// 	Result:               &data,
+	// 	TagName:              "gtag",
+	// 	IgnoreUntaggedFields: true,
+	// 	Squash:               true,
+	// })
+	// if err != nil {
+	// 	return nil, nil, errors.Wrap(err, "failed to weakly decode query")
+	// }
+	// if err := decoder.Decode(payload); err != nil {
+	// 	return nil, nil, errors.Wrap(err, "failed to weakly decode query")
+	// }
 
 	for s, a := range remain {
 		data[s] = a
@@ -67,6 +82,8 @@ func Encode(input *Payload) (url.Values, io.Reader, error) {
 			ret[k] = []string{t}
 		case interface{ String() string }:
 			ret[k] = []string{t.String()}
+		case nil:
+			continue
 		default:
 			panic("unhandled")
 		}
@@ -74,7 +91,7 @@ func Encode(input *Payload) (url.Values, io.Reader, error) {
 
 	var body []string
 	var reader io.Reader
-	maxQueryLength := 2048 //
+	maxQueryLength := 2048
 	if richsstsse {
 		maxQueryLength -= len("&richsstsse")
 	}

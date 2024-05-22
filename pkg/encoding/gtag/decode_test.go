@@ -6,12 +6,16 @@ import (
 	"reflect"
 	"testing"
 
+	testingx "github.com/foomo/go/testing"
+	tagx "github.com/foomo/go/testing/tag"
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDecode(t *testing.T) {
+	testingx.Tags(t, tagx.Short)
+
 	tests := []struct {
 		name string
 		args string
@@ -30,7 +34,7 @@ func TestDecode(t *testing.T) {
 		{
 			name: "select_item",
 			args: "v=2&tid=G-F9XM71K45T&gtm=45he4580v9184715813z89184708445za200&_p=1715430403224&_dbg=1&gcd=13l3l3l2l1&npa=1&dma_cps=sypham&dma=1&cid=179294588.1715353601&ecid=251283723&ul=en-us&sr=3840x1600&_fplc=0&ur=&uaa=arm&uab=64&uafvl=Chromium%3B124.0.6367.119%7CGoogle%2520Chrome%3B124.0.6367.119%7CNot-A.Brand%3B99.0.0.0&uamb=0&uam=&uap=macOS&uapv=14.4.1&uaw=0&are=1&frm=0&pscdl=noapi&sst.gcd=13l3l3l2l1&sst.tft=1715430403224&sst.ude=0&_s=3&sid=1715428762&sct=2&seg=1&dl=https%3A%2F%2Fsesamy.local.bestbytes.net%2F%3Fgtm_debug%3D1715430402906&dr=https%3A%2F%2Ftagassistant.google.com%2F&dt=Home&en=select_item&pr1=idSKU_12345~nmStan%20and%20Friends%20Tee~afGoogle%20Merchandise%20Store~cpSUMMER_FUN~ds2.22~lp0~brGoogle~caApparel~c2Adult~c3Shirts~c4Crew~c5Short%20sleeve~lirelated_products~lnRelated%20Products~vagreen~loChIJIQBpAG2ahYAR_6128GcTUEo~pr10.01~qt3&ep.enable_page_views=false&ep.item_list_id=related_products&ep.item_list_name=Related%20products&_et=89&tfd=8618&richsstsse",
-			want: `{"consent":{"google_consent_default":"13l3l3l2l1"},"campaign":{},"ecommerce":{"items":[{"affiliation":"Google Merchandise Store","coupon":"SUMMER_FUN","discount":"2.22","item_brand":"Google","item_category":"Apparel","item_category2":"Adult","item_category3":"Shirts","item_category4":"Crew","item_category5":"Short sleeve","item_id":"SKU_12345","item_list_id":"related_products","item_list_name":"Related Products","item_name":"Stan and Friends Tee","item_variant":"green","item_list_position":"0","location_id":"ChIJIQBpAG2ahYAR_6128GcTUEo","price":"10.01","quantity":"3"}]},"client_hints":{"screen_resolution":"3840x1600","user_language":"en-us","user_agent_architecture":"arm","user_agent_bitness":"64","user_agent_full_version_list":"Chromium;124.0.6367.119|Google Chrome;124.0.6367.119|Not-A.Brand;99.0.0.0","user_agent_mobile":"0","user_agent_model":"","user_agent_platform":"macOS","user_agent_platform_version":"14.4.1","user_agent_wow_64":"0","user_region":""},"protocol_version":"2","tracking_id":"G-F9XM71K45T","gtmhash_info":"45he4580v9184715813z89184708445za200","client_id":"179294588.1715353601","richsstsse":"","document_location":"https://sesamy.local.bestbytes.net/?gtm_debug=1715430402906","document_title":"Home","document_referrer":"https://tagassistant.google.com/","event_name":"select_item","event_parameter":{"enable_page_views":"false","item_list_id":"related_products","item_list_name":"Related products"},"session_id":"1715428762","non_personalized_ads":"1","sst":{"tft":"1715430403224","gcd":"13l3l3l2l1"}}`,
+			want: `{"consent":{"google_consent_default":"13l3l3l2l1"},"campaign":{},"ecommerce":{"items":[{"affiliation":"Google Merchandise Store","coupon":"SUMMER_FUN","discount":"2.22","item_brand":"Google","item_category":"Apparel","item_category2":"Adult","item_category3":"Shirts","item_category4":"Crew","item_category5":"Short sleeve","item_id":"SKU_12345","item_list_id":"related_products","item_list_name":"Related Products","item_name":"Stan and Friends Tee","item_variant":"green","item_list_position":"0","location_id":"ChIJIQBpAG2ahYAR_6128GcTUEo","price":"10.01","quantity":"3"}]},"client_hints":{"screen_resolution":"3840x1600","user_language":"en-us","user_agent_architecture":"arm","user_agent_bitness":"64","user_agent_full_version_list":"Chromium;124.0.6367.119|Google%20Chrome;124.0.6367.119|Not-A.Brand;99.0.0.0","user_agent_mobile":"0","user_agent_model":"","user_agent_platform":"macOS","user_agent_platform_version":"14.4.1","user_agent_wow_64":"0","user_region":""},"protocol_version":"2","tracking_id":"G-F9XM71K45T","gtmhash_info":"45he4580v9184715813z89184708445za200","client_id":"179294588.1715353601","richsstsse":"","document_location":"https://sesamy.local.bestbytes.net/?gtm_debug=1715430402906","document_title":"Home","document_referrer":"https://tagassistant.google.com/","event_name":"select_item","event_parameter":{"enable_page_views":"false","item_list_id":"related_products","item_list_name":"Related products"},"session_id":"1715428762","non_personalized_ads":"1","sst":{"tft":"1715430403224", "ude":"0", "gcd":"13l3l3l2l1"}}`,
 		},
 	}
 	for _, tt := range tests {

@@ -6,10 +6,10 @@ import (
 
 // Payload https://www.thyngster.com/ga4-measurement-protocol-cheatsheet/
 type Payload struct {
-	Consent     `json:"consent" gtag:",squash"`
-	Campaign    `json:"campaign" gtag:",squash"`
-	ECommerce   `json:"ecommerce" gtag:",squash"`
-	ClientHints `json:"client_hints" gtag:",squash"`
+	Consent     `json:"consent" gtag:",inline,squash"`
+	Campaign    `json:"campaign" gtag:",inline,squash"`
+	ECommerce   `json:"ecommerce" gtag:",inline,squash"`
+	ClientHints `json:"client_hints" gtag:",inline,squash"`
 
 	// --- Request parameters ---
 
@@ -164,5 +164,5 @@ type Payload struct {
 
 	// --- Unresolved ---
 
-	Remain map[string]any `json:"-" gtag:",remain"`
+	Remain map[string]any `json:"-" gtag:"-,omitempy,remain"`
 }

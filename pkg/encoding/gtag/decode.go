@@ -47,11 +47,11 @@ func Decode(values url.Values, target any) error {
 		}
 
 		// default
-		v, err := url.QueryUnescape(value[0])
-		if err != nil {
-			return errors.Wrap(err, "failed to unescape query parameter")
-		}
-		data[key] = v
+		// v, err := url.QueryUnescape(value[0])
+		// if err != nil {
+		// 	return errors.Wrap(err, "failed to unescape query parameter")
+		// }
+		data[key] = value[0]
 	}
 
 	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
