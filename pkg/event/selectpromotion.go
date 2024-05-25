@@ -7,6 +7,6 @@ import (
 
 type SelectPromotion sesamy.Event[params.SelectPromotion[params.Item]]
 
-func NewSelectPromotion(p params.SelectPromotion[params.Item]) SelectPromotion {
-	return SelectPromotion(sesamy.NewEvent(sesamy.EventNameSelectPromotion, p))
+func NewSelectPromotion(p params.SelectPromotion[params.Item]) sesamy.Event[params.SelectPromotion[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameSelectPromotion, p)
 }

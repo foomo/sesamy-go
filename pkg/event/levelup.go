@@ -7,6 +7,6 @@ import (
 
 type LevelUp sesamy.Event[params.LevelUp]
 
-func NewLevelUp(p params.LevelUp) LevelUp {
-	return LevelUp(sesamy.NewEvent(sesamy.EventNameLevelUp, p))
+func NewLevelUp(p params.LevelUp) sesamy.Event[params.LevelUp] {
+	return sesamy.NewEvent(sesamy.EventNameLevelUp, p)
 }

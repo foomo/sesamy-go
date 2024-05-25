@@ -7,6 +7,6 @@ import (
 
 type FileDownload sesamy.Event[params.FileDownload]
 
-func NewFileDownload(p params.FileDownload) FileDownload {
-	return FileDownload(sesamy.NewEvent(sesamy.EventNameFileDownload, p))
+func NewFileDownload(p params.FileDownload) sesamy.Event[params.FileDownload] {
+	return sesamy.NewEvent(sesamy.EventNameFileDownload, p)
 }

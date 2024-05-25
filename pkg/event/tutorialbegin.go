@@ -7,6 +7,6 @@ import (
 
 type TutorialBegin sesamy.Event[params.TutorialBegin]
 
-func NewTutorialBegin(p params.TutorialBegin) TutorialBegin {
-	return TutorialBegin(sesamy.NewEvent(sesamy.EventNameTutorialBegin, p))
+func NewTutorialBegin(p params.TutorialBegin) sesamy.Event[params.TutorialBegin] {
+	return sesamy.NewEvent(sesamy.EventNameTutorialBegin, p)
 }

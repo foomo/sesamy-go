@@ -7,6 +7,6 @@ import (
 
 type CampaignDetails sesamy.Event[params.CampaignDetails]
 
-func NewCampaignDetails(p params.CampaignDetails) CampaignDetails {
-	return CampaignDetails(sesamy.NewEvent(sesamy.EventNameCampaignDetails, p))
+func NewCampaignDetails(p params.CampaignDetails) sesamy.Event[params.CampaignDetails] {
+	return sesamy.NewEvent(sesamy.EventNameCampaignDetails, p)
 }

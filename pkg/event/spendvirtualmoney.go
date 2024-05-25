@@ -7,6 +7,6 @@ import (
 
 type SpendVirtualCurrency sesamy.Event[params.SpendVirtualCurrency]
 
-func NewSpendVirtualCurrency(p params.SpendVirtualCurrency) SpendVirtualCurrency {
-	return SpendVirtualCurrency(sesamy.NewEvent(sesamy.EventNameSpendVirtualCurrency, p))
+func NewSpendVirtualCurrency(p params.SpendVirtualCurrency) sesamy.Event[params.SpendVirtualCurrency] {
+	return sesamy.NewEvent(sesamy.EventNameSpendVirtualCurrency, p)
 }

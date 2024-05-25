@@ -7,6 +7,6 @@ import (
 
 type GenerateLead sesamy.Event[params.GenerateLead]
 
-func NewGenerateLead(p params.GenerateLead) GenerateLead {
-	return GenerateLead(sesamy.NewEvent(sesamy.EventNameGenerateLead, p))
+func NewGenerateLead(p params.GenerateLead) sesamy.Event[params.GenerateLead] {
+	return sesamy.NewEvent(sesamy.EventNameGenerateLead, p)
 }

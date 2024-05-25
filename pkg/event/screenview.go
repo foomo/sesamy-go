@@ -7,6 +7,6 @@ import (
 
 type ScreenView sesamy.Event[params.ScreenView]
 
-func NewScreenView(p params.ScreenView) ScreenView {
-	return ScreenView(sesamy.NewEvent(sesamy.EventNameScreenView, p))
+func NewScreenView(p params.ScreenView) sesamy.Event[params.ScreenView] {
+	return sesamy.NewEvent(sesamy.EventNameScreenView, p)
 }

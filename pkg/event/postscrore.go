@@ -7,6 +7,6 @@ import (
 
 type PostScore sesamy.Event[params.PostScore]
 
-func NewPostScore(p params.PostScore) PostScore {
-	return PostScore(sesamy.NewEvent(sesamy.EventNamePostScore, p))
+func NewPostScore(p params.PostScore) sesamy.Event[params.PostScore] {
+	return sesamy.NewEvent(sesamy.EventNamePostScore, p)
 }

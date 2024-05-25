@@ -7,6 +7,6 @@ import (
 
 type PageView sesamy.Event[params.PageView]
 
-func NewPageView(p params.PageView) PageView {
-	return PageView(sesamy.NewEvent(sesamy.EventNamePageView, p))
+func NewPageView(p params.PageView) sesamy.Event[params.PageView] {
+	return sesamy.NewEvent(sesamy.EventNamePageView, p)
 }

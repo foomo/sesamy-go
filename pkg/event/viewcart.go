@@ -7,6 +7,6 @@ import (
 
 type ViewCart sesamy.Event[params.ViewCart[params.Item]]
 
-func NewViewCart(p params.ViewCart[params.Item]) ViewCart {
-	return ViewCart(sesamy.NewEvent(sesamy.EventNameViewCart, p))
+func NewViewCart(p params.ViewCart[params.Item]) sesamy.Event[params.ViewCart[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameViewCart, p)
 }

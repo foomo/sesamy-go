@@ -7,6 +7,6 @@ import (
 
 type VideoStart sesamy.Event[params.VideoStart]
 
-func NewVideoStart(p params.VideoStart) VideoStart {
-	return VideoStart(sesamy.NewEvent(sesamy.EventNameVideoStart, p))
+func NewVideoStart(p params.VideoStart) sesamy.Event[params.VideoStart] {
+	return sesamy.NewEvent(sesamy.EventNameVideoStart, p)
 }

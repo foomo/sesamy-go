@@ -7,6 +7,6 @@ import (
 
 type Search sesamy.Event[params.Search]
 
-func NewSearch(p params.Search) Search {
-	return Search(sesamy.NewEvent(sesamy.EventNameSearch, p))
+func NewSearch(p params.Search) sesamy.Event[params.Search] {
+	return sesamy.NewEvent(sesamy.EventNameSearch, p)
 }

@@ -7,6 +7,6 @@ import (
 
 type LevelEnd sesamy.Event[params.LevelEnd]
 
-func NewLevelEnd(p params.LevelEnd) LevelEnd {
-	return LevelEnd(sesamy.NewEvent(sesamy.EventNameLevelEnd, p))
+func NewLevelEnd(p params.LevelEnd) sesamy.Event[params.LevelEnd] {
+	return sesamy.NewEvent(sesamy.EventNameLevelEnd, p)
 }

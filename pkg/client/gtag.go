@@ -1,16 +1,17 @@
-package gtag
+package client
 
 import (
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 type (
-	Client struct {
+	GTag struct {
 		l               *zap.Logger
 		path            string
 		host            string
@@ -18,37 +19,37 @@ type (
 		trackingID      string
 		protocolVersion string
 		httpClient      *http.Client
-		middlewares     []ClientMiddleware
+		middlewares     []GTagMiddleware
 	}
-	ClientOption     func(*Client)
-	ClientHandler    func(r *http.Request, event *Payload) error
-	ClientMiddleware func(next ClientHandler) ClientHandler
+	GTagOption     func(*GTag)
+	GTagHandler    func(r *http.Request, payload *gtag.Payload) error
+	GTagMiddleware func(next GTagHandler) GTagHandler
 )
 
 // ------------------------------------------------------------------------------------------------
 // ~ Options
 // ------------------------------------------------------------------------------------------------
 
-func ClientWithHTTPClient(v *http.Client) ClientOption {
-	return func(o *Client) {
+func GTagWithHTTPClient(v *http.Client) GTagOption {
+	return func(o *GTag) {
 		o.httpClient = v
 	}
 }
 
-func ClientWithPath(v string) ClientOption {
-	return func(o *Client) {
+func GTagWithPath(v string) GTagOption {
+	return func(o *GTag) {
 		o.path = v
 	}
 }
 
-func ClientWithCookies(v ...string) ClientOption {
-	return func(o *Client) {
+func GTagWithCookies(v ...string) GTagOption {
+	return func(o *GTag) {
 		o.cookies = append(o.cookies, v...)
 	}
 }
 
-func ClientWithMiddlewares(v ...ClientMiddleware) ClientOption {
-	return func(o *Client) {
+func GTagWithMiddlewares(v ...GTagMiddleware) GTagOption {
+	return func(o *GTag) {
 		o.middlewares = append(o.middlewares, v...)
 	}
 }
@@ -57,8 +58,8 @@ func ClientWithMiddlewares(v ...ClientMiddleware) ClientOption {
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
 
-func NewClient(l *zap.Logger, host, trackingID string, opts ...ClientOption) *Client {
-	inst := &Client{
+func NewGTag(l *zap.Logger, host, trackingID string, opts ...GTagOption) *GTag {
+	inst := &GTag{
 		l:               l,
 		host:            host,
 		path:            "/g/collect",
@@ -71,14 +72,12 @@ func NewClient(l *zap.Logger, host, trackingID string, opts ...ClientOption) *Cl
 		opt(inst)
 	}
 	inst.middlewares = append(inst.middlewares,
-		MiddlewareRichsstsse,
-		MiddlewareTrackingID(inst.trackingID),
-		// MiddlewarIgnoreReferrer("1"),
-		MiddlewarProtocolVersion("2"),
-		// MiddlewarDebug,
-		MiddlewarClientID,
-		MiddlewarSessionID(inst.trackingID),
-		MiddlewarDocument,
+		GTagMiddlewareRichsstsse,
+		GTagMiddlewareTrackingID(inst.trackingID),
+		GTagMiddlewarProtocolVersion("2"),
+		GTagMiddlewarIsDebug,
+		GTagMiddlewarClientID,
+		GTagMiddlewarSessionID(inst.trackingID),
 	)
 	return inst
 }
@@ -87,7 +86,7 @@ func NewClient(l *zap.Logger, host, trackingID string, opts ...ClientOption) *Cl
 // ~ Getter
 // ------------------------------------------------------------------------------------------------
 
-func (c *Client) HTTPClient() *http.Client {
+func (c *GTag) HTTPClient() *http.Client {
 	return c.httpClient
 }
 
@@ -95,32 +94,24 @@ func (c *Client) HTTPClient() *http.Client {
 // ~ Public methods
 // ------------------------------------------------------------------------------------------------
 
-func (c *Client) Send(r *http.Request, event Marshler) error {
-	e, err := event.MarshalMPv2()
-	if err != nil {
-		return err
-	}
-	return c.SendEvent(r, e)
-}
-
-func (c *Client) SendEvent(r *http.Request, event *Payload) error {
-	next := c.SendRawEvent
+func (c *GTag) Send(r *http.Request, payload *gtag.Payload) error {
+	next := c.SendRaw
 	for _, middleware := range c.middlewares {
 		next = middleware(next)
 	}
-	return next(r, event)
+	return next(r, payload)
 }
 
-func (c *Client) SendRawEvent(r *http.Request, event *Payload) error {
-	values, body, err := Encode(event)
+func (c *GTag) SendRaw(r *http.Request, payload *gtag.Payload) error {
+	values, body, err := gtag.Encode(payload)
 	if err != nil {
-		return errors.Wrap(err, "failed to encode event")
+		return errors.Wrap(err, "failed to encode payload")
 	}
 
 	req, err := http.NewRequestWithContext(
 		r.Context(),
 		http.MethodPost,
-		fmt.Sprintf("%s%s?%s", c.host, c.path, EncodeValues(values)),
+		fmt.Sprintf("%s%s?%s", c.host, c.path, gtag.EncodeValues(values)),
 		body,
 	)
 	if err != nil {

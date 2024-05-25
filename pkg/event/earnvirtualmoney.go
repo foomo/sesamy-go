@@ -7,6 +7,6 @@ import (
 
 type EarnVirtualMoney sesamy.Event[params.EarnVirtualMoney]
 
-func NewEarnVirtualMoney(p params.EarnVirtualMoney) EarnVirtualMoney {
-	return EarnVirtualMoney(sesamy.NewEvent(sesamy.EventNameEarnVirtualMoney, p))
+func NewEarnVirtualMoney(p params.EarnVirtualMoney) sesamy.Event[params.EarnVirtualMoney] {
+	return sesamy.NewEvent(sesamy.EventNameEarnVirtualMoney, p)
 }

@@ -7,6 +7,6 @@ import (
 
 type JoinGroup sesamy.Event[params.JoinGroup]
 
-func NewJoinGroup(p params.JoinGroup) JoinGroup {
-	return JoinGroup(sesamy.NewEvent(sesamy.EventNameJoinGroup, p))
+func NewJoinGroup(p params.JoinGroup) sesamy.Event[params.JoinGroup] {
+	return sesamy.NewEvent(sesamy.EventNameJoinGroup, p)
 }

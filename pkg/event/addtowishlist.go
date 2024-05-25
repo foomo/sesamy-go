@@ -7,6 +7,6 @@ import (
 
 type AddToWishlist sesamy.Event[params.AddToWishlist[params.Item]]
 
-func NewAddToWishlist(p params.AddToWishlist[params.Item]) AddToWishlist {
-	return AddToWishlist(sesamy.NewEvent(sesamy.EventNameAddToWishlist, p))
+func NewAddToWishlist(p params.AddToWishlist[params.Item]) sesamy.Event[params.AddToWishlist[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameAddToWishlist, p)
 }

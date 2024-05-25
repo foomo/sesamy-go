@@ -7,6 +7,6 @@ import (
 
 type VideoProgress sesamy.Event[params.VideoProgress]
 
-func NewVideoProgress(p params.VideoProgress) VideoProgress {
-	return VideoProgress(sesamy.NewEvent(sesamy.EventNameVideoProgress, p))
+func NewVideoProgress(p params.VideoProgress) sesamy.Event[params.VideoProgress] {
+	return sesamy.NewEvent(sesamy.EventNameVideoProgress, p)
 }

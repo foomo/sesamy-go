@@ -7,6 +7,6 @@ import (
 
 type TutorialComplete sesamy.Event[params.TutorialComplete]
 
-func NewTutorialComplete(p params.TutorialComplete) TutorialComplete {
-	return TutorialComplete(sesamy.NewEvent(sesamy.EventNameTutorialComplete, p))
+func NewTutorialComplete(p params.TutorialComplete) sesamy.Event[params.TutorialComplete] {
+	return sesamy.NewEvent(sesamy.EventNameTutorialComplete, p)
 }

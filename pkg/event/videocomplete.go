@@ -7,6 +7,6 @@ import (
 
 type VideoComplete sesamy.Event[params.VideoComplete]
 
-func NewVideoComplete(p params.VideoComplete) VideoComplete {
-	return VideoComplete(sesamy.NewEvent(sesamy.EventNameVideoComplete, p))
+func NewVideoComplete(p params.VideoComplete) sesamy.Event[params.VideoComplete] {
+	return sesamy.NewEvent(sesamy.EventNameVideoComplete, p)
 }

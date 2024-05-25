@@ -7,6 +7,6 @@ import (
 
 type UserEngagement sesamy.Event[params.UserEngagement]
 
-func NewUserEngagement(p params.UserEngagement) UserEngagement {
-	return UserEngagement(sesamy.NewEvent(sesamy.EventNameUserEngagement, p))
+func NewUserEngagement(p params.UserEngagement) sesamy.Event[params.UserEngagement] {
+	return sesamy.NewEvent(sesamy.EventNameUserEngagement, p)
 }

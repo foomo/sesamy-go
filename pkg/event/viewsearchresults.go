@@ -7,6 +7,6 @@ import (
 
 type ViewSearchResults sesamy.Event[params.ViewSearchResults]
 
-func NewViewSearchResults(p params.ViewSearchResults) ViewSearchResults {
-	return ViewSearchResults(sesamy.NewEvent(sesamy.EventNameViewSearchResults, p))
+func NewViewSearchResults(p params.ViewSearchResults) sesamy.Event[params.ViewSearchResults] {
+	return sesamy.NewEvent(sesamy.EventNameViewSearchResults, p)
 }

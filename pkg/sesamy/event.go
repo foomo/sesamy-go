@@ -13,3 +13,10 @@ func NewEvent[P any](name EventName, params P) Event[P] {
 		Params: params,
 	}
 }
+
+func (e Event[P]) AnyEvent() Event[any] {
+	return Event[any]{
+		Name:   e.Name,
+		Params: e.Params,
+	}
+}

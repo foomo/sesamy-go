@@ -56,7 +56,7 @@ type Payload struct {
 	// EventDebugID *string `json:"event_debug_id,omitempty" gtag:"edid,omitempty"`
 	// If an event contains this parameters it won't be processed and it will show on on the debug View in GA4
 	// Example: 1
-	// IsDebug *string `json:"is_debug,omitempty" gtag:"_dbg,omitempty"`
+	IsDebug *string `json:"is_debug,omitempty" gtag:"_dbg,omitempty"`
 	// If the current request has a referrer, it will be ignored at processing level
 	// Example: 1
 	// IgnoreReferrer *string `json:"ignore_referrer,omitempty" gtag:"ir,omitempty"`

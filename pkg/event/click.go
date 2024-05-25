@@ -7,6 +7,6 @@ import (
 
 type Click sesamy.Event[params.Click]
 
-func NewClick(p params.Click) Click {
-	return Click(sesamy.NewEvent(sesamy.EventNameClick, p))
+func NewClick(p params.Click) sesamy.Event[params.Click] {
+	return sesamy.NewEvent(sesamy.EventNameClick, p)
 }

@@ -7,6 +7,6 @@ import (
 
 type SessionStart sesamy.Event[params.SessionStart]
 
-func NewSessionStart(p params.SessionStart) SessionStart {
-	return SessionStart(sesamy.NewEvent(sesamy.EventNameSessionStart, p))
+func NewSessionStart(p params.SessionStart) sesamy.Event[params.SessionStart] {
+	return sesamy.NewEvent(sesamy.EventNameSessionStart, p)
 }

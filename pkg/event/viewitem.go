@@ -7,6 +7,6 @@ import (
 
 type ViewItem sesamy.Event[params.ViewItem[params.Item]]
 
-func NewViewItem(p params.ViewItem[params.Item]) ViewItem {
-	return ViewItem(sesamy.NewEvent(sesamy.EventNameViewItem, p))
+func NewViewItem(p params.ViewItem[params.Item]) sesamy.Event[params.ViewItem[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameViewItem, p)
 }

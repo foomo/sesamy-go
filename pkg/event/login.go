@@ -7,6 +7,6 @@ import (
 
 type Login sesamy.Event[params.Login]
 
-func NewLogin(p params.Login) Login {
-	return Login(sesamy.NewEvent(sesamy.EventNameLogin, p))
+func NewLogin(p params.Login) sesamy.Event[params.Login] {
+	return sesamy.NewEvent(sesamy.EventNameLogin, p)
 }

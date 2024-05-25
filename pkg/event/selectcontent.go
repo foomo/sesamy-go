@@ -7,6 +7,6 @@ import (
 
 type SelectContent sesamy.Event[params.SelectContent]
 
-func NewSelectContent(p params.SelectContent) SelectContent {
-	return SelectContent(sesamy.NewEvent(sesamy.EventNameSelectContent, p))
+func NewSelectContent(p params.SelectContent) sesamy.Event[params.SelectContent] {
+	return sesamy.NewEvent(sesamy.EventNameSelectContent, p)
 }

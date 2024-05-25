@@ -7,6 +7,6 @@ import (
 
 type SelectItem sesamy.Event[params.SelectItem[params.Item]]
 
-func NewSelectItem(p params.SelectItem[params.Item]) SelectItem {
-	return SelectItem(sesamy.NewEvent(sesamy.EventNameSelectItem, p))
+func NewSelectItem(p params.SelectItem[params.Item]) sesamy.Event[params.SelectItem[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameSelectItem, p)
 }

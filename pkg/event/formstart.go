@@ -7,6 +7,6 @@ import (
 
 type FormStart sesamy.Event[params.FormStart]
 
-func NewFormStart(p params.FormStart) FormStart {
-	return FormStart(sesamy.NewEvent(sesamy.EventNameFormStart, p))
+func NewFormStart(p params.FormStart) sesamy.Event[params.FormStart] {
+	return sesamy.NewEvent(sesamy.EventNameFormStart, p)
 }

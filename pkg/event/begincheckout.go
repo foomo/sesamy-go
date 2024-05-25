@@ -7,6 +7,6 @@ import (
 
 type BeginCheckout sesamy.Event[params.BeginCheckout[params.Item]]
 
-func NewBeginCheckout(p params.BeginCheckout[params.Item]) BeginCheckout {
-	return BeginCheckout(sesamy.NewEvent(sesamy.EventNameBeginCheckout, p))
+func NewBeginCheckout(p params.BeginCheckout[params.Item]) sesamy.Event[params.BeginCheckout[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameBeginCheckout, p)
 }

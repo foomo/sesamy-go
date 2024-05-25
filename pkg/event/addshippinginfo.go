@@ -7,6 +7,6 @@ import (
 
 type AddShippingInfo sesamy.Event[params.AddShippingInfo[params.Item]]
 
-func NewAddShippingInfo(p params.AddShippingInfo[params.Item]) AddShippingInfo {
-	return AddShippingInfo(sesamy.NewEvent(sesamy.EventNameAddShippingInfo, p))
+func NewAddShippingInfo(p params.AddShippingInfo[params.Item]) sesamy.Event[params.AddShippingInfo[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameAddShippingInfo, p)
 }

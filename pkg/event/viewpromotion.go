@@ -7,6 +7,6 @@ import (
 
 type ViewPromotion sesamy.Event[params.ViewPromotion[params.Item]]
 
-func NewViewPromotion(p params.ViewPromotion[params.Item]) ViewPromotion {
-	return ViewPromotion(sesamy.NewEvent(sesamy.EventNameViewPromotion, p))
+func NewViewPromotion(p params.ViewPromotion[params.Item]) sesamy.Event[params.ViewPromotion[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameViewPromotion, p)
 }

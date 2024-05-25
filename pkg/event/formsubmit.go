@@ -7,6 +7,6 @@ import (
 
 type FormSubmit sesamy.Event[params.FormSubmit]
 
-func NewFormSubmit(p params.FormSubmit) FormSubmit {
-	return FormSubmit(sesamy.NewEvent(sesamy.EventNameFormSubmit, p))
+func NewFormSubmit(p params.FormSubmit) sesamy.Event[params.FormSubmit] {
+	return sesamy.NewEvent(sesamy.EventNameFormSubmit, p)
 }

@@ -7,6 +7,6 @@ import (
 
 type RemoveFromCart sesamy.Event[params.RemoveFromCart[params.Item]]
 
-func NewRemoveFromCart(p params.RemoveFromCart[params.Item]) RemoveFromCart {
-	return RemoveFromCart(sesamy.NewEvent(sesamy.EventNameRemoveFromCart, p))
+func NewRemoveFromCart(p params.RemoveFromCart[params.Item]) sesamy.Event[params.RemoveFromCart[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameRemoveFromCart, p)
 }

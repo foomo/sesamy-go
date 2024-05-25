@@ -7,6 +7,6 @@ import (
 
 type AddToCart sesamy.Event[params.AddToCart[params.Item]]
 
-func NewAddToCart(p params.AddToCart[params.Item]) AddToCart {
-	return AddToCart(sesamy.NewEvent(sesamy.EventNameAddToCart, p))
+func NewAddToCart(p params.AddToCart[params.Item]) sesamy.Event[params.AddToCart[params.Item]] {
+	return sesamy.NewEvent(sesamy.EventNameAddToCart, p)
 }

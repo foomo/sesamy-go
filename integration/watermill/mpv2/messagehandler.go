@@ -8,9 +8,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-func MessageHandler(handler func(payload *mpv2.Payload[any], msg *message.Message) error) func(msg *message.Message) ([]*message.Message, error) {
+func MessageHandler(handler func(payload *mpv2.Payload[map[string]any], msg *message.Message) error) func(msg *message.Message) ([]*message.Message, error) {
 	return func(msg *message.Message) ([]*message.Message, error) {
-		var payload *mpv2.Payload[any]
+		var payload *mpv2.Payload[map[string]any]
 
 		// unmarshal payload
 		if err := json.Unmarshal(msg.Payload, &payload); err != nil {
