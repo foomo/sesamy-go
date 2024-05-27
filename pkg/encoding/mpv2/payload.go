@@ -14,4 +14,5 @@ type Payload[P any] struct {
 	NonPersonalizedAds bool              `json:"non_personalized_ads,omitempty"`
 	Events             []sesamy.Event[P] `json:"events,omitempty"`
 	UserData           *UserData         `json:"user_data,omitempty"`
+	DebugMode          bool              `json:"debug_mode,omitempty"`
 }

@@ -14,16 +14,16 @@ import (
 
 type (
 	Publisher struct {
-		l                  *zap.Logger
-		host               string
-		path               string
-		client             *http.Client
-		marshalMessageFunc PublisherMarshalMessageFunc
-		closed             bool
+		l           *zap.Logger
+		host        string
+		path        string
+		httpClient  *http.Client
+		middlewares []PublisherMiddleware
+		closed      bool
 	}
-	PublisherOption func(*Publisher)
-	// PublisherMarshalMessageFunc transforms the message into a HTTP request to be sent to the specified url.
-	PublisherMarshalMessageFunc func(url string, msg *message.Message) (*http.Request, error)
+	PublisherOption     func(*Publisher)
+	PublisherHandler    func(l *zap.Logger, msg *message.Message) error
+	PublisherMiddleware func(next PublisherHandler) PublisherHandler
 )
 
 // ------------------------------------------------------------------------------------------------
@@ -32,10 +32,10 @@ type (
 
 func NewPublisher(l *zap.Logger, host string, opts ...PublisherOption) *Publisher {
 	inst := &Publisher{
-		l:      l,
-		host:   host,
-		path:   "/mp/collect",
-		client: http.DefaultClient,
+		l:          l,
+		host:       host,
+		path:       "/mp/collect",
+		httpClient: http.DefaultClient,
 	}
 	for _, opt := range opts {
 		opt(inst)
@@ -53,15 +53,15 @@ func PublisherWithPath(v string) PublisherOption {
 	}
 }
 
-func PublisherWithClient(v *http.Client) PublisherOption {
+func PublisherWithHTTPClient(v *http.Client) PublisherOption {
 	return func(o *Publisher) {
-		o.client = v
+		o.httpClient = v
 	}
 }
 
-func PublisherWithMarshalMessageFunc(v PublisherMarshalMessageFunc) PublisherOption {
+func PublisherWithMiddlewares(v ...PublisherMiddleware) PublisherOption {
 	return func(o *Publisher) {
-		o.marshalMessageFunc = v
+		o.middlewares = append(o.middlewares, v...)
 	}
 }
 
@@ -69,8 +69,8 @@ func PublisherWithMarshalMessageFunc(v PublisherMarshalMessageFunc) PublisherOpt
 // ~ Getter
 // ------------------------------------------------------------------------------------------------
 
-func (p *Publisher) Client() *http.Client {
-	return p.client
+func (p *Publisher) HTTPClient() *http.Client {
+	return p.httpClient
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -83,50 +83,16 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 	}
 
 	for _, msg := range messages {
-		req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, fmt.Sprintf("%s%s", p.host, p.path), bytes.NewReader(msg.Payload))
-		if err != nil {
-			return errors.Wrap(err, "failed to create request")
+		// compose middlewares
+		next := p.handle
+		for _, middleware := range p.middlewares {
+			next = middleware(next)
 		}
 
-		for s, s2 := range msg.Metadata {
-			if s == "Cookie" {
-				for _, s3 := range strings.Split(s2, "; ") {
-					val := strings.Split(s3, "=")
-					req.AddCookie(&http.Cookie{
-						Name:  val[0],
-						Value: strings.Join(val[1:], "="),
-					})
-				}
-			} else {
-				req.Header.Set(s, s2)
-			}
-		}
-
-		l := p.l.With(
+		// run handler
+		if err := next(p.l.With(
 			zap.String("message_id", msg.UUID),
-		)
-
-		if err := func() error {
-			resp, err := p.client.Do(req)
-			if err != nil {
-				return errors.Wrapf(err, "failed to publish message: %s", msg.UUID)
-			}
-			defer resp.Body.Close()
-
-			l = l.With(zap.Int("http_status_code", resp.StatusCode))
-
-			if resp.StatusCode >= http.StatusBadRequest {
-				if body, err := io.ReadAll(resp.Body); err == nil {
-					l = l.With(zap.String("http_response", string(body)))
-				}
-				l.Warn("server responded with error")
-				return errors.Wrap(ErrErrorResponse, resp.Status)
-			}
-
-			l.Debug("message published")
-
-			return nil
-		}(); err != nil {
+		), msg); err != nil {
 			return err
 		}
 	}
@@ -140,5 +106,56 @@ func (p *Publisher) Close() error {
 	}
 
 	p.closed = true
+	return nil
+}
+
+// ------------------------------------------------------------------------------------------------
+// ~ Private methods
+// ------------------------------------------------------------------------------------------------
+
+func (p *Publisher) handle(l *zap.Logger, msg *message.Message) error {
+	req, err := http.NewRequestWithContext(msg.Context(), http.MethodPost, fmt.Sprintf("%s%s", p.host, p.path), bytes.NewReader(msg.Payload))
+	if err != nil {
+		return errors.Wrap(err, "failed to create request")
+	}
+
+	for s, s2 := range msg.Metadata {
+		if s == "Cookie" {
+			for _, s3 := range strings.Split(s2, "; ") {
+				val := strings.Split(s3, "=")
+				req.AddCookie(&http.Cookie{
+					Name:  val[0],
+					Value: strings.Join(val[1:], "="),
+				})
+			}
+		} else {
+			req.Header.Set(s, s2)
+		}
+	}
+
+	if err := func() error {
+		resp, err := p.httpClient.Do(req)
+		if err != nil {
+			return errors.Wrapf(err, "failed to publish message: %s", msg.UUID)
+		}
+		defer resp.Body.Close()
+
+		l = l.With(zap.Int("http_status_code", resp.StatusCode))
+
+		if resp.StatusCode >= http.StatusBadRequest {
+			if body, err := io.ReadAll(resp.Body); err == nil {
+				l = l.With(zap.String("http_response", string(body)))
+			}
+			l.Warn("server responded with error")
+			return errors.Wrap(ErrErrorResponse, resp.Status)
+		}
+
+		l.Debug("message published")
+
+		return nil
+	}(); err != nil {
+		return err
+	}
+
 	return nil
 }

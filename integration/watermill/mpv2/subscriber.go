@@ -58,6 +58,10 @@ func NewSubscriber(l *zap.Logger, opts ...SubscriberOption) *Subscriber {
 	return inst
 }
 
+// ------------------------------------------------------------------------------------------------
+// ~ Public methods
+// ------------------------------------------------------------------------------------------------
+
 func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)

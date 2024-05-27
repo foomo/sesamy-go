@@ -20,12 +20,11 @@ var (
 
 type (
 	Publisher struct {
-		l                  *zap.Logger
-		host               string
-		path               string
-		client             *http.Client
-		marshalMessageFunc PublisherMarshalMessageFunc
-		closed             bool
+		l      *zap.Logger
+		host   string
+		path   string
+		client *http.Client
+		closed bool
 	}
 	PublisherOption func(*Publisher)
 	// PublisherMarshalMessageFunc transforms the message into a HTTP request to be sent to the specified url.
@@ -62,12 +61,6 @@ func PublisherWithPath(v string) PublisherOption {
 func PublisherWithClient(v *http.Client) PublisherOption {
 	return func(o *Publisher) {
 		o.client = v
-	}
-}
-
-func PublisherWithMarshalMessageFunc(v PublisherMarshalMessageFunc) PublisherOption {
-	return func(o *Publisher) {
-		o.marshalMessageFunc = v
 	}
 }
 

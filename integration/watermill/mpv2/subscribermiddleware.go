@@ -34,6 +34,15 @@ func SubscriberMiddlewareUserID(cookieName string) SubscriberMiddleware {
 	}
 }
 
+func SubscriberMiddlewareDebugMode(next SubscriberHandler) SubscriberHandler {
+	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+		if session.IsGTMDebug(r) {
+			payload.DebugMode = true
+		}
+		return next(l, r, payload)
+	}
+}
+
 func SubscriberMiddlewareTimestamp(next SubscriberHandler) SubscriberHandler {
 	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
 		payload.TimestampMicros = time.Now().UnixMicro()

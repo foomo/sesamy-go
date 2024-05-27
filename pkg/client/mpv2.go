@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"time"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
@@ -95,11 +94,6 @@ func (c *MPv2) HTTPClient() *http.Client {
 func (c *MPv2) Collect(r *http.Request, events ...sesamy.AnyEvent) error {
 	anyEvents := make([]sesamy.Event[any], len(events))
 	for i, event := range events {
-		fmt.Println("-----------")
-		t := reflect.TypeOf(event)
-		x := reflect.New(t)
-		fmt.Println(x)
-		fmt.Println("-----------")
 		anyEvents[i] = event.AnyEvent()
 	}
 

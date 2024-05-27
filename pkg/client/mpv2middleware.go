@@ -20,3 +20,12 @@ func MPv2MiddlewarClientID(next MPv2Handler) MPv2Handler {
 		return next(r, payload)
 	}
 }
+
+func MPv2MiddlewarDebugMode(next MPv2Handler) MPv2Handler {
+	return func(r *http.Request, payload *mpv2.Payload[any]) error {
+		if session.IsGTMDebug(r) {
+			payload.DebugMode = true
+		}
+		return next(r, payload)
+	}
+}
