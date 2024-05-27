@@ -1,6 +1,7 @@
 package gtagencode
 
 import (
+	"encoding/json"
 	"maps"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
@@ -10,18 +11,13 @@ import (
 
 func MPv2(source gtag.Payload, target any) error {
 	var sourceData map[string]any
-	// encode gtag event to map
-	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-		Result:               &sourceData,
-		TagName:              "json",
-		IgnoreUntaggedFields: true,
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to create event decoder")
-	}
 
-	if err := dec.Decode(source); err != nil {
-		return errors.Wrap(err, "failed to decode event")
+	out, err := json.Marshal(source)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal source")
+	}
+	if err = json.Unmarshal(out, &sourceData); err != nil {
+		return errors.Wrap(err, "failed to unmarshal source")
 	}
 
 	// transorm map to match mpv2 format

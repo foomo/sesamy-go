@@ -67,7 +67,7 @@ func TestSelectItem_Pointer(t *testing.T) {
 	// 	fmt.Println(string(out))
 	// }
 
-	err = mpv2encode.GTag(*intermediate, incoming)
+	err = mpv2encode.GTag(*intermediate, &incoming)
 	require.NoError(t, err)
 	assert.Equal(t, iso4217.EUR, gtag.Get(incoming.ECommerce.Currency))
 }
