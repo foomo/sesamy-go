@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"go.uber.org/zap"
 )
@@ -22,11 +21,12 @@ func PublisherMiddlewareDebugMode(next PublisherHandler) PublisherHandler {
 				}
 				payload.Events[i] = event
 			}
-			spew.Dump(payload.Events)
+
 			out, err := json.Marshal(payload)
 			if err != nil {
 				return err
 			}
+
 			msg.Payload = out
 		}
 		return next(l, msg)
