@@ -4,12 +4,11 @@ import (
 	"maps"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
-	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
 
-func MPv2[P any](source gtag.Payload, target *mpv2.Payload[P]) error {
+func MPv2(source gtag.Payload, target any) error {
 	var sourceData map[string]any
 	// encode gtag event to map
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{

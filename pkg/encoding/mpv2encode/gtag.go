@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
 
-func GTag[P any](source mpv2.Payload[P], target *gtag.Payload) error {
+func GTag[P any](source mpv2.Payload[P], target any) error {
 	targetData := map[string]any{
 		"client_id":            source.ClientID,
 		"user_id":              source.UserID,
@@ -50,23 +49,18 @@ func GTag[P any](source mpv2.Payload[P], target *gtag.Payload) error {
 		targetData["event_name"] = sourceData["name"]
 
 		if params, ok := sourceData["params"].(map[string]any); ok {
-			targetEcommerceData := map[string]any{
-				"currency":       params["currency"],
-				"promotion_id":   params["promotion_id"],
-				"promotion_name": params["promotion_name"],
-				"location_id":    params["location_id"],
-				"is_conversion":  params["is_conversion"],
-			}
+			targetData["currency"] = params["currency"]
+			targetData["promotion_id"] = params["promotion_id"]
+			targetData["promotion_name"] = params["promotion_name"]
+			targetData["location_id"] = params["location_id"]
+			targetData["is_conversion"] = params["is_conversion"]
+			targetData["items"] = params["items"]
 			delete(params, "currency")
 			delete(params, "promotion_id")
 			delete(params, "promotion_name")
 			delete(params, "location_id")
 			delete(params, "is_conversion")
-
-			targetData["ecommerce"] = targetEcommerceData
-			targetData["items"] = params["items"]
 			delete(params, "items")
-
 			{ // user_property
 				targetEventProperty := map[string]any{}
 				targetEventPropertyNumber := map[string]any{}
@@ -91,7 +85,7 @@ func GTag[P any](source mpv2.Payload[P], target *gtag.Payload) error {
 	dec, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
 		WeaklyTypedInput:     true,
 		Squash:               true,
-		Result:               &target,
+		Result:               target,
 		TagName:              "json",
 		IgnoreUntaggedFields: true,
 	})
