@@ -10,6 +10,7 @@ import (
 	"github.com/foomo/sesamy-go/pkg/client"
 	"github.com/foomo/sesamy-go/pkg/event"
 	"github.com/foomo/sesamy-go/pkg/event/params"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -20,8 +21,9 @@ func TestNewMPv2(t *testing.T) {
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Helper()
 		out, err := httputil.DumpRequest(r, true)
-		require.NoError(t, err)
-		t.Log(string(out))
+		if assert.NoError(t, err) {
+			t.Log(string(out))
+		}
 	}))
 
 	c := client.NewMPv2(l, s.URL)
