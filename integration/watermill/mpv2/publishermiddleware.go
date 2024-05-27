@@ -16,7 +16,18 @@ func PublisherMiddlewareDebugMode(next PublisherHandler) PublisherHandler {
 			return err
 		}
 		if payload.DebugMode {
+			for i, event := range payload.Events {
+				if params, ok := event.Params.(map[string]any); ok {
+					params["debug_mode"] = "1"
+				}
+				payload.Events[i] = event
+			}
 			spew.Dump(payload.Events)
+			out, err := json.Marshal(payload)
+			if err != nil {
+				return err
+			}
+			msg.Payload = out
 		}
 		return next(l, msg)
 	}
