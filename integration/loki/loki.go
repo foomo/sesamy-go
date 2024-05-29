@@ -27,25 +27,23 @@ const (
 	defaultMaxReponseBufferLen = 1024
 )
 
-// Loki is a io.Writer, that writes given log entries by pushing
-// directly to the given loki server URL. Each `Push` instance handles for a single tenant.
-// No batching of log lines happens when sending to Loki.
 type (
 	Loki struct {
 		l        *zap.Logger
 		endpoint string
 
 		// channel for incoming logs
-		entries    chan logproto.Entry
-		batchSize  int
-		bufferSize int
+		entries chan logproto.Entry
 
-		// shutdown channels
+		// shutdown
 		cancel context.CancelFunc
 
+		// options
+		backoff    *backoff.Config
+		batchSize  int
+		bufferSize int
 		userAgent  string
 		httpClient *http.Client
-		backoff    *backoff.Config
 	}
 	Option func(*Loki)
 )
@@ -122,7 +120,7 @@ func (p *Loki) Start(ctx context.Context) {
 	utils.Batch(ctx, p.entries, p.batchSize, p.process)
 }
 
-func (p *Loki) Write(ts time.Time, payload mpv2.Payload[any]) {
+func (p *Loki) Write(payload mpv2.Payload[any]) {
 	var metadata push.LabelsAdapter
 	if payload.UserID != "" {
 		metadata = append(metadata, push.LabelAdapter{
