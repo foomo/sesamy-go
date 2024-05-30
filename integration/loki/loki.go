@@ -114,56 +114,66 @@ func New(l *zap.Logger, addr string, opts ...Option) *Loki {
 }
 
 // Start pulls lines out of the channel and sends them to Loki
-func (p *Loki) Start(ctx context.Context) {
+func (l *Loki) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
-	p.cancel = cancel
-	utils.Batch(ctx, p.entries, p.batchSize, p.process)
+	l.cancel = cancel
+	utils.Batch(ctx, l.entries, l.batchSize, l.process)
 }
 
-func (p *Loki) Write(payload mpv2.Payload[any]) {
-	var metadata push.LabelsAdapter
-	if payload.UserID != "" {
-		metadata = append(metadata, push.LabelAdapter{
-			Name:  "user_id",
-			Value: payload.UserID,
-		})
+func (l *Loki) Write(payload mpv2.Payload[any]) {
+	// sanity check
+	if payload.ClientID == "" {
+		l.l.Warn("received event without client id")
+		return
 	}
+
 	for _, event := range payload.Events {
-		metadata := append(metadata, push.LabelAdapter{
-			Name:  "name",
-			Value: event.Name.String(),
-		})
+		// sanity check
+		if event.Name == "" {
+			l.l.Warn("received event without event name")
+			continue
+		}
 
 		line := Line{
+			Name:               event.Name,
 			Params:             event.Params,
-			ClientID:           payload.ClientID,
 			UserID:             payload.UserID,
-			UserProperties:     payload.UserProperties,
 			Consent:            payload.Consent,
-			NonPersonalizedAds: payload.NonPersonalizedAds,
 			UserData:           payload.UserData,
+			ClientID:           payload.ClientID,
+			UserProperties:     payload.UserProperties,
+			NonPersonalizedAds: payload.NonPersonalizedAds,
 			DebugMode:          payload.DebugMode,
 		}
 
 		lineBytes, err := line.Marshal()
 		if err != nil {
-			p.l.Warn("failed to marshal line", zap.Error(err))
+			l.l.Warn("failed to marshal line", zap.Error(err))
 			continue
 		}
 
-		p.entries <- logproto.Entry{
-			Line:               string(lineBytes),
-			Timestamp:          time.UnixMicro(payload.TimestampMicros),
-			StructuredMetadata: metadata,
+		if len(l.entries) == l.bufferSize {
+			l.l.Warn("buffer size reached", zap.Int("size", l.bufferSize))
+		}
+
+		l.entries <- logproto.Entry{
+			Line:      string(lineBytes),
+			Timestamp: time.UnixMicro(payload.TimestampMicros),
+			StructuredMetadata: push.LabelsAdapter{
+				{
+					Name:  "event_name",
+					Value: event.Name.String(),
+				},
+			},
 		}
 	}
 }
 
 // Stop will cancel any ongoing requests and stop the goroutine listening for requests
-func (p *Loki) Stop() {
-	if p.cancel != nil {
-		p.cancel()
-		p.cancel = nil
+func (l *Loki) Stop() {
+	if l.cancel != nil {
+		l.cancel()
+		l.cancel = nil
 	}
 }
 
@@ -171,7 +181,9 @@ func (p *Loki) Stop() {
 // ~ Private methods
 // ------------------------------------------------------------------------------------------------
 
-func (p *Loki) process(entries []logproto.Entry) {
+func (l *Loki) process(entries []logproto.Entry) {
+	l.l.Info("processing entries batch", zap.Int("num", len(entries)))
+
 	labels := model.LabelSet{
 		"name":   "events",
 		"stream": "sesamy",
@@ -186,50 +198,50 @@ func (p *Loki) process(entries []logproto.Entry) {
 		},
 	})
 	if err != nil {
-		p.l.Error("failed to marshal payload to json", zap.Error(err))
+		l.l.Error("failed to marshal payload to json", zap.Error(err))
 		return
 	}
 
 	payload := snappy.Encode(nil, request)
 
 	// We will use a timeout within each attempt to send
-	back := backoff.New(context.Background(), *p.backoff)
+	back := backoff.New(context.Background(), *l.backoff)
 
 	// send log with retry
 	for {
 		var status int
-		status, err = p.send(context.Background(), payload)
+		status, err = l.send(context.Background(), payload)
 		if err == nil {
 			break
 		}
 
 		if status > 0 && status != 429 && status/100 != 5 {
-			p.l.Error("failed to send entry, server rejected push with a non-retryable status code", zap.Error(err), zap.Int("status", status))
+			l.l.Error("failed to send entries, server rejected push with a non-retryable status code", zap.Error(err), zap.Int("status", status))
 			break
 		}
 
 		if !back.Ongoing() {
-			p.l.Error("failed to send entry, retries exhausted, entry will be dropped", zap.Error(err), zap.Int("status", status))
+			l.l.Error("failed to send entries, retries exhausted, entries will be dropped", zap.Error(err), zap.Int("status", status))
 			break
 		}
-		p.l.Warn("failed to send entry, retrying", zap.Error(err), zap.Int("status", status))
+		l.l.Warn("failed to send entries, retrying", zap.Error(err), zap.Int("status", status))
 		back.Wait()
 	}
 }
 
 // send makes one attempt to send the payload to Loki
-func (p *Loki) send(ctx context.Context, payload []byte) (int, error) {
+func (l *Loki) send(ctx context.Context, payload []byte) (int, error) {
 	// Set a timeout for the request
-	ctx, cancel := context.WithTimeout(ctx, p.httpClient.Timeout)
+	ctx, cancel := context.WithTimeout(ctx, l.httpClient.Timeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, p.endpoint, bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, l.endpoint, bytes.NewReader(payload))
 	if err != nil {
 		return -1, errors.Wrap(err, "failed to create request")
 	}
 	req.Header.Set("Content-Type", defaultContentType)
-	req.Header.Set("User-Agent", p.userAgent)
+	req.Header.Set("User-Agent", l.userAgent)
 
-	resp, err := p.httpClient.Do(req)
+	resp, err := l.httpClient.Do(req)
 	if err != nil {
 		return -1, errors.Wrap(err, "failed to send payload")
 	}
@@ -244,7 +256,7 @@ func (p *Loki) send(ctx context.Context, payload []byte) (int, error) {
 	}
 
 	if err := resp.Body.Close(); err != nil {
-		p.l.Error("failed to close response body", zap.Error(err))
+		l.l.Error("failed to close response body", zap.Error(err))
 	}
 
 	return status, err
