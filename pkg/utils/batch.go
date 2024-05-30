@@ -38,24 +38,6 @@ func Batch[T any](ctx context.Context, ch <-chan T, batchSize int, fn func([]T))
 				fn(batch)
 				batch = make([]T, 0, batchSize) // reset
 			}
-		default:
-			if len(batch) > 0 { // partial
-				fmt.Println("<< 5")
-				fn(batch)
-				batch = make([]T, 0, batchSize) // reset
-			} else { // empty
-				// wait for more
-				select {
-				case <-ctx.Done():
-					return
-				case v, ok := <-ch:
-					if !ok {
-						return
-					}
-
-					batch = append(batch, v)
-				}
-			}
 		}
 	}
 }
