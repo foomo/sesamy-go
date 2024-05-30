@@ -182,7 +182,7 @@ func (l *Loki) Stop() {
 // ------------------------------------------------------------------------------------------------
 
 func (l *Loki) process(entries []logproto.Entry) {
-	l.l.Info("processing entries batch", zap.Int("num", len(entries)))
+	l.l.Debug("processing entries batch", zap.Int("num", len(entries)))
 
 	labels := model.LabelSet{
 		"name":   "events",

@@ -139,13 +139,13 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *mpv2.Payloa
 	// wait for ACK
 	select {
 	case <-msg.Acked():
-		l.Info("message acked")
+		l.Debug("message acked")
 		return nil
 	case <-msg.Nacked():
-		l.Info("message nacked")
+		l.Debug("message nacked")
 		return ErrMessageNacked
 	case <-r.Context().Done():
-		l.Info("message cancled")
+		l.Debug("message cancled")
 		return ErrContextCanceled
 	}
 }
