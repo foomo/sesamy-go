@@ -20,12 +20,13 @@ func MPv2(source gtag.Payload, target any) error {
 		return errors.Wrap(err, "failed to unmarshal source")
 	}
 
-	// transorm map to match mpv2 format
+	// transform map to match mpv2 format
 	targetData := map[string]any{
 		"client_id":            source.ClientID,
 		"user_id":              source.UserID,
 		"non_personalized_ads": source.NonPersonalizedAds,
 		"timestamp_micros":     source.SST.TFT,
+		"debug_mode":           source.IsDebug,
 	}
 	if source.SST != nil && source.SST.TFT != nil {
 		targetData["timestamp_micros"] = gtag.Get(source.SST.TFT) + "000"
