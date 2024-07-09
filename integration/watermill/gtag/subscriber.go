@@ -131,9 +131,7 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payloa
 
 	msg := message.NewMessage(s.uuidFunc(), data)
 	l = l.With(zap.String("message_id", msg.UUID))
-	// if labeler, ok := keellog.LabelerFromRequest(r); ok {
-	// 	labeler.Add(zap.String("message_id", msg.UUID))
-	// }
+
 	if payload.EventName != nil {
 		msg.Metadata.Set(MetadataEventName, gtag.Get(payload.EventName).String())
 	}
@@ -142,14 +140,6 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payloa
 	for name, headers := range r.Header {
 		msg.Metadata.Set(name, strings.Join(headers, ","))
 	}
-	//
-	// if cookies := r.Cookies(); len(cookies) > 0 {
-	// 	values := make([]string, len(cookies))
-	// 	for i, cookie := range r.Cookies() {
-	// 		values[i] = cookie.String()
-	// 	}
-	// 	msg.Metadata.Set("Cookie", strings.Join(values, "; "))
-	// }
 
 	for k, v := range msg.Metadata {
 		l = l.With(zap.String(k, v))
