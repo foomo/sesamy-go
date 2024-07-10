@@ -110,28 +110,15 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *mpv2.Payloa
 
 	msg := message.NewMessage(s.uuidFunc(), jsonPayload)
 	l = l.With(zap.String("message_id", msg.UUID))
+	msg.SetContext(context.WithoutCancel(r.Context()))
 
-	// TODO filter headers?
 	for name, headers := range r.Header {
 		msg.Metadata.Set(name, strings.Join(headers, ","))
 	}
 
-	// if cookies := r.Cookies(); len(cookies) > 0 {
-	// 	values := make([]string, len(cookies))
-	// 	for i, cookie := range r.Cookies() {
-	// 		values[i] = cookie.String()
-	// 	}
-	// 	msg.Metadata.Set("Cookie", strings.Join(values, "; "))
-	// }
-
 	for k, v := range msg.Metadata {
 		l = l.With(zap.String(k, v))
 	}
-
-	// TODO different context?
-	ctx, cancelCtx := context.WithCancel(r.Context())
-	msg.SetContext(ctx)
-	defer cancelCtx()
 
 	// send message
 	s.messages <- msg
@@ -145,7 +132,7 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *mpv2.Payloa
 		l.Debug("message nacked")
 		return ErrMessageNacked
 	case <-r.Context().Done():
-		l.Debug("message cancled")
+		l.Debug("message canceled")
 		return ErrContextCanceled
 	}
 }

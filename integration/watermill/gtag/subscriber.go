@@ -131,12 +131,12 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payloa
 
 	msg := message.NewMessage(s.uuidFunc(), data)
 	l = l.With(zap.String("message_id", msg.UUID))
+	msg.SetContext(context.WithoutCancel(r.Context()))
 
 	if payload.EventName != nil {
 		msg.Metadata.Set(MetadataEventName, gtag.Get(payload.EventName).String())
 	}
 
-	// TODO filter headers?
 	for name, headers := range r.Header {
 		msg.Metadata.Set(name, strings.Join(headers, ","))
 	}
@@ -144,11 +144,6 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payloa
 	for k, v := range msg.Metadata {
 		l = l.With(zap.String(k, v))
 	}
-
-	// TODO different context?
-	ctx, cancelCtx := context.WithCancel(r.Context())
-	msg.SetContext(ctx)
-	defer cancelCtx()
 
 	// send message
 	s.messages <- msg
@@ -162,7 +157,7 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payloa
 		l.Debug("message nacked")
 		return ErrMessageNacked
 	case <-r.Context().Done():
-		l.Debug("message cancled")
+		l.Debug("message canceled")
 		return ErrContextCanceled
 	}
 }
