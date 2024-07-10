@@ -18,11 +18,12 @@ import (
 
 type (
 	Subscriber struct {
-		l           *zap.Logger
-		uuidFunc    func() string
-		messages    chan *message.Message
-		middlewares []SubscriberMiddleware
-		closed      bool
+		l            *zap.Logger
+		uuidFunc     func() string
+		messages     chan *message.Message
+		metadataFunc func(r *http.Request) map[string]string
+		middlewares  []SubscriberMiddleware
+		closed       bool
 	}
 	SubscriberOption     func(*Subscriber)
 	SubscriberHandler    func(l *zap.Logger, r *http.Request, payload *gtag.Payload) error
@@ -36,6 +37,12 @@ type (
 func SubscriberWithUUIDFunc(v func() string) SubscriberOption {
 	return func(o *Subscriber) {
 		o.uuidFunc = v
+	}
+}
+
+func SubscriberWithMetadataFunc(v func(r *http.Request) map[string]string) SubscriberOption {
+	return func(o *Subscriber) {
+		o.metadataFunc = v
 	}
 }
 
@@ -139,6 +146,12 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payloa
 
 	for name, headers := range r.Header {
 		msg.Metadata.Set(name, strings.Join(headers, ","))
+	}
+
+	if s.metadataFunc != nil {
+		for k, v := range s.metadataFunc(r) {
+			msg.Metadata.Set(k, v)
+		}
 	}
 
 	for k, v := range msg.Metadata {
