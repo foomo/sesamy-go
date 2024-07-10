@@ -25,7 +25,6 @@ func MPv2(source gtag.Payload, target any) error {
 		"client_id":            source.ClientID,
 		"user_id":              source.UserID,
 		"non_personalized_ads": source.NonPersonalizedAds,
-		"timestamp_micros":     source.SST.TFT,
 		"debug_mode":           source.IsDebug,
 	}
 	if source.SST != nil && source.SST.TFT != nil {
