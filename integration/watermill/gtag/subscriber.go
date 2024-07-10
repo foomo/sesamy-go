@@ -104,7 +104,7 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate
-	if payload.EventName.String() == "" {
+	if payload.EventName == nil || payload.EventName.String() == "" {
 		http.Error(w, "missing event name", http.StatusBadRequest)
 		return
 	}
