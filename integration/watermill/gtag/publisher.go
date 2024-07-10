@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
@@ -98,17 +97,17 @@ func (p *Publisher) Publish(topic string, messages ...*message.Message) error {
 		}
 
 		for s, s2 := range msg.Metadata {
-			if s == "Cookie" {
-				for _, s3 := range strings.Split(s2, "; ") {
-					val := strings.Split(s3, "=")
-					req.AddCookie(&http.Cookie{
-						Name:  val[0],
-						Value: strings.Join(val[1:], "="),
-					})
-				}
-			} else {
-				req.Header.Set(s, s2)
-			}
+			// if s == "Cookie" {
+			// 	for _, s3 := range strings.Split(s2, "; ") {
+			// 		val := strings.Split(s3, "=")
+			// 		req.AddCookie(&http.Cookie{
+			// 			Name:  val[0],
+			// 			Value: strings.Join(val[1:], "="),
+			// 		})
+			// 	}
+			// } else {
+			req.Header.Set(s, s2)
+			// }
 		}
 
 		l := p.l.With(

@@ -21,6 +21,7 @@ type (
 		l           *zap.Logger
 		uuidFunc    func() string
 		messages    chan *message.Message
+		messageFunc func(l *zap.Logger, r *http.Request, msg *message.Message) error
 		middlewares []SubscriberMiddleware
 		closed      bool
 	}
@@ -36,6 +37,12 @@ type (
 func SubscriberWithUUIDFunc(v func() string) SubscriberOption {
 	return func(o *Subscriber) {
 		o.uuidFunc = v
+	}
+}
+
+func SubscriberWithMessageFunc(v func(l *zap.Logger, r *http.Request, msg *message.Message) error) SubscriberOption {
+	return func(o *Subscriber) {
+		o.messageFunc = v
 	}
 }
 
@@ -104,7 +111,7 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// validate
-	if payload.EventName.String() == "" {
+	if payload.EventName == nil || payload.EventName.String() == "" {
 		http.Error(w, "missing event name", http.StatusBadRequest)
 		return
 	}
@@ -131,34 +138,25 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payloa
 
 	msg := message.NewMessage(s.uuidFunc(), data)
 	l = l.With(zap.String("message_id", msg.UUID))
-	// if labeler, ok := keellog.LabelerFromRequest(r); ok {
-	// 	labeler.Add(zap.String("message_id", msg.UUID))
-	// }
+	msg.SetContext(context.WithoutCancel(r.Context()))
+
 	if payload.EventName != nil {
 		msg.Metadata.Set(MetadataEventName, gtag.Get(payload.EventName).String())
 	}
 
-	// TODO filter headers?
 	for name, headers := range r.Header {
 		msg.Metadata.Set(name, strings.Join(headers, ","))
 	}
-	//
-	// if cookies := r.Cookies(); len(cookies) > 0 {
-	// 	values := make([]string, len(cookies))
-	// 	for i, cookie := range r.Cookies() {
-	// 		values[i] = cookie.String()
-	// 	}
-	// 	msg.Metadata.Set("Cookie", strings.Join(values, "; "))
-	// }
+
+	if s.messageFunc != nil {
+		if err := s.messageFunc(l, r, msg); err != nil {
+			return err
+		}
+	}
 
 	for k, v := range msg.Metadata {
 		l = l.With(zap.String(k, v))
 	}
-
-	// TODO different context?
-	ctx, cancelCtx := context.WithCancel(r.Context())
-	msg.SetContext(ctx)
-	defer cancelCtx()
 
 	// send message
 	s.messages <- msg
@@ -172,7 +170,7 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payloa
 		l.Debug("message nacked")
 		return ErrMessageNacked
 	case <-r.Context().Done():
-		l.Debug("message cancled")
+		l.Debug("message canceled")
 		return ErrContextCanceled
 	}
 }
