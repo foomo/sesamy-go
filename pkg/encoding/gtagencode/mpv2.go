@@ -53,12 +53,12 @@ func MPv2(source gtag.Payload, target any) error {
 	if node, ok := sourceData["ecommerce"].(map[string]any); ok {
 		maps.Copy(targetEventDataParams, node)
 	}
-	if node, ok := sourceData["event_parameter"].(map[string]string); ok {
+	if node, ok := sourceData["event_parameter"].(map[string]any); ok {
 		for s, s2 := range node {
 			targetEventDataParams[s] = s2
 		}
 	}
-	if node, ok := sourceData["event_parameter_number"].(map[string]string); ok {
+	if node, ok := sourceData["event_parameter_number"].(map[string]any); ok {
 		for s, s2 := range node {
 			targetEventDataParams[s] = s2
 		}
