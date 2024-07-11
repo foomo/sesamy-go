@@ -2,7 +2,9 @@ package gtagencode
 
 import (
 	"encoding/json"
+	"fmt"
 	"maps"
+	"strconv"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/mitchellh/mapstructure"
@@ -60,7 +62,11 @@ func MPv2(source gtag.Payload, target any) error {
 	}
 	if node, ok := sourceData["event_parameter_number"].(map[string]any); ok {
 		for s, s2 := range node {
-			targetEventDataParams[s] = s2
+			if value, err := strconv.ParseFloat(fmt.Sprintf("%s", s2), 64); err == nil {
+				targetEventDataParams[s] = value
+			} else {
+				targetEventDataParams[s] = s2
+			}
 		}
 	}
 	targetEventData["params"] = targetEventDataParams
