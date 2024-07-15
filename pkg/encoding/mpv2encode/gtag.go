@@ -65,13 +65,16 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 				targetEventProperty := map[string]any{}
 				targetEventPropertyNumber := map[string]any{}
 				for k, v := range params {
-					if s, ok := v.(string); ok {
-						if f, err := strconv.ParseFloat(s, 64); err == nil {
+					switch t := v.(type) {
+					case float64:
+						targetEventPropertyNumber[k] = v
+					case string:
+						if f, err := strconv.ParseFloat(t, 64); err == nil {
 							targetEventPropertyNumber[k] = f
 						} else {
 							targetEventProperty[k] = v
 						}
-					} else {
+					default:
 						targetEventProperty[k] = fmt.Sprintf("%s", v)
 					}
 				}

@@ -15,8 +15,13 @@ const (
 	EventNameBeginCheckout        EventName = "begin_checkout"
 	EventNameCampaignDetails      EventName = "campaign_details"
 	EventNameClick                EventName = "click"
+	EventNameCloseConvertLead     EventName = "close_convert_lead"
+	EventNameCloseUnconvertLead   EventName = "close_unconvert_lead"
+	EventNameDisqualifyLead       EventName = "disqualify_lead"
 	EventNameEarnVirtualMoney     EventName = "earn_virtual_money"
+	EventNameException            EventName = "exception"
 	EventNameFileDownload         EventName = "file_download"
+	EventNameFirstVisit           EventName = "first_visit"
 	EventNameFormStart            EventName = "form_start"
 	EventNameFormSubmit           EventName = "form_submit"
 	EventNameGenerateLead         EventName = "generate_lead"
@@ -28,6 +33,7 @@ const (
 	EventNamePageView             EventName = "page_view"
 	EventNamePostScore            EventName = "post_score"
 	EventNamePurchase             EventName = "purchase"
+	EventNameQualifyLead          EventName = "qualify_lead"
 	EventNameRefund               EventName = "refund"
 	EventNameRemoveFromCart       EventName = "remove_from_cart"
 	EventNameScreenView           EventName = "screen_view"
@@ -52,6 +58,7 @@ const (
 	EventNameViewItemList         EventName = "view_item_list"
 	EventNameViewPromotion        EventName = "view_promotion"
 	EventNameViewSearchResults    EventName = "view_search_results"
+	EventNameWorkingLead          EventName = "working_lead"
 )
 
 func (s EventName) String() string {

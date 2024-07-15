@@ -39,19 +39,6 @@ func Encode(payload *Payload) (url.Values, io.Reader, error) {
 		return nil, nil, errors.Wrap(err, "failed to unmarshall payload")
 	}
 
-	// decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
-	// 	Result:               &data,
-	// 	TagName:              "gtag",
-	// 	IgnoreUntaggedFields: true,
-	// 	Squash:               true,
-	// })
-	// if err != nil {
-	// 	return nil, nil, errors.Wrap(err, "failed to weakly decode query")
-	// }
-	// if err := decoder.Decode(payload); err != nil {
-	// 	return nil, nil, errors.Wrap(err, "failed to weakly decode query")
-	// }
-
 	for s, a := range remain {
 		data[s] = a
 	}
