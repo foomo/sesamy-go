@@ -6,7 +6,7 @@ import (
 	"github.com/foomo/sesamy-go/pkg/sesamy"
 )
 
-const EventNameEmarsysPurchase sesamy.EventName = "emarsys_cart"
+const EventNameEmarsysPurchase sesamy.EventName = "emarsys_purchase"
 
 type EmarsysPurchase sesamy.Event[params.EmarsysPurchase[sesamyparams.Item]]
 
