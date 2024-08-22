@@ -1,6 +1,6 @@
 package params
 
 type EmarsysView[I any] struct {
-	Item       I      `json:"item,omitempty"`
+	Items      []I    `json:"sitem,omitempty"`
 	PageViewID string `json:"page_view_id,omitempty" dlv:"emarsys.page_view_id"`
 }
