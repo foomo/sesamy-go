@@ -1,5 +1,9 @@
 package gtag
 
+import (
+	"strings"
+)
+
 type Consent struct {
 	// Current Google Consent Status. Format 'G1'+'AdsStorageBoolStatus'`+'AnalyticsStorageBoolStatus'
 	// Example:  G101
@@ -13,4 +17,30 @@ type Consent struct {
 	// Will be added with the value "1" if the Google Consent had a default value before getting an update
 	// Example: G111
 	GoogleConsentDefault *string `json:"google_consent_default,omitempty" gtag:"gcd,omitempty"`
+}
+
+// ------------------------------------------------------------------------------------------------
+// ~ Public methods
+// ------------------------------------------------------------------------------------------------
+
+func (c Consent) AdStorage() bool {
+	if c.GoogleConsentUpdate != nil {
+		gcs := *c.GoogleConsentUpdate
+		if strings.HasPrefix(gcs, "G1") && len(gcs) == 4 {
+			return gcs[2:3] == "1"
+		}
+		return false
+	}
+	return true
+}
+
+func (c Consent) AnalyticsStorage() bool {
+	if c.GoogleConsentUpdate != nil {
+		gcs := *c.GoogleConsentUpdate
+		if strings.HasPrefix(gcs, "G1") && len(gcs) == 4 {
+			return gcs[3:4] == "1"
+		}
+		return false
+	}
+	return true
 }
