@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/foomo/sesamy-go/pkg/client"
@@ -34,7 +35,7 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 			}
 
 			var value cookiebot.Cookie
-			if err := yaml.Unmarshal([]byte(data), &value); err != nil {
+			if err := yaml.Unmarshal([]byte(strings.ReplaceAll(data, ":", ": ")), &value); err != nil {
 				l.With(zap.Error(err), zap.String("value", data)).Warn("failed to unmarshal cookie bot cookie")
 				return next(r, payload)
 			}
