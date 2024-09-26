@@ -19,9 +19,10 @@ func MPv2MiddlewarConsent(next client.MPv2Handler) client.MPv2Handler {
 			return next(r, payload)
 		}
 
-		fmt.Println("---> 2")
+		fmt.Println("---> 2: " + cookie.Value)
 		data, err := base64.StdEncoding.DecodeString(cookie.Value)
 		if err != nil {
+			fmt.Println("---> 2: " + err.Error())
 			return next(r, payload)
 		}
 
