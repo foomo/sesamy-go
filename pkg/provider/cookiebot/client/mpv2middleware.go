@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/foomo/sesamy-go/pkg/client"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/provider/cookiebot"
@@ -50,6 +51,7 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 				AdUserData:        consent(value.Marketing),
 				AdPersonalization: consent(value.Statistics),
 			}
+			spew.Dump(payload)
 
 			return next(r, payload)
 		}
