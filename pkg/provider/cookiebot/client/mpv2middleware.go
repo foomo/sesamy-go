@@ -38,6 +38,7 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 				l.With(zap.Error(err)).Warn("failed to unmarshal cookie bot cookie")
 				return next(r, payload)
 			}
+			spew.Dump(value)
 
 			consent := func(b bool) *string {
 				ret := "denied"
