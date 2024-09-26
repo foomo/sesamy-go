@@ -50,8 +50,13 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 			}
 
 			payload.Consent = &mpv2.ConsentData{
-				AdUserData:        consent(value.Marketing),
-				AdPersonalization: consent(value.Statistics),
+				AdStorage:              consent(value.Marketing),
+				AdUserData:             consent(value.Marketing),
+				AdPersonalization:      consent(value.Marketing),
+				PersonalizationStorage: consent(value.Marketing),
+				AnalyticsStorage:       consent(value.Statistics),
+				FunctionalityStorage:   consent(value.Necessary),
+				SecurityStorage:        consent(value.Necessary),
 			}
 			spew.Dump(payload)
 
