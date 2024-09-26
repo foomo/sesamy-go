@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -11,6 +10,7 @@ import (
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/provider/cookiebot"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v2"
 )
 
 func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
@@ -34,7 +34,7 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 			}
 
 			var value cookiebot.Cookie
-			if err := json.Unmarshal([]byte(data), &value); err != nil {
+			if err := yaml.Unmarshal([]byte(data), &value); err != nil {
 				l.With(zap.Error(err), zap.String("value", data)).Warn("failed to unmarshal cookie bot cookie")
 				return next(r, payload)
 			}
