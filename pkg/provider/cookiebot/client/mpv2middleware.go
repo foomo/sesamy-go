@@ -41,15 +41,15 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 			}
 			spew.Dump(value)
 
-			consent := func(b bool) *string {
-				ret := "denied"
+			consent := func(b bool) *mpv2.Consent {
+				ret := mpv2.ConsentDenied
 				if b {
-					ret = "granted"
+					ret = mpv2.ConsentGranted
 				}
 				return &ret
 			}
 
-			payload.Consent = &mpv2.Consent{
+			payload.Consent = &mpv2.ConsentData{
 				AdUserData:        consent(value.Marketing),
 				AdPersonalization: consent(value.Statistics),
 			}
