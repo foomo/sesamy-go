@@ -27,15 +27,15 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 				return next(r, payload)
 			}
 
-			data, err := url.PathUnescape(cookie.Value)
+			data, err := url.QueryUnescape(cookie.Value)
 			if err != nil {
-				l.With(zap.Error(err)).Warn("failed to unescape cookie bot cookie")
+				l.With(zap.Error(err), zap.String("value", cookie.Value)).Warn("failed to unescape cookie bot cookie")
 				return next(r, payload)
 			}
 
 			var value cookiebot.Cookie
 			if err := json.Unmarshal([]byte(data), &value); err != nil {
-				l.With(zap.Error(err)).Warn("failed to unmarshal cookie bot cookie")
+				l.With(zap.Error(err), zap.String("value", data)).Warn("failed to unmarshal cookie bot cookie")
 				return next(r, payload)
 			}
 			spew.Dump(value)
