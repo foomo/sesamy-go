@@ -1,51 +1,57 @@
 package client
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/foomo/sesamy-go/pkg/client"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/provider/cookiebot"
+	"go.uber.org/zap"
 )
 
-func MPv2MiddlewarConsent(next client.MPv2Handler) client.MPv2Handler {
-	return func(r *http.Request, payload *mpv2.Payload[any]) error {
-		fmt.Println("---> 1")
-		cookie, err := r.Cookie(cookiebot.CookieName)
-		if err != nil || cookie.Value == "" {
-			return next(r, payload)
-		}
-
-		fmt.Println("---> 2: " + cookie.Value)
-		data, err := base64.StdEncoding.DecodeString(cookie.Value)
-		if err != nil {
-			fmt.Println("---> 2: " + err.Error())
-			return next(r, payload)
-		}
-
-		var value cookiebot.Cookie
-		fmt.Println("---> 3")
-		if err := json.Unmarshal(data, &value); err != nil {
-			return next(r, payload)
-		}
-
-		consent := func(b bool) *string {
-			ret := "denied"
-			if b {
-				ret = "granted"
+func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
+	return func(next client.MPv2Handler) client.MPv2Handler {
+		return func(r *http.Request, payload *mpv2.Payload[any]) error {
+			cookie, err := r.Cookie(cookiebot.CookieName)
+			if errors.Is(err, http.ErrNoCookie) {
+				return next(r, payload)
+			} else if err != nil {
+				l.With(zap.Error(err)).Warn("failed to retrieve cookie bot cookie")
+				return next(r, payload)
+			} else if cookie.Value == "" {
+				l.With(zap.Error(err)).Warn("empty cookie bot cookie")
+				return next(r, payload)
 			}
-			return &ret
-		}
 
-		fmt.Println("---> 4")
-		payload.Consent = &mpv2.Consent{
-			AdUserData:        consent(value.Marketing),
-			AdPersonalization: consent(value.Statistics),
-		}
+			data, err := url.PathUnescape(cookie.Value)
+			if err != nil {
+				l.With(zap.Error(err)).Warn("failed to unescape cookie bot cookie")
+				return next(r, payload)
+			}
 
-		return next(r, payload)
+			var value cookiebot.Cookie
+			if err := json.Unmarshal([]byte(data), &value); err != nil {
+				l.With(zap.Error(err)).Warn("failed to unmarshal cookie bot cookie")
+				return next(r, payload)
+			}
+
+			consent := func(b bool) *string {
+				ret := "denied"
+				if b {
+					ret = "granted"
+				}
+				return &ret
+			}
+
+			payload.Consent = &mpv2.Consent{
+				AdUserData:        consent(value.Marketing),
+				AdPersonalization: consent(value.Statistics),
+			}
+
+			return next(r, payload)
+		}
 	}
 }
