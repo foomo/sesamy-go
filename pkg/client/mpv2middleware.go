@@ -8,6 +8,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+func MPv2MiddlewarSessionID(trackingID string) MPv2Middleware {
+	return func(next MPv2Handler) MPv2Handler {
+		return func(r *http.Request, payload *mpv2.Payload[any]) error {
+			value, err := session.ParseGASessionID(r, trackingID)
+			if err != nil && !errors.Is(err, http.ErrNoCookie) {
+				return errors.Wrap(err, "failed to parse client cookie")
+			}
+			if value != "" {
+				payload.SessionID = value
+			}
+			return next(r, payload)
+		}
+	}
+}
+
 func MPv2MiddlewarClientID(next MPv2Handler) MPv2Handler {
 	return func(r *http.Request, payload *mpv2.Payload[any]) error {
 		value, err := session.ParseGAClientID(r)
