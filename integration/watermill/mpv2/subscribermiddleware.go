@@ -10,6 +10,21 @@ import (
 	"go.uber.org/zap"
 )
 
+func SubscriberMiddlewareSessionID(trackingID string) SubscriberMiddleware {
+	return func(next SubscriberHandler) SubscriberHandler {
+		return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+			if payload.SessionID == "" {
+				sessionID, err := session.ParseGASessionID(r, trackingID)
+				if err != nil {
+					return err
+				}
+				payload.SessionID = sessionID
+			}
+			return next(l, r, payload)
+		}
+	}
+}
+
 func SubscriberMiddlewareClientID(next SubscriberHandler) SubscriberHandler {
 	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
 		if payload.ClientID == "" {

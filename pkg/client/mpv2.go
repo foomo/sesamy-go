@@ -20,6 +20,8 @@ type (
 		path            string
 		host            string
 		cookies         []string
+		apiSecret       string
+		measurementID   string
 		protocolVersion string
 		httpClient      *http.Client
 		middlewares     []MPv2Middleware
@@ -48,6 +50,18 @@ func MPv2WithPath(v string) MPv2Option {
 func MPv2WithCookies(v ...string) MPv2Option {
 	return func(o *MPv2) {
 		o.cookies = append(o.cookies, v...)
+	}
+}
+
+func MPv2WithAPISecret(v string) MPv2Option {
+	return func(o *MPv2) {
+		o.apiSecret = v
+	}
+}
+
+func MPv2WithMeasurementID(v string) MPv2Option {
+	return func(o *MPv2) {
+		o.measurementID = v
 	}
 }
 
@@ -124,6 +138,15 @@ func (c *MPv2) SendRaw(r *http.Request, payload *mpv2.Payload[any]) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
 	}
+
+	qry := req.URL.Query()
+	if len(c.apiSecret) > 0 {
+		qry.Add("api_secret", c.apiSecret)
+	}
+	if len(c.measurementID) > 0 {
+		qry.Add("measurement_id", c.measurementID)
+	}
+	req.URL.RawQuery = qry.Encode()
 
 	// TODO valiate: copy headers
 	req.Header = r.Header.Clone()
