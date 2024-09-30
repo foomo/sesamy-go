@@ -8,6 +8,14 @@ import (
 	"go.uber.org/zap"
 )
 
+func PublisherMiddlewareIgnoreError(next PublisherHandler) PublisherHandler {
+	return func(l *zap.Logger, msg *message.Message) error {
+		err := next(l, msg)
+		l.With(zap.Error(err)).Warn("ignoring error")
+		return nil
+	}
+}
+
 func PublisherMiddlewareDebugMode(next PublisherHandler) PublisherHandler {
 	return func(l *zap.Logger, msg *message.Message) error {
 		var payload *mpv2.Payload[any]
