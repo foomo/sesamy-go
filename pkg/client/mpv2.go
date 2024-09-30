@@ -16,11 +16,15 @@ import (
 
 type (
 	MPv2 struct {
-		l               *zap.Logger
-		path            string
-		host            string
-		cookies         []string
-		apiSecret       string
+		l       *zap.Logger
+		path    string
+		host    string
+		cookies []string
+		// To create a new secret, navigate in the Google Analytics UI to:
+		// Admin > Data Streams > choose your stream > Measurement Protocol > Create
+		apiSecret string
+		// Measurement ID. The identifier for a Data Stream. Found in the Google Analytics UI under:
+		// Admin > Data Streams > choose your stream > Measurement ID
 		measurementID   string
 		protocolVersion string
 		httpClient      *http.Client
@@ -139,6 +143,7 @@ func (c *MPv2) SendRaw(r *http.Request, payload *mpv2.Payload[any]) error {
 		return errors.Wrap(err, "failed to create request")
 	}
 
+	// query
 	qry := req.URL.Query()
 	if len(c.apiSecret) > 0 {
 		qry.Add("api_secret", c.apiSecret)
