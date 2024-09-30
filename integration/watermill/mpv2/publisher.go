@@ -149,11 +149,8 @@ func (p *Publisher) handle(l *zap.Logger, msg *message.Message) error {
 			if body, err := io.ReadAll(resp.Body); err == nil {
 				l = l.With(zap.String("http_response", string(body)))
 			}
-			l.Warn("server responded with error")
 			return errors.Wrap(ErrErrorResponse, resp.Status)
 		}
-
-		l.Debug("message published")
 
 		return nil
 	}(); err != nil {
