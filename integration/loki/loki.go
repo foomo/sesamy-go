@@ -113,6 +113,10 @@ func New(l *zap.Logger, addr string, opts ...Option) *Loki {
 	return inst
 }
 
+func (l *Loki) Name() string {
+	return "loki"
+}
+
 // Start pulls lines out of the channel and sends them to Loki
 func (l *Loki) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
@@ -176,6 +180,12 @@ func (l *Loki) Stop() {
 		l.cancel()
 		l.cancel = nil
 	}
+}
+
+// Close will cancel any ongoing requests and stop the goroutine listening for requests
+func (l *Loki) Close(ctx context.Context) error {
+	l.Stop()
+	return nil
 }
 
 // ------------------------------------------------------------------------------------------------
