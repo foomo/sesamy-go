@@ -58,11 +58,11 @@ func GTagMiddlewarClientID(next GTagHandler) GTagHandler {
 	}
 }
 
-func GTagMiddlewarSessionID(trackingID string) GTagMiddleware {
-	trackingID = strings.Split(trackingID, "-")[1]
+func GTagMiddlewarSessionID(measurementID string) GTagMiddleware {
+	measurementID = strings.Split(measurementID, "-")[1]
 	return func(next GTagHandler) GTagHandler {
 		return func(r *http.Request, payload *gtag.Payload) error {
-			value, err := session.ParseGASessionID(r, trackingID)
+			value, err := session.ParseGASessionID(r, measurementID)
 			if err != nil && !errors.Is(err, http.ErrNoCookie) {
 				return errors.Wrap(err, "failed to parse session cookie")
 			}

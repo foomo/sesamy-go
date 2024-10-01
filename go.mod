@@ -17,8 +17,8 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
+	github.com/pperaltaisern/watermillzap v1.0.0
 	github.com/prometheus/common v0.55.0
-	github.com/qntfy/kazaam/v4 v4.0.1
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.27.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -56,7 +56,6 @@ require (
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
-	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/gogo/status v1.1.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
@@ -111,7 +110,6 @@ require (
 	github.com/prometheus/exporter-toolkit v0.11.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/prometheus/prometheus v0.51.0 // indirect
-	github.com/qntfy/jsonparser v1.0.2 // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
 	github.com/sercand/kuberesolver/v5 v5.1.1 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect

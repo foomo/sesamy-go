@@ -22,7 +22,46 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-func TestPublisher(t *testing.T) {
+func TestPublisherMiddlewareIgnoreError(t *testing.T) {
+	l := zaptest.NewLogger(t)
+
+	var done atomic.Bool
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		done.Store(true)
+	}))
+
+	p := mpv2.NewPublisher(l, s.URL, mpv2.PublisherWithMiddlewares(mpv2.PublisherMiddlewareIgnoreError))
+
+	payload := encoding.Payload[params.PageView]{
+		ClientID:        "C123456",
+		UserID:          "U123456",
+		TimestampMicros: 1727701064057701,
+		UserProperties:  nil,
+		Consent:         nil,
+		Events: []sesamy.Event[params.PageView]{
+			event.NewPageView(params.PageView{
+				PageTitle:    "Home",
+				PageLocation: "https://foomo.org",
+			}),
+		},
+		UserData:           nil,
+		DebugMode:          true,
+		SessionID:          "S123456",
+		EngagementTimeMSec: 100,
+	}
+
+	jsonPayload, err := json.Marshal(payload)
+	require.NoError(t, err)
+
+	msg := message.NewMessage(watermill.NewUUID(), jsonPayload)
+
+	require.NoError(t, p.Publish("foo", msg))
+
+	assert.Eventually(t, done.Load, time.Second, 50*time.Millisecond)
+}
+
+func TestPublisherMiddlewareEventParams(t *testing.T) {
 	l := zaptest.NewLogger(t)
 
 	var done atomic.Bool
@@ -30,14 +69,14 @@ func TestPublisher(t *testing.T) {
 		out, err := io.ReadAll(r.Body)
 		assert.NoError(t, err)
 
-		expected := `{"client_id":"C123456","user_id":"U123456","timestamp_micros":1727701064057701,"events":[{"name":"page_view","params":{"page_title":"Home","page_location":"https://foomo.org"}}],"debug_mode":true,"session_id":"S123456","engagement_time_msec":100}`
+		expected := `{"client_id":"C123456","user_id":"U123456","timestamp_micros":1727701064057701,"events":[{"name":"page_view","params":{"debug_mode":"1","engagement_time_msec":100,"page_location":"https://foomo.org","page_title":"Home","session_id":"S123456"}}]}`
 		if !assert.JSONEq(t, expected, string(out)) {
 			fmt.Println(string(out))
 		}
 		done.Store(true)
 	}))
 
-	p := mpv2.NewPublisher(l, s.URL)
+	p := mpv2.NewPublisher(l, s.URL, mpv2.PublisherWithMiddlewares(mpv2.PublisherMiddlewareEventParams))
 
 	payload := encoding.Payload[params.PageView]{
 		ClientID:        "C123456",
@@ -61,8 +100,7 @@ func TestPublisher(t *testing.T) {
 
 	msg := message.NewMessage(watermill.NewUUID(), jsonPayload)
 
-	err = p.Publish("foo", msg)
-	require.NoError(t, err)
+	require.NoError(t, p.Publish("foo", msg))
 
-	assert.Eventually(t, done.Load, time.Second, time.Millisecond)
+	assert.Eventually(t, done.Load, time.Second, 50*time.Millisecond)
 }

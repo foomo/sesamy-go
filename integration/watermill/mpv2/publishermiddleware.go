@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// PublisherMiddlewareIgnoreError ignores error responses from the gtm endpoint to prevent retries.
 func PublisherMiddlewareIgnoreError(next PublisherHandler) PublisherHandler {
 	return func(l *zap.Logger, msg *message.Message) error {
 		err := next(l, msg)
@@ -16,6 +17,9 @@ func PublisherMiddlewareIgnoreError(next PublisherHandler) PublisherHandler {
 	}
 }
 
+// PublisherMiddlewareEventParams moves the `debug_mode`, `session_id` & `engagement_time_msec` into the events params
+// since this is required by the measurement protocol but make coding much more complex. That's why it's part of the payload
+// in this library.
 func PublisherMiddlewareEventParams(next PublisherHandler) PublisherHandler {
 	return func(l *zap.Logger, msg *message.Message) error {
 		var payload *mpv2.Payload[any]

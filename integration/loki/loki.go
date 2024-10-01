@@ -135,14 +135,16 @@ func (l *Loki) Write(payload mpv2.Payload[any]) {
 		}
 
 		line := Line{
-			Name:           event.Name,
-			Params:         event.Params,
-			UserID:         payload.UserID,
-			Consent:        payload.Consent,
-			UserData:       payload.UserData,
-			ClientID:       payload.ClientID,
-			UserProperties: payload.UserProperties,
-			DebugMode:      payload.DebugMode,
+			Name:               event.Name,
+			Params:             event.Params,
+			UserID:             payload.UserID,
+			Consent:            payload.Consent,
+			UserData:           payload.UserData,
+			ClientID:           payload.ClientID,
+			UserProperties:     payload.UserProperties,
+			DebugMode:          payload.DebugMode,
+			SessionID:          payload.SessionID,
+			EngagementTimeMSec: payload.EngagementTimeMSec,
 		}
 
 		lineBytes, err := line.Marshal()
