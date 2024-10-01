@@ -142,8 +142,9 @@ func (l *Loki) Write(payload mpv2.Payload[any]) {
 			UserData:           payload.UserData,
 			ClientID:           payload.ClientID,
 			UserProperties:     payload.UserProperties,
-			NonPersonalizedAds: payload.NonPersonalizedAds,
 			DebugMode:          payload.DebugMode,
+			SessionID:          payload.SessionID,
+			EngagementTimeMSec: payload.EngagementTimeMSec,
 		}
 
 		lineBytes, err := line.Marshal()

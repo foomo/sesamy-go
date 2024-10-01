@@ -12,9 +12,8 @@ import (
 
 func GTag[P any](source mpv2.Payload[P], target any) error {
 	targetData := map[string]any{
-		"client_id":            source.ClientID,
-		"user_id":              source.UserID,
-		"non_personalized_ads": source.NonPersonalizedAds,
+		"client_id": source.ClientID,
+		"user_id":   source.UserID,
 	}
 
 	{ // user_property

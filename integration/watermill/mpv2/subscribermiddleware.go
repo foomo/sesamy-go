@@ -7,17 +7,43 @@ import (
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/session"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
+
+func SubscriberMiddlewareSessionID(measurementID string) SubscriberMiddleware {
+	measurementID = strings.Split(measurementID, "-")[1]
+	return func(next SubscriberHandler) SubscriberHandler {
+		return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+			if payload.SessionID == "" {
+				value, err := session.ParseGASessionID(r, measurementID)
+				if err != nil && !errors.Is(err, http.ErrNoCookie) {
+					return errors.Wrap(err, "failed to parse client cookie")
+				}
+				payload.SessionID = value
+			}
+			return next(l, r, payload)
+		}
+	}
+}
 
 func SubscriberMiddlewareClientID(next SubscriberHandler) SubscriberHandler {
 	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
 		if payload.ClientID == "" {
-			clientID, err := session.ParseGAClientID(r)
+			value, err := session.ParseGAClientID(r)
 			if err != nil {
 				return err
 			}
-			payload.ClientID = clientID
+			payload.ClientID = value
+		}
+		return next(l, r, payload)
+	}
+}
+
+func SubscriberMiddlewareDebugMode(next SubscriberHandler) SubscriberHandler {
+	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+		if !payload.DebugMode {
+			payload.DebugMode = session.IsGTMDebug(r)
 		}
 		return next(l, r, payload)
 	}
@@ -26,26 +52,23 @@ func SubscriberMiddlewareClientID(next SubscriberHandler) SubscriberHandler {
 func SubscriberMiddlewareUserID(cookieName string) SubscriberMiddleware {
 	return func(next SubscriberHandler) SubscriberHandler {
 		return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
-			if cookie, err := r.Cookie(cookieName); err == nil {
-				payload.UserID = cookie.Value
+			if payload.UserID == "" {
+				value, err := r.Cookie(cookieName)
+				if err != nil && !errors.Is(err, http.ErrNoCookie) {
+					return err
+				}
+				payload.UserID = value.Value
 			}
 			return next(l, r, payload)
 		}
 	}
 }
 
-func SubscriberMiddlewareDebugMode(next SubscriberHandler) SubscriberHandler {
-	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
-		if session.IsGTMDebug(r) {
-			payload.DebugMode = true
-		}
-		return next(l, r, payload)
-	}
-}
-
 func SubscriberMiddlewareTimestamp(next SubscriberHandler) SubscriberHandler {
 	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
-		payload.TimestampMicros = time.Now().UnixMicro()
+		if payload.TimestampMicros == 0 {
+			payload.TimestampMicros = time.Now().UnixMicro()
+		}
 		return next(l, r, payload)
 	}
 }

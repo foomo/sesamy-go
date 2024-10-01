@@ -16,10 +16,16 @@ import (
 
 type (
 	MPv2 struct {
-		l               *zap.Logger
-		path            string
-		host            string
-		cookies         []string
+		l       *zap.Logger
+		path    string
+		host    string
+		cookies []string
+		// To create a new secret, navigate in the Google Analytics UI to:
+		// Admin > Data Streams > choose your stream > Measurement Protocol > Create
+		apiSecret string
+		// Measurement ID. The identifier for a Data Stream. Found in the Google Analytics UI under:
+		// Admin > Data Streams > choose your stream > Measurement ID
+		measurementID   string
 		protocolVersion string
 		httpClient      *http.Client
 		middlewares     []MPv2Middleware
@@ -48,6 +54,18 @@ func MPv2WithPath(v string) MPv2Option {
 func MPv2WithCookies(v ...string) MPv2Option {
 	return func(o *MPv2) {
 		o.cookies = append(o.cookies, v...)
+	}
+}
+
+func MPv2WithAPISecret(v string) MPv2Option {
+	return func(o *MPv2) {
+		o.apiSecret = v
+	}
+}
+
+func MPv2WithMeasurementID(v string) MPv2Option {
+	return func(o *MPv2) {
+		o.measurementID = v
 	}
 }
 
@@ -124,6 +142,16 @@ func (c *MPv2) SendRaw(r *http.Request, payload *mpv2.Payload[any]) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
 	}
+
+	// query
+	qry := req.URL.Query()
+	if len(c.apiSecret) > 0 {
+		qry.Add("api_secret", c.apiSecret)
+	}
+	if len(c.measurementID) > 0 {
+		qry.Add("measurement_id", c.measurementID)
+	}
+	req.URL.RawQuery = qry.Encode()
 
 	// TODO valiate: copy headers
 	req.Header = r.Header.Clone()

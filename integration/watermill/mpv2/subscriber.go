@@ -119,6 +119,10 @@ func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *mpv2.Payloa
 	l = l.With(zap.String("message_id", msg.UUID))
 	msg.SetContext(context.WithoutCancel(r.Context()))
 
+	// store query
+	msg.Metadata.Set(MetadataRequestQuery, r.URL.RawQuery)
+
+	// store header
 	for name, headers := range r.Header {
 		msg.Metadata.Set(name, strings.Join(headers, ","))
 	}

@@ -119,17 +119,20 @@ func (p *Publisher) handle(l *zap.Logger, msg *message.Message) error {
 		return errors.Wrap(err, "failed to create request")
 	}
 
-	for s, s2 := range msg.Metadata {
-		if s == "Cookie" {
-			for _, s3 := range strings.Split(s2, "; ") {
+	for key, value := range msg.Metadata {
+		switch key {
+		case "Cookie":
+			for _, s3 := range strings.Split(value, "; ") {
 				val := strings.Split(s3, "=")
 				req.AddCookie(&http.Cookie{
 					Name:  val[0],
 					Value: strings.Join(val[1:], "="),
 				})
 			}
-		} else {
-			req.Header.Set(s, s2)
+		case MetadataRequestQuery:
+			req.URL.RawQuery = value
+		default:
+			req.Header.Set(key, value)
 		}
 	}
 
@@ -146,11 +149,8 @@ func (p *Publisher) handle(l *zap.Logger, msg *message.Message) error {
 			if body, err := io.ReadAll(resp.Body); err == nil {
 				l = l.With(zap.String("http_response", string(body)))
 			}
-			l.Warn("server responded with error")
 			return errors.Wrap(ErrErrorResponse, resp.Status)
 		}
-
-		l.Debug("message published")
 
 		return nil
 	}(); err != nil {
