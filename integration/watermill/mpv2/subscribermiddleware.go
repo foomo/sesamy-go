@@ -8,6 +8,7 @@ import (
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/session"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -78,6 +79,10 @@ func SubscriberMiddlewareLogger(next SubscriberHandler) SubscriberHandler {
 		eventNames := make([]string, len(payload.Events))
 		for i, event := range payload.Events {
 			eventNames[i] = event.Name.String()
+		}
+
+		if spanCtx := trace.SpanContextFromContext(r.Context()); spanCtx.IsValid() && spanCtx.IsSampled() {
+			l = l.With(zap.String("trace_id", spanCtx.TraceID().String()), zap.String("span_id", spanCtx.SpanID().String()))
 		}
 
 		l = l.With(
