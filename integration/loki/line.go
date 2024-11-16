@@ -9,8 +9,8 @@ import (
 
 type Line struct {
 	Name               sesamy.EventName  `json:"name"`
-	Params             any               `json:"params"`
-	ClientID           string            `json:"client_id"`
+	Params             any               `json:"params,omitempty"`
+	ClientID           string            `json:"client_id,omitempty"`
 	UserID             string            `json:"user_id,omitempty"`
 	UserProperties     map[string]any    `json:"user_properties,omitempty"`
 	Consent            *mpv2.ConsentData `json:"consent,omitempty"`
