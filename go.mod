@@ -1,7 +1,8 @@
 module github.com/foomo/sesamy-go
 
-go 1.21.8
-toolchain go1.23.0
+go 1.22
+
+toolchain go1.23.3
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.4.1
@@ -19,6 +20,7 @@ require (
 	github.com/pperaltaisern/watermillzap v1.0.0
 	github.com/prometheus/common v0.60.1
 	github.com/stretchr/testify v1.9.0
+	go.opentelemetry.io/otel/trace v1.28.0
 	go.uber.org/zap v1.27.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -113,7 +115,6 @@ require (
 	go.opentelemetry.io/collector/pdata v1.12.0 // indirect
 	go.opentelemetry.io/otel v1.28.0 // indirect
 	go.opentelemetry.io/otel/metric v1.28.0 // indirect
-	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go4.org/netipx v0.0.0-20230125063823-8449b0a6169f // indirect
