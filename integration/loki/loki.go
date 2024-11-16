@@ -121,12 +121,6 @@ func (l *Loki) Start(ctx context.Context) {
 }
 
 func (l *Loki) Write(payload mpv2.Payload[any]) {
-	// sanity check
-	if payload.ClientID == "" {
-		l.l.Warn("received event without client id")
-		return
-	}
-
 	for _, event := range payload.Events {
 		// sanity check
 		if event.Name == "" {
