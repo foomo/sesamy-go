@@ -19,7 +19,7 @@ func SubscriberMiddlewareSessionID(measurementID string) SubscriberMiddleware {
 			if payload.SessionID == "" {
 				value, err := session.ParseGASessionID(r, measurementID)
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
-					return errors.Wrap(err, "failed to parse client cookie")
+					return err
 				}
 				payload.SessionID = value
 			}
@@ -32,7 +32,7 @@ func SubscriberMiddlewareClientID(next SubscriberHandler) SubscriberHandler {
 	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
 		if payload.ClientID == "" {
 			value, err := session.ParseGAClientID(r)
-			if err != nil {
+			if err != nil && !errors.Is(err, http.ErrNoCookie) {
 				return err
 			}
 			payload.ClientID = value
@@ -43,8 +43,8 @@ func SubscriberMiddlewareClientID(next SubscriberHandler) SubscriberHandler {
 
 func SubscriberMiddlewareDebugMode(next SubscriberHandler) SubscriberHandler {
 	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
-		if !payload.DebugMode {
-			payload.DebugMode = session.IsGTMDebug(r)
+		if !payload.DebugMode && session.IsGTMDebug(r) {
+			payload.DebugMode = true
 		}
 		return next(l, r, payload)
 	}
