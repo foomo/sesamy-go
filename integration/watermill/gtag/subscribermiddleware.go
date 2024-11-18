@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
-	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -21,9 +20,9 @@ func SubscriberMiddlewareUserID(cookieName string) SubscriberMiddleware {
 
 func SubscriberMiddlewareLogger(next SubscriberHandler) SubscriberHandler {
 	return func(l *zap.Logger, r *http.Request, payload *gtag.Payload) error {
-		if spanCtx := trace.SpanContextFromContext(r.Context()); spanCtx.IsValid() && spanCtx.IsSampled() {
-			l = l.With(zap.String("trace_id", spanCtx.TraceID().String()), zap.String("span_id", spanCtx.SpanID().String()))
-		}
+		// if spanCtx := trace.SpanContextFromContext(r.Context()); spanCtx.IsValid() && spanCtx.IsSampled() {
+		// 	l = l.With(zap.String("trace_id", spanCtx.TraceID().String()), zap.String("span_id", spanCtx.SpanID().String()))
+		// }
 		l = l.With(
 			zap.String("event_name", gtag.GetDefault(payload.EventName, "-").String()),
 			zap.String("event_user_id", gtag.GetDefault(payload.UserID, "-")),
