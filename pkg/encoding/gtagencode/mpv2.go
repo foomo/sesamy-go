@@ -52,6 +52,15 @@ func MPv2(source gtag.Payload, target any) error {
 		"name": source.EventName,
 	}
 	targetEventDataParams := map[string]any{}
+	if value, ok := sourceData["document_title"]; ok {
+		targetEventDataParams["page_title"] = value
+	}
+	if value, ok := sourceData["document_referrer"]; ok {
+		targetEventDataParams["page_referrer"] = value
+	}
+	if value, ok := sourceData["document_location"]; ok {
+		targetEventDataParams["page_location"] = value
+	}
 	if node, ok := sourceData["ecommerce"].(map[string]any); ok {
 		maps.Copy(targetEventDataParams, node)
 	}

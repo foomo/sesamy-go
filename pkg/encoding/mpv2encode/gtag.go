@@ -48,17 +48,23 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 		targetData["event_name"] = sourceData["name"]
 
 		if params, ok := sourceData["params"].(map[string]any); ok {
+			targetData["document_title"] = params["page_title"]
+			delete(params, "page_title")
+			targetData["document_referrer"] = params["page_referrer"]
+			delete(params, "page_referrer")
+			targetData["document_location"] = params["page_location"]
+			delete(params, "page_location")
 			targetData["currency"] = params["currency"]
-			targetData["promotion_id"] = params["promotion_id"]
-			targetData["promotion_name"] = params["promotion_name"]
-			targetData["location_id"] = params["location_id"]
-			targetData["is_conversion"] = params["is_conversion"]
-			targetData["items"] = params["items"]
 			delete(params, "currency")
+			targetData["promotion_id"] = params["promotion_id"]
 			delete(params, "promotion_id")
+			targetData["promotion_name"] = params["promotion_name"]
 			delete(params, "promotion_name")
+			targetData["location_id"] = params["location_id"]
 			delete(params, "location_id")
+			targetData["is_conversion"] = params["is_conversion"]
 			delete(params, "is_conversion")
+			targetData["items"] = params["items"]
 			delete(params, "items")
 			{ // user_property
 				targetEventProperty := map[string]any{}
