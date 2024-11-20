@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
+	sesamyhttp "github.com/foomo/sesamy-go/pkg/http"
 	"github.com/foomo/sesamy-go/pkg/session"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -16,6 +17,20 @@ type (
 	MiddlewareHandler func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error
 	Middleware        func(next MiddlewareHandler) MiddlewareHandler
 )
+
+func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
+	return func(next MiddlewareHandler) MiddlewareHandler {
+		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
+			for i, event := range payload.Events {
+				if err := h(r, &event); err != nil {
+					return err
+				}
+				payload.Events[i] = event
+			}
+			return next(l, w, r, payload)
+		}
+	}
+}
 
 func MiddlewareSessionID(measurementID string) Middleware {
 	measurementID = strings.Split(measurementID, "-")[1]

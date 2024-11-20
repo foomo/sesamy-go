@@ -6,25 +6,18 @@ import (
 	"net/url"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
-	"github.com/foomo/sesamy-go/pkg/encoding/gtagencode"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
-	"github.com/foomo/sesamy-go/pkg/encoding/mpv2encode"
-	sesamyhttp "github.com/foomo/sesamy-go/pkg/http"
 	gtaghttp "github.com/foomo/sesamy-go/pkg/http/gtag"
 	mpv2http "github.com/foomo/sesamy-go/pkg/http/mpv2"
-	"github.com/foomo/sesamy-go/pkg/sesamy"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 type (
 	Collect struct {
-		l               *zap.Logger
-		gtagProxy       *httputil.ReverseProxy
-		mpv2Proxy       *httputil.ReverseProxy
-		gtagMiddlewares []gtaghttp.Middleware
-		mpv2Middlewares []mpv2http.Middleware
-		eventHandlers   []sesamyhttp.EventHandler
+		l                   *zap.Logger
+		taggingProxy        *httputil.ReverseProxy
+		gtagHTTPMiddlewares []gtaghttp.Middleware
+		mpv2HTTPMiddlewares []mpv2http.Middleware
 	}
 	Option func(*Collect) error
 )
@@ -33,47 +26,28 @@ type (
 // ~ Options
 // ------------------------------------------------------------------------------------------------
 
-func WithGTag(endpoint string) Option {
+func WithTagging(endpoint string) Option {
 	return func(c *Collect) error {
 		target, err := url.Parse(endpoint)
 		if err != nil {
 			return err
 		}
 		proxy := httputil.NewSingleHostReverseProxy(target)
-		c.gtagProxy = proxy
+		c.taggingProxy = proxy
 		return nil
 	}
 }
 
-func WithMPv2(endpoint string) Option {
+func WithGTagHTTPMiddlewares(v ...gtaghttp.Middleware) Option {
 	return func(c *Collect) error {
-		target, err := url.Parse(endpoint)
-		if err != nil {
-			return err
-		}
-		proxy := httputil.NewSingleHostReverseProxy(target)
-		c.mpv2Proxy = proxy
+		c.gtagHTTPMiddlewares = append(c.gtagHTTPMiddlewares, v...)
 		return nil
 	}
 }
 
-func WithGTagMiddlewares(v ...gtaghttp.Middleware) Option {
+func WithMPv2HTTPMiddlewares(v ...mpv2http.Middleware) Option {
 	return func(c *Collect) error {
-		c.gtagMiddlewares = append(c.gtagMiddlewares, v...)
-		return nil
-	}
-}
-
-func WithMPv2Middlewares(v ...mpv2http.Middleware) Option {
-	return func(c *Collect) error {
-		c.mpv2Middlewares = append(c.mpv2Middlewares, v...)
-		return nil
-	}
-}
-
-func WithEventHandlers(v ...sesamyhttp.EventHandler) Option {
-	return func(c *Collect) error {
-		c.eventHandlers = append(c.eventHandlers, v...)
+		c.mpv2HTTPMiddlewares = append(c.mpv2HTTPMiddlewares, v...)
 		return nil
 	}
 }
@@ -108,7 +82,7 @@ func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
 
 	// compose middlewares
 	next := c.gtagHandler
-	for _, middleware := range c.gtagMiddlewares {
+	for _, middleware := range c.gtagHTTPMiddlewares {
 		next = middleware(next)
 	}
 
@@ -125,7 +99,7 @@ func (c *Collect) MPv2HTTPHandler(w http.ResponseWriter, r *http.Request) {
 
 	// compose middlewares
 	next := c.mpv2Handler
-	for _, middleware := range c.mpv2Middlewares {
+	for _, middleware := range c.mpv2HTTPMiddlewares {
 		next = middleware(next)
 	}
 
@@ -141,47 +115,15 @@ func (c *Collect) MPv2HTTPHandler(w http.ResponseWriter, r *http.Request) {
 // ------------------------------------------------------------------------------------------------
 
 func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
-	var mpv2Payload *mpv2.Payload[any]
-	if err := gtagencode.MPv2(*payload, &mpv2Payload); err != nil {
-		return errors.Wrap(err, "failed to encode gtag to mpv2")
-	}
-
-	for i, event := range mpv2Payload.Events {
-		if err := c.mpv2EventHandler(r, &event); err != nil {
-			return err
-		}
-		mpv2Payload.Events[i] = event
-	}
-
-	if err := mpv2encode.GTag[any](*mpv2Payload, &payload); err != nil {
-		return errors.Wrap(err, "failed to encode mpv2 to gtag")
-	}
-
-	if c.gtagProxy == nil {
-		c.gtagProxy.ServeHTTP(w, r)
+	if c.taggingProxy == nil {
+		c.taggingProxy.ServeHTTP(w, r)
 	}
 	return nil
 }
 
 func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
-	for i, event := range payload.Events {
-		if err := c.mpv2EventHandler(r, &event); err != nil {
-			return err
-		}
-		payload.Events[i] = event
-	}
-
-	if c.mpv2Proxy == nil {
-		c.mpv2Proxy.ServeHTTP(w, r)
-	}
-	return nil
-}
-
-func (c *Collect) mpv2EventHandler(r *http.Request, event *sesamy.Event[any]) error {
-	for _, handler := range c.eventHandlers {
-		if err := handler(r, event); err != nil {
-			return err
-		}
+	if c.taggingProxy == nil {
+		c.taggingProxy.ServeHTTP(w, r)
 	}
 	return nil
 }
