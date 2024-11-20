@@ -151,9 +151,16 @@ func (l *Loki) Write(payload mpv2.Payload[any]) {
 			l.l.Warn("buffer size reached", zap.Int("size", l.bufferSize))
 		}
 
+		var timestamp time.Time
+		if payload.TimestampMicros > 0 {
+			timestamp = time.UnixMicro(payload.TimestampMicros)
+		} else {
+			timestamp = time.Now()
+		}
+
 		l.entries <- logproto.Entry{
 			Line:      string(lineBytes),
-			Timestamp: time.UnixMicro(payload.TimestampMicros),
+			Timestamp: timestamp,
 			StructuredMetadata: push.LabelsAdapter{
 				{
 					Name:  "event_name",

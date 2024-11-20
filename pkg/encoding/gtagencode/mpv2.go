@@ -29,9 +29,6 @@ func MPv2(source gtag.Payload, target any) error {
 		"non_personalized_ads": source.NonPersonalizedAds,
 		"debug_mode":           source.IsDebug,
 	}
-	if source.SST != nil && source.SST.TFT != nil {
-		targetData["timestamp_micros"] = gtag.Get(source.SST.TFT) + "000"
-	}
 
 	// combine user properties
 	targetUserProperties := map[string]any{}
