@@ -32,7 +32,9 @@ func WithTagging(endpoint string) Option {
 		if err != nil {
 			return err
 		}
+		c.l.Info("--->" + endpoint)
 		proxy := httputil.NewSingleHostReverseProxy(target)
+		proxy.ErrorLog = zap.NewStdLog(c.l)
 		c.taggingProxy = proxy
 		return nil
 	}
