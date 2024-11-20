@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
+	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
@@ -26,9 +27,19 @@ func MPv2(source gtag.Payload, target any) error {
 	targetData := map[string]any{
 		"client_id":            source.ClientID,
 		"user_id":              source.UserID,
+		"session_id":           source.SessionID,
 		"non_personalized_ads": source.NonPersonalizedAds,
 		"debug_mode":           source.IsDebug,
 	}
+
+	// consent
+	targetConsentData := map[string]any{
+		"add_storage":        mpv2.ConsentText(source.AdStorage()),
+		"ad_user_data":       mpv2.ConsentText(source.AdUserData()),
+		"ad_personalization": mpv2.ConsentText(source.AdPersonalization()),
+		"analytics_storage":  mpv2.ConsentText(source.AnalyticsStorage()),
+	}
+	targetData["consent"] = targetConsentData
 
 	// combine user properties
 	targetUserProperties := map[string]any{}
