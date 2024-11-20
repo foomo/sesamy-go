@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
@@ -145,9 +144,7 @@ func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 	defer resp.Body.Close()
 
 	// copy headers
-	for name, values := range resp.Header {
-		r.Header.Add(name, strings.Join(values, ","))
-	}
+	r.Header = resp.Header.Clone()
 
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
@@ -179,9 +176,7 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 	defer resp.Body.Close()
 
 	// copy headers
-	for name, values := range resp.Header {
-		r.Header.Add(name, strings.Join(values, ","))
-	}
+	r.Header = resp.Header.Clone()
 
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
