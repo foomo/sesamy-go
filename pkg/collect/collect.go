@@ -115,14 +115,14 @@ func (c *Collect) MPv2HTTPHandler(w http.ResponseWriter, r *http.Request) {
 // ------------------------------------------------------------------------------------------------
 
 func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
-	if c.taggingProxy == nil {
+	if c.taggingProxy != nil {
 		c.taggingProxy.ServeHTTP(w, r)
 	}
 	return nil
 }
 
 func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
-	if c.taggingProxy == nil {
+	if c.taggingProxy != nil {
 		c.taggingProxy.ServeHTTP(w, r)
 	}
 	return nil
