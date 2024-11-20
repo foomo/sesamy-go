@@ -1,23 +1,29 @@
 package collect
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
+	"strings"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	gtaghttp "github.com/foomo/sesamy-go/pkg/http/gtag"
 	mpv2http "github.com/foomo/sesamy-go/pkg/http/mpv2"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
 type (
 	Collect struct {
-		l                   *zap.Logger
-		taggingProxy        *httputil.ReverseProxy
-		gtagHTTPMiddlewares []gtaghttp.Middleware
-		mpv2HTTPMiddlewares []mpv2http.Middleware
+		l                      *zap.Logger
+		taggingURL             string
+		taggingClient          *http.Client
+		taggingMaxResponseCode int
+		gtagHTTPMiddlewares    []gtaghttp.Middleware
+		mpv2HTTPMiddlewares    []mpv2http.Middleware
 	}
 	Option func(*Collect) error
 )
@@ -26,16 +32,16 @@ type (
 // ~ Options
 // ------------------------------------------------------------------------------------------------
 
-func WithTagging(endpoint string) Option {
+func WithTagging(v string) Option {
 	return func(c *Collect) error {
-		target, err := url.Parse(endpoint)
-		if err != nil {
-			return err
-		}
-		c.l.Info("--->" + endpoint)
-		proxy := httputil.NewSingleHostReverseProxy(target)
-		proxy.ErrorLog = zap.NewStdLog(c.l)
-		c.taggingProxy = proxy
+		c.taggingURL = v
+		return nil
+	}
+}
+
+func WithTaggingClient(v *http.Client) Option {
+	return func(c *Collect) error {
+		c.taggingClient = v
 		return nil
 	}
 }
@@ -60,7 +66,9 @@ func WithMPv2HTTPMiddlewares(v ...mpv2http.Middleware) Option {
 
 func New(l *zap.Logger, opts ...Option) (*Collect, error) {
 	inst := &Collect{
-		l: l,
+		l:                      l,
+		taggingClient:          http.DefaultClient,
+		taggingMaxResponseCode: http.StatusBadRequest,
 	}
 
 	for _, opt := range opts {
@@ -117,15 +125,67 @@ func (c *Collect) MPv2HTTPHandler(w http.ResponseWriter, r *http.Request) {
 // ------------------------------------------------------------------------------------------------
 
 func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
-	if c.taggingProxy != nil {
-		c.taggingProxy.ServeHTTP(w, r)
+	values, body, err := gtag.Encode(payload)
+	if err != nil {
+		return err
 	}
+
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, fmt.Sprintf("%s%s?%s", c.taggingURL, "/g/collect", gtag.EncodeValues(values)), body)
+	if err != nil {
+		return errors.Wrap(err, "failed to create request")
+	}
+
+	// copy headers
+	req.Header = r.Header.Clone()
+
+	resp, err := c.taggingClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// copy headers
+	for name, values := range resp.Header {
+		r.Header.Add(name, strings.Join(values, ","))
+	}
+
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
-	if c.taggingProxy != nil {
-		c.taggingProxy.ServeHTTP(w, r)
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
 	}
+
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, fmt.Sprintf("%s%s", c.taggingURL, "/mp/collect"), bytes.NewReader(body))
+	if err != nil {
+		return errors.Wrap(err, "failed to create request")
+	}
+
+	// copy headers
+	req.Header = r.Header.Clone()
+	// copy raw query
+	req.URL.RawQuery = r.URL.RawQuery
+
+	resp, err := c.taggingClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// copy headers
+	for name, values := range resp.Header {
+		r.Header.Add(name, strings.Join(values, ","))
+	}
+
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		return err
+	}
+
 	return nil
 }
