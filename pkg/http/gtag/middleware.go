@@ -8,19 +8,24 @@ import (
 	"go.uber.org/zap"
 )
 
-func SubscriberMiddlewareUserID(cookieName string) SubscriberMiddleware {
-	return func(next SubscriberHandler) SubscriberHandler {
-		return func(l *zap.Logger, r *http.Request, payload *gtag.Payload) error {
+type (
+	Middleware        func(next MiddlewareHandler) MiddlewareHandler
+	MiddlewareHandler func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error
+)
+
+func MiddlewareUserID(cookieName string) Middleware {
+	return func(next MiddlewareHandler) MiddlewareHandler {
+		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
 			if cookie, err := r.Cookie(cookieName); err == nil {
 				payload.UserID = gtag.Set(cookie.Value)
 			}
-			return next(l, r, payload)
+			return next(l, w, r, payload)
 		}
 	}
 }
 
-func SubscriberMiddlewareLogger(next SubscriberHandler) SubscriberHandler {
-	return func(l *zap.Logger, r *http.Request, payload *gtag.Payload) error {
+func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
+	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
 		if spanCtx := trace.SpanContextFromContext(r.Context()); spanCtx.IsValid() && spanCtx.IsSampled() {
 			l = l.With(zap.String("trace_id", spanCtx.TraceID().String()), zap.String("span_id", spanCtx.SpanID().String()))
 		}
@@ -29,7 +34,7 @@ func SubscriberMiddlewareLogger(next SubscriberHandler) SubscriberHandler {
 			zap.String("event_user_id", gtag.GetDefault(payload.UserID, "-")),
 			zap.String("event_session_id", gtag.GetDefault(payload.SessionID, "-")),
 		)
-		err := next(l, r, payload)
+		err := next(l, w, r, payload)
 		if err != nil {
 			l.Error("handled event", zap.Error(err))
 		} else {

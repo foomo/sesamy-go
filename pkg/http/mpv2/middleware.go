@@ -12,10 +12,15 @@ import (
 	"go.uber.org/zap"
 )
 
-func SubscriberMiddlewareSessionID(measurementID string) SubscriberMiddleware {
+type (
+	MiddlewareHandler func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error
+	Middleware        func(next MiddlewareHandler) MiddlewareHandler
+)
+
+func MiddlewareSessionID(measurementID string) Middleware {
 	measurementID = strings.Split(measurementID, "-")[1]
-	return func(next SubscriberHandler) SubscriberHandler {
-		return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+	return func(next MiddlewareHandler) MiddlewareHandler {
+		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 			if payload.SessionID == "" {
 				value, err := session.ParseGASessionID(r, measurementID)
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
@@ -23,13 +28,13 @@ func SubscriberMiddlewareSessionID(measurementID string) SubscriberMiddleware {
 				}
 				payload.SessionID = value
 			}
-			return next(l, r, payload)
+			return next(l, w, r, payload)
 		}
 	}
 }
 
-func SubscriberMiddlewareClientID(next SubscriberHandler) SubscriberHandler {
-	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+func MiddlewareClientID(next MiddlewareHandler) MiddlewareHandler {
+	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if payload.ClientID == "" {
 			value, err := session.ParseGAClientID(r)
 			if err != nil && !errors.Is(err, http.ErrNoCookie) {
@@ -37,22 +42,22 @@ func SubscriberMiddlewareClientID(next SubscriberHandler) SubscriberHandler {
 			}
 			payload.ClientID = value
 		}
-		return next(l, r, payload)
+		return next(l, w, r, payload)
 	}
 }
 
-func SubscriberMiddlewareDebugMode(next SubscriberHandler) SubscriberHandler {
-	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+func MiddlewareDebugMode(next MiddlewareHandler) MiddlewareHandler {
+	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if !payload.DebugMode && session.IsGTMDebug(r) {
 			payload.DebugMode = true
 		}
-		return next(l, r, payload)
+		return next(l, w, r, payload)
 	}
 }
 
-func SubscriberMiddlewareUserID(cookieName string) SubscriberMiddleware {
-	return func(next SubscriberHandler) SubscriberHandler {
-		return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+func MiddlewareUserID(cookieName string) Middleware {
+	return func(next MiddlewareHandler) MiddlewareHandler {
+		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 			if payload.UserID == "" {
 				value, err := r.Cookie(cookieName)
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
@@ -60,22 +65,22 @@ func SubscriberMiddlewareUserID(cookieName string) SubscriberMiddleware {
 				}
 				payload.UserID = value.Value
 			}
-			return next(l, r, payload)
+			return next(l, w, r, payload)
 		}
 	}
 }
 
-func SubscriberMiddlewareTimestamp(next SubscriberHandler) SubscriberHandler {
-	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+func MiddlewareTimestamp(next MiddlewareHandler) MiddlewareHandler {
+	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if payload.TimestampMicros == 0 {
 			payload.TimestampMicros = time.Now().UnixMicro()
 		}
-		return next(l, r, payload)
+		return next(l, w, r, payload)
 	}
 }
 
-func SubscriberMiddlewareLogger(next SubscriberHandler) SubscriberHandler {
-	return func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
+	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		eventNames := make([]string, len(payload.Events))
 		for i, event := range payload.Events {
 			eventNames[i] = event.Name.String()
@@ -90,7 +95,7 @@ func SubscriberMiddlewareLogger(next SubscriberHandler) SubscriberHandler {
 			zap.String("event_user_id", payload.UserID),
 		)
 
-		err := next(l, r, payload)
+		err := next(l, w, r, payload)
 		if err != nil {
 			l.Error("handled event", zap.Error(err))
 		} else {
