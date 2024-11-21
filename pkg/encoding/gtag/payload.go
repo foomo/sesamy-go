@@ -151,11 +151,6 @@ type Payload struct {
 	NonPersonalizedAds *string `json:"non_personalized_ads,omitempty" gtag:"npa,omitempty"`
 	// Example: 1
 	// ARE *string `json:"are,omitempty" gtag:"are,omitempty"`
-	// Example: 1
-	// DigitalMarketAct *string `json:"digital_market_act,omitempty" gtag:"dma,omitempty"`
-	// Example: sypham
-	// DigitalMarketActParameters *string `json:"digital_market_act_parameters,omitempty" gtag:"dma_cps,omitempty"`
-	// Example: noapi | denied
 	// PrivacySandboxCookieDeprecationLabel *string `json:"privacy_sandbox_cookie_deprecation_label,omitempty" gtag:"pscdl,omitempty"`
 	// A timestamp measuring the difference between the moment this parameter gets populated and the moment the navigation started on that particular page.
 	// TFD *string `json:"tfd,omitempty" gtag:"tfd,omitempty"`

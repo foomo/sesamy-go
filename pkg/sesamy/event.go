@@ -36,3 +36,7 @@ func (e Event[P]) Decode(output any) error {
 func (e Event[P]) DecodeParams(output any) error {
 	return Decode(e.Params, output)
 }
+
+func (e Event[P]) EncodeParams(input any) error {
+	return Decode(input, &e.Params)
+}

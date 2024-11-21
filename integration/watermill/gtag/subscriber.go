@@ -3,15 +3,13 @@ package gtag
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
+	gtaghttp "github.com/foomo/sesamy-go/pkg/http/gtag"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -22,12 +20,10 @@ type (
 		uuidFunc    func() string
 		messages    chan *message.Message
 		messageFunc func(l *zap.Logger, r *http.Request, msg *message.Message) error
-		middlewares []SubscriberMiddleware
+		middlewares []gtaghttp.Middleware
 		closed      bool
 	}
-	SubscriberOption     func(*Subscriber)
-	SubscriberHandler    func(l *zap.Logger, r *http.Request, payload *gtag.Payload) error
-	SubscriberMiddleware func(next SubscriberHandler) SubscriberHandler
+	SubscriberOption func(*Subscriber)
 )
 
 // ------------------------------------------------------------------------------------------------
@@ -46,7 +42,7 @@ func SubscriberWithMessageFunc(v func(l *zap.Logger, r *http.Request, msg *messa
 	}
 }
 
-func SubscriberWithMiddlewares(v ...SubscriberMiddleware) SubscriberOption {
+func SubscriberWithMiddlewares(v ...gtaghttp.Middleware) SubscriberOption {
 	return func(o *Subscriber) {
 		o.middlewares = append(o.middlewares, v...)
 	}
@@ -69,52 +65,8 @@ func NewSubscriber(l *zap.Logger, opts ...SubscriberOption) *Subscriber {
 }
 
 func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var values url.Values
-
-	switch r.Method {
-	case http.MethodGet:
-		values = r.URL.Query()
-	case http.MethodPost:
-		values = r.URL.Query()
-
-		// read request body
-		out, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("failed to read body: %s", err.Error()), http.StatusInternalServerError)
-			return
-		}
-		defer r.Body.Close()
-
-		// append request body to query
-		if len(out) > 0 {
-			v, err := url.ParseQuery(string(out))
-			if err != nil {
-				http.Error(w, fmt.Sprintf("failed to parse extended url: %s", err.Error()), http.StatusInternalServerError)
-				return
-			}
-			for s2, i := range v {
-				values.Set(s2, i[0])
-			}
-		} else {
-			values = r.URL.Query()
-		}
-	default:
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
-
-	// unmarshal event
-	var payload *gtag.Payload
-	if err := gtag.Decode(values, &payload); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// validate
-	if payload.EventName == nil || payload.EventName.String() == "" {
-		http.Error(w, "missing event name", http.StatusBadRequest)
-		return
-	}
+	// retrieve payload
+	payload := gtaghttp.Handler(w, r)
 
 	// compose middlewares
 	next := s.handle
@@ -123,13 +75,13 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// run handler
-	if err := next(s.l, r, payload); err != nil {
+	if err := next(s.l, w, r, payload); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *gtag.Payload) error {
+func (s *Subscriber) handle(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
 	// marshal message payload
 	data, err := json.Marshal(payload)
 	if err != nil {
