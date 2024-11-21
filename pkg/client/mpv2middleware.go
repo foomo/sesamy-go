@@ -62,7 +62,7 @@ func MPv2MiddlewareUserID(cookieName string) MPv2Middleware {
 	}
 }
 
-func MiddlewareUserAgent(next MPv2Handler) MPv2Handler {
+func MPv2MiddlewareUserAgent(next MPv2Handler) MPv2Handler {
 	return func(r *http.Request, payload *mpv2.Payload[any]) error {
 		if userAgent := r.Header.Get("User-Agent"); userAgent != "" {
 			for i, event := range payload.Events {
@@ -76,7 +76,7 @@ func MiddlewareUserAgent(next MPv2Handler) MPv2Handler {
 	}
 }
 
-func MiddlewareIPOverride(next MPv2Handler) MPv2Handler {
+func MPv2MiddlewareIPOverride(next MPv2Handler) MPv2Handler {
 	return func(r *http.Request, payload *mpv2.Payload[any]) error {
 		var ipOverride string
 		for _, key := range []string{"CF-Connecting-IP", "X-Original-Forwarded-For", "X-Forwarded-For", "X-Real-Ip"} {
@@ -97,7 +97,7 @@ func MiddlewareIPOverride(next MPv2Handler) MPv2Handler {
 	}
 }
 
-func MiddlewarePageLocation(next MPv2Handler) MPv2Handler {
+func MPv2MiddlewarePageLocation(next MPv2Handler) MPv2Handler {
 	return func(r *http.Request, payload *mpv2.Payload[any]) error {
 		if referrer := r.Header.Get("Referer"); referrer != "" {
 			for i, event := range payload.Events {
