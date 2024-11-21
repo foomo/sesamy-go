@@ -17,12 +17,11 @@ import (
 
 type (
 	Collect struct {
-		l                      *zap.Logger
-		taggingURL             string
-		taggingClient          *http.Client
-		taggingMaxResponseCode int
-		gtagHTTPMiddlewares    []gtaghttp.Middleware
-		mpv2HTTPMiddlewares    []mpv2http.Middleware
+		l                   *zap.Logger
+		taggingURL          string
+		taggingClient       *http.Client
+		gtagHTTPMiddlewares []gtaghttp.Middleware
+		mpv2HTTPMiddlewares []mpv2http.Middleware
 	}
 	Option func(*Collect) error
 )
@@ -65,9 +64,8 @@ func WithMPv2HTTPMiddlewares(v ...mpv2http.Middleware) Option {
 
 func New(l *zap.Logger, opts ...Option) (*Collect, error) {
 	inst := &Collect{
-		l:                      l,
-		taggingClient:          http.DefaultClient,
-		taggingMaxResponseCode: http.StatusBadRequest,
+		l:             l,
+		taggingClient: http.DefaultClient,
 	}
 
 	for _, opt := range opts {
