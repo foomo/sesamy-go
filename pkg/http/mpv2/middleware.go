@@ -22,7 +22,7 @@ func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 			for i, event := range payload.Events {
-				if err := h(r, &event); err != nil {
+				if err := h(l, r, &event); err != nil {
 					return err
 				}
 				payload.Events[i] = event
@@ -100,8 +100,9 @@ func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
 					value["user_agent"] = userAgent
+					event.Params = value
+					payload.Events[i] = event
 				}
-				payload.Events[i] = event
 			}
 		}
 		return next(l, w, r, payload)
@@ -121,8 +122,9 @@ func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
 					value["ip_override"] = ipOverride
+					event.Params = value
+					payload.Events[i] = event
 				}
-				payload.Events[i] = event
 			}
 		}
 		return next(l, w, r, payload)
@@ -135,8 +137,9 @@ func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
 					value["page_location"] = referrer
+					event.Params = value
+					payload.Events[i] = event
 				}
-				payload.Events[i] = event
 			}
 		}
 		return next(l, w, r, payload)

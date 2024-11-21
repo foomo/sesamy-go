@@ -27,7 +27,7 @@ func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 			}
 
 			for i, event := range mpv2Payload.Events {
-				if err := h(r, &event); err != nil {
+				if err := h(l, r, &event); err != nil {
 					return err
 				}
 				mpv2Payload.Events[i] = event

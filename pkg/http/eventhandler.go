@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/foomo/sesamy-go/pkg/sesamy"
+	"go.uber.org/zap"
 )
 
-type EventHandler func(r *http.Request, event *sesamy.Event[any]) error
+type EventHandler func(l *zap.Logger, r *http.Request, event *sesamy.Event[any]) error
