@@ -3,7 +3,6 @@ package client
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/session"
@@ -63,15 +62,6 @@ func MPv2MiddlewareUserID(cookieName string) MPv2Middleware {
 	}
 }
 
-func MPv2MiddlewareTimestamp(next MPv2Handler) MPv2Handler {
-	return func(r *http.Request, payload *mpv2.Payload[any]) error {
-		if payload.TimestampMicros == 0 {
-			payload.TimestampMicros = time.Now().UnixMicro()
-		}
-		return next(r, payload)
-	}
-}
-
 func MiddlewareUserAgent(next MPv2Handler) MPv2Handler {
 	return func(r *http.Request, payload *mpv2.Payload[any]) error {
 		if userAgent := r.Header.Get("User-Agent"); userAgent != "" {
@@ -89,7 +79,7 @@ func MiddlewareUserAgent(next MPv2Handler) MPv2Handler {
 func MiddlewareIPOverride(next MPv2Handler) MPv2Handler {
 	return func(r *http.Request, payload *mpv2.Payload[any]) error {
 		var ipOverride string
-		for _, key := range []string{"X-Original-Forwarded-For", "X-Forwarded-For", "X-Real-Ip"} {
+		for _, key := range []string{"CF-Connecting-IP", "X-Original-Forwarded-For", "X-Forwarded-For", "X-Real-Ip"} {
 			if value := r.Header.Get(key); value != "" {
 				ipOverride = value
 				break

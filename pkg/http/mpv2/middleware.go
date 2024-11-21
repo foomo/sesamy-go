@@ -94,7 +94,7 @@ func MiddlewareTimestamp(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
-func MiddlewareUserAgentEventParam(next MiddlewareHandler) MiddlewareHandler {
+func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if userAgent := r.Header.Get("User-Agent"); userAgent != "" {
 			for i, event := range payload.Events {
@@ -108,10 +108,10 @@ func MiddlewareUserAgentEventParam(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
-func MiddlewareIPOverrideEventParam(next MiddlewareHandler) MiddlewareHandler {
+func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		var ipOverride string
-		for _, key := range []string{"X-Original-Forwarded-For", "X-Forwarded-For", "X-Real-Ip"} {
+		for _, key := range []string{"CF-Connecting-IP", "X-Original-Forwarded-For", "X-Forwarded-For", "X-Real-Ip"} {
 			if value := r.Header.Get(key); value != "" {
 				ipOverride = value
 				break
@@ -129,7 +129,7 @@ func MiddlewareIPOverrideEventParam(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
-func MiddlewarePageLocationEventParam(next MiddlewareHandler) MiddlewareHandler {
+func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if referrer := r.Header.Get("Referer"); referrer != "" {
 			for i, event := range payload.Events {
