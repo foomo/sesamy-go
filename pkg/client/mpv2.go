@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/sesamy"
@@ -110,16 +109,14 @@ func (c *MPv2) HTTPClient() *http.Client {
 // ------------------------------------------------------------------------------------------------
 
 func (c *MPv2) Collect(r *http.Request, events ...sesamy.AnyEvent) error {
-	anyEvents := make([]sesamy.Event[any], len(events))
-	for i, event := range events {
-		anyEvents[i] = event.AnyEvent()
+	payload := mpv2.NewPayload[any]()
+	for _, event := range events {
+		payload.Events = append(payload.Events, event.AnyEvent())
 	}
+	return c.SendPayload(r, payload)
+}
 
-	payload := &mpv2.Payload[any]{
-		Events:          anyEvents,
-		TimestampMicros: time.Now().UnixMicro(),
-	}
-
+func (c *MPv2) SendPayload(r *http.Request, payload *mpv2.Payload[any]) error {
 	next := c.SendRaw
 	for _, middleware := range c.middlewares {
 		next = middleware(next)

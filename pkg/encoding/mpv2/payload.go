@@ -1,6 +1,8 @@
 package mpv2
 
 import (
+	"time"
+
 	"github.com/foomo/sesamy-go/pkg/sesamy"
 )
 
@@ -16,4 +18,10 @@ type Payload[P any] struct {
 	DebugMode          bool              `json:"debug_mode,omitempty"`
 	SessionID          string            `json:"session_id,omitempty"`
 	EngagementTimeMSec int64             `json:"engagement_time_msec,omitempty"`
+}
+
+func NewPayload[P any]() *Payload[P] {
+	return &Payload[P]{
+		TimestampMicros: time.Now().UnixMicro(),
+	}
 }
