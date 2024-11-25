@@ -13,7 +13,7 @@ type SST struct {
 	GCSub *string `json:"gcsub,omitempty" gtag:"gcsub,omitempty"`
 	// Example: DE
 	UC *string `json:"uc,omitempty" gtag:"uc,omitempty"`
-	// Example: 1708250245344
+	// Session start time, time first seen. Example: 1708250245344
 	TFT *string `json:"tft,omitempty" gtag:"tft,omitempty"`
 	// Example: 13l3l3l3l1
 	GCD *string `json:"gcd,omitempty" gtag:"gcd,omitempty"`

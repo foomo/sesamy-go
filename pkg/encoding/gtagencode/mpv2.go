@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
+	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 )
@@ -26,12 +27,19 @@ func MPv2(source gtag.Payload, target any) error {
 	targetData := map[string]any{
 		"client_id":            source.ClientID,
 		"user_id":              source.UserID,
+		"session_id":           source.SessionID,
 		"non_personalized_ads": source.NonPersonalizedAds,
 		"debug_mode":           source.IsDebug,
 	}
-	if source.SST != nil && source.SST.TFT != nil {
-		targetData["timestamp_micros"] = gtag.Get(source.SST.TFT) + "000"
+
+	// consent
+	targetConsentData := map[string]any{
+		"add_storage":        mpv2.ConsentText(source.AdStorage()),
+		"ad_user_data":       mpv2.ConsentText(source.AdUserData()),
+		"ad_personalization": mpv2.ConsentText(source.AdPersonalization()),
+		"analytics_storage":  mpv2.ConsentText(source.AnalyticsStorage()),
 	}
+	targetData["consent"] = targetConsentData
 
 	// combine user properties
 	targetUserProperties := map[string]any{}
@@ -52,6 +60,15 @@ func MPv2(source gtag.Payload, target any) error {
 		"name": source.EventName,
 	}
 	targetEventDataParams := map[string]any{}
+	if value, ok := sourceData["document_title"]; ok {
+		targetEventDataParams["page_title"] = value
+	}
+	if value, ok := sourceData["document_referrer"]; ok {
+		targetEventDataParams["page_referrer"] = value
+	}
+	if value, ok := sourceData["document_location"]; ok {
+		targetEventDataParams["page_location"] = value
+	}
 	if node, ok := sourceData["ecommerce"].(map[string]any); ok {
 		maps.Copy(targetEventDataParams, node)
 	}

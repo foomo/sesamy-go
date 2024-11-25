@@ -9,6 +9,7 @@ import (
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
+	mpv2http "github.com/foomo/sesamy-go/pkg/http/mpv2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
@@ -19,12 +20,10 @@ type (
 		uuidFunc    func() string
 		messages    chan *message.Message
 		messageFunc func(l *zap.Logger, r *http.Request, msg *message.Message) error
-		middlewares []SubscriberMiddleware
+		middlewares []mpv2http.Middleware
 		closed      bool
 	}
-	SubscriberOption     func(*Subscriber)
-	SubscriberHandler    func(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error
-	SubscriberMiddleware func(next SubscriberHandler) SubscriberHandler
+	SubscriberOption func(*Subscriber)
 )
 
 // ------------------------------------------------------------------------------------------------
@@ -43,7 +42,7 @@ func SubscriberWithMessageFunc(v func(l *zap.Logger, r *http.Request, msg *messa
 	}
 }
 
-func SubscriberWithMiddlewares(v ...SubscriberMiddleware) SubscriberOption {
+func SubscriberWithMiddlewares(v ...mpv2http.Middleware) SubscriberOption {
 	return func(o *Subscriber) {
 		o.middlewares = append(o.middlewares, v...)
 	}
@@ -70,30 +69,8 @@ func NewSubscriber(l *zap.Logger, opts ...SubscriberOption) *Subscriber {
 // ------------------------------------------------------------------------------------------------
 
 func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
-
-	// read request body
-	var payload *mpv2.Payload[any]
-	err := json.NewDecoder(r.Body).Decode(&payload)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// validate required fields
-	if len(payload.Events) == 0 {
-		http.Error(w, "missing events", http.StatusBadRequest)
-		return
-	}
-	for _, event := range payload.Events {
-		if event.Name == "" {
-			http.Error(w, "missing event name", http.StatusBadRequest)
-			return
-		}
-	}
+	// retrieve payload
+	payload := mpv2http.Handler(w, r)
 
 	// compose middlewares
 	next := s.handle
@@ -102,13 +79,13 @@ func (s *Subscriber) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// run handler
-	if err := next(s.l, r, payload); err != nil {
+	if err := next(s.l, w, r, payload); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-func (s *Subscriber) handle(l *zap.Logger, r *http.Request, payload *mpv2.Payload[any]) error {
+func (s *Subscriber) handle(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 	// marshal message payload
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {

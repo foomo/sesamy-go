@@ -3,7 +3,6 @@ package client
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/session"
@@ -60,14 +59,5 @@ func MPv2MiddlewareUserID(cookieName string) MPv2Middleware {
 			}
 			return next(r, payload)
 		}
-	}
-}
-
-func MPv2MiddlewareTimestamp(next MPv2Handler) MPv2Handler {
-	return func(r *http.Request, payload *mpv2.Payload[any]) error {
-		if payload.TimestampMicros == 0 {
-			payload.TimestampMicros = time.Now().UnixMicro()
-		}
-		return next(r, payload)
 	}
 }

@@ -99,7 +99,7 @@ func TestMPv2MessageHandler(t *testing.T) {
 	var done atomic.Bool
 	router.AddHandler("gtag", "in", pubSub, "out", pubSub, gtag.MPv2MessageHandler)
 	router.AddNoPublisherHandler("mpv2", "out", pubSub, func(msg *message.Message) error {
-		expected := `{"client_id":"C123456","events":[{"name":"add_to_cart","params":{}}],"debug_mode":true}`
+		expected := `{"client_id":"C123456","consent":{"ad_user_data":"GRANTED","ad_personalization":"GRANTED","analytics_storage":"GRANTED"},"events":[{"name":"add_to_cart","params":{"page_location":"https://foomo.org","page_title":"Home"}}],"debug_mode":true}`
 		if !assert.JSONEq(t, expected, string(msg.Payload)) {
 			fmt.Println(string(msg.Payload))
 		}
