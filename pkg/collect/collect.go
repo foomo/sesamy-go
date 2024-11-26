@@ -142,7 +142,9 @@ func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 	defer resp.Body.Close()
 
 	// copy headers
-	r.Header = resp.Header.Clone()
+	for s := range resp.Header {
+		w.Header().Set(s, resp.Header.Get(s))
+	}
 
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
@@ -174,7 +176,9 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 	defer resp.Body.Close()
 
 	// copy headers
-	r.Header = resp.Header.Clone()
+	for s := range resp.Header {
+		w.Header().Set(s, resp.Header.Get(s))
+	}
 
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
