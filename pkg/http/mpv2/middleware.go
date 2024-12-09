@@ -1,6 +1,7 @@
 package mpv2
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -143,6 +144,16 @@ func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
+func MiddlewareWithTimeout(timeout time.Duration) Middleware {
+	return func(next MiddlewareHandler) MiddlewareHandler {
+		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
+			ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), timeout)
+			defer cancel()
+			return next(l, w, r.WithContext(ctx), payload)
+		}
+	}
+}
+
 func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		eventNames := make([]string, len(payload.Events))
@@ -153,12 +164,12 @@ func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
 		if spanCtx := trace.SpanContextFromContext(r.Context()); spanCtx.IsValid() && spanCtx.IsSampled() {
 			l = l.With(zap.String("trace_id", spanCtx.TraceID().String()), zap.String("span_id", spanCtx.SpanID().String()))
 		}
-
 		l = l.With(
 			zap.String("event_names", strings.Join(eventNames, ",")),
 			zap.String("event_user_id", payload.UserID),
+			zap.String("event_client_id", payload.ClientID),
+			zap.String("event_session_id", payload.SessionID),
 		)
-
 		err := next(l, w, r, payload)
 		if err != nil {
 			l.Error("handled event", zap.Error(err))
