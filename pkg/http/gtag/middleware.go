@@ -1,7 +1,9 @@
 package gtag
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/encoding/gtagencode"
@@ -52,6 +54,16 @@ func MiddlewareUserID(cookieName string) Middleware {
 	}
 }
 
+func MiddlewareWithTimeout(timeout time.Duration) Middleware {
+	return func(next MiddlewareHandler) MiddlewareHandler {
+		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
+			ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), timeout)
+			defer cancel()
+			return next(l, w, r.WithContext(ctx), payload)
+		}
+	}
+}
+
 func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
 		if spanCtx := trace.SpanContextFromContext(r.Context()); spanCtx.IsValid() && spanCtx.IsSampled() {
@@ -60,6 +72,7 @@ func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
 		l = l.With(
 			zap.String("event_name", gtag.GetDefault(payload.EventName, "-").String()),
 			zap.String("event_user_id", gtag.GetDefault(payload.UserID, "-")),
+			zap.String("event_client_id", gtag.GetDefault(payload.ClientID, "-")),
 			zap.String("event_session_id", gtag.GetDefault(payload.SessionID, "-")),
 		)
 		err := next(l, w, r, payload)
