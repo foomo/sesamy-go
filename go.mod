@@ -1,7 +1,6 @@
 module github.com/foomo/sesamy-go
 
-go 1.22.7
-toolchain go1.23.4
+go 1.23.0
 
 require (
 	github.com/ThreeDotsLabs/watermill v1.4.1
