@@ -152,6 +152,7 @@ func (c *MPv2) SendRaw(r *http.Request, payload *mpv2.Payload[any]) error {
 
 	// TODO valiate: copy headers
 	req.Header = r.Header.Clone()
+	req.Header.Set("Content-Type", "application/json")
 
 	// forward cookies
 	for _, cookie := range c.cookies {
