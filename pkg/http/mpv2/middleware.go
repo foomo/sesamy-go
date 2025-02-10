@@ -66,6 +66,13 @@ func MiddlewareDebugMode(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if !payload.DebugMode && session.IsGTMDebug(r) {
 			payload.DebugMode = true
+			for i, event := range payload.Events {
+				if value, ok := event.Params.(map[string]any); ok {
+					value["debug_mode"] = true
+					event.Params = value
+				}
+				payload.Events[i] = event
+			}
 		}
 		return next(l, w, r, payload)
 	}
