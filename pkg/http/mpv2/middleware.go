@@ -38,11 +38,25 @@ func MiddlewareSessionID(measurementID string) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 			if payload.SessionID == "" {
-				value, err := session.ParseGASessionID(r, measurementID)
+				id, err := session.ParseGASessionID(r, measurementID)
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
 					return err
 				}
-				payload.SessionID = value
+
+				number, err := session.ParseGASessionNumber(r, measurementID)
+				if err != nil && !errors.Is(err, http.ErrNoCookie) {
+					return err
+				}
+
+				payload.SessionID = id
+				for i, event := range payload.Events {
+					if value, ok := event.Params.(map[string]any); ok {
+						value["ga_session_id"] = id
+						value["ga_session_number"] = number
+						event.Params = value
+					}
+					payload.Events[i] = event
+				}
 			}
 			return next(l, w, r, payload)
 		}
