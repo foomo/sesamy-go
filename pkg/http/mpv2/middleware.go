@@ -151,14 +151,34 @@ func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
+func MiddlewareEngagementTime(next MiddlewareHandler) MiddlewareHandler {
+	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
+		for i, event := range payload.Events {
+			if value, ok := event.Params.(map[string]any); ok {
+				value["engagement_time_msec"] = 100
+				payload.Events[i] = event
+			}
+		}
+		return next(l, w, r, payload)
+	}
+}
 func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
-		if referrer := r.Header.Get("Referer"); referrer != "" {
-			for i, event := range payload.Events {
-				if value, ok := event.Params.(map[string]any); ok {
-					value["page_location"] = referrer
-					payload.Events[i] = event
+		pageTitle := r.Header.Get("X-Page-Title")
+		pageLocation := r.Header.Get("Referer")
+		pageReferrer := r.Header.Get("X-Page-Referrer")
+		for i, event := range payload.Events {
+			if value, ok := event.Params.(map[string]any); ok {
+				if value["page_title"] == "" && pageTitle != "" {
+					value["page_title"] = pageTitle
 				}
+				if value["page_referrer"] == "" && pageReferrer != "" {
+					value["page_referrer"] = pageReferrer
+				}
+				if value["page_location"] == "" && pageLocation != "" {
+					value["page_location"] = pageLocation
+				}
+				payload.Events[i] = event
 			}
 		}
 		return next(l, w, r, payload)
