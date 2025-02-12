@@ -122,8 +122,9 @@ func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
 					value["user_agent"] = userAgent
-					payload.Events[i] = event
+					event.Params = value
 				}
+				payload.Events[i] = event
 			}
 		}
 		return next(l, w, r, payload)
@@ -143,8 +144,9 @@ func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
 					value["ip_override"] = ipOverride
-					payload.Events[i] = event
+					event.Params = value
 				}
+				payload.Events[i] = event
 			}
 		}
 		return next(l, w, r, payload)
@@ -156,8 +158,9 @@ func MiddlewareEngagementTime(next MiddlewareHandler) MiddlewareHandler {
 		for i, event := range payload.Events {
 			if value, ok := event.Params.(map[string]any); ok {
 				value["engagement_time_msec"] = 100
-				payload.Events[i] = event
+				event.Params = value
 			}
+			payload.Events[i] = event
 		}
 		return next(l, w, r, payload)
 	}
@@ -178,8 +181,9 @@ func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 				if value["page_location"] == "" && pageLocation != "" {
 					value["page_location"] = pageLocation
 				}
-				payload.Events[i] = event
+				event.Params = value
 			}
+			payload.Events[i] = event
 		}
 		return next(l, w, r, payload)
 	}
