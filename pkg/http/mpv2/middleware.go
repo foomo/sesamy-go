@@ -80,13 +80,6 @@ func MiddlewareDebugMode(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if !payload.DebugMode && session.IsGTMDebug(r) {
 			payload.DebugMode = true
-			for i, event := range payload.Events {
-				if value, ok := event.Params.(map[string]any); ok {
-					value["debug_mode"] = true
-					event.Params = value
-				}
-				payload.Events[i] = event
-			}
 		}
 		return next(l, w, r, payload)
 	}
@@ -121,7 +114,9 @@ func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 		if userAgent := r.Header.Get("User-Agent"); userAgent != "" {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
-					value["user_agent"] = userAgent
+					if value["user_agent"] == nil {
+						value["user_agent"] = userAgent
+					}
 					event.Params = value
 				}
 				payload.Events[i] = event
@@ -143,7 +138,9 @@ func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 		if ipOverride != "" {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
-					value["ip_override"] = ipOverride
+					if value["ip_override"] == nil {
+						value["ip_override"] = ipOverride
+					}
 					event.Params = value
 				}
 				payload.Events[i] = event
@@ -157,7 +154,9 @@ func MiddlewareEngagementTime(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		for i, event := range payload.Events {
 			if value, ok := event.Params.(map[string]any); ok {
-				value["engagement_time_msec"] = 100
+				if value["engagement_time_msec"] == nil {
+					value["engagement_time_msec"] = 100
+				}
 				event.Params = value
 			}
 			payload.Events[i] = event
@@ -172,13 +171,13 @@ func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 		pageReferrer := r.Header.Get("X-Page-Referrer")
 		for i, event := range payload.Events {
 			if value, ok := event.Params.(map[string]any); ok {
-				if value["page_title"] == "" && pageTitle != "" {
+				if value["page_title"] == nil && pageTitle != "" {
 					value["page_title"] = pageTitle
 				}
-				if value["page_referrer"] == "" && pageReferrer != "" {
+				if value["page_referrer"] == nil && pageReferrer != "" {
 					value["page_referrer"] = pageReferrer
 				}
-				if value["page_location"] == "" && pageLocation != "" {
+				if value["page_location"] == nil && pageLocation != "" {
 					value["page_location"] = pageLocation
 				}
 				event.Params = value
