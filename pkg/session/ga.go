@@ -38,3 +38,19 @@ func ParseGASessionID(r *http.Request, id string) (string, error) {
 
 	return parts[2], nil
 }
+
+func ParseGASessionNumber(r *http.Request, id string) (string, error) {
+	cookie, err := r.Cookie("_ga_" + id)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to retrieve _ga cookie")
+	}
+
+	parts := strings.Split(cookie.Value, ".")
+
+	// validate
+	if !strings.HasPrefix(cookie.Value, "GS1.1") || len(parts) < 4 {
+		return "", errors.New("invalid _ga cookie value")
+	}
+
+	return parts[3], nil
+}

@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/foomo/sesamy-go/pkg/client"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/provider/cookiebot"
@@ -39,7 +38,6 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 				l.With(zap.Error(err), zap.String("value", data)).Warn("failed to unmarshal cookie bot cookie")
 				return next(r, payload)
 			}
-			spew.Dump(value)
 
 			consent := func(b bool) *mpv2.Consent {
 				ret := mpv2.ConsentDenied
@@ -58,7 +56,6 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 				FunctionalityStorage:   consent(value.Necessary),
 				SecurityStorage:        consent(value.Necessary),
 			}
-			spew.Dump(payload)
 
 			return next(r, payload)
 		}

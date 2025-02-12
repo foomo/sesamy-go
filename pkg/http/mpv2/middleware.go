@@ -38,11 +38,25 @@ func MiddlewareSessionID(measurementID string) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 			if payload.SessionID == "" {
-				value, err := session.ParseGASessionID(r, measurementID)
+				id, err := session.ParseGASessionID(r, measurementID)
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
 					return err
 				}
-				payload.SessionID = value
+
+				number, err := session.ParseGASessionNumber(r, measurementID)
+				if err != nil && !errors.Is(err, http.ErrNoCookie) {
+					return err
+				}
+
+				payload.SessionID = id
+				for i, event := range payload.Events {
+					if value, ok := event.Params.(map[string]any); ok {
+						value["ga_session_id"] = id
+						value["ga_session_number"] = number
+						event.Params = value
+					}
+					payload.Events[i] = event
+				}
 			}
 			return next(l, w, r, payload)
 		}
@@ -100,9 +114,12 @@ func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 		if userAgent := r.Header.Get("User-Agent"); userAgent != "" {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
-					value["user_agent"] = userAgent
-					payload.Events[i] = event
+					if value["user_agent"] == nil {
+						value["user_agent"] = userAgent
+					}
+					event.Params = value
 				}
+				payload.Events[i] = event
 			}
 		}
 		return next(l, w, r, payload)
@@ -121,24 +138,51 @@ func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 		if ipOverride != "" {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
-					value["ip_override"] = ipOverride
-					payload.Events[i] = event
+					if value["ip_override"] == nil {
+						value["ip_override"] = ipOverride
+					}
+					event.Params = value
 				}
+				payload.Events[i] = event
 			}
 		}
 		return next(l, w, r, payload)
 	}
 }
 
+func MiddlewareEngagementTime(next MiddlewareHandler) MiddlewareHandler {
+	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
+		for i, event := range payload.Events {
+			if value, ok := event.Params.(map[string]any); ok {
+				if value["engagement_time_msec"] == nil {
+					value["engagement_time_msec"] = 100
+				}
+				event.Params = value
+			}
+			payload.Events[i] = event
+		}
+		return next(l, w, r, payload)
+	}
+}
 func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
-		if referrer := r.Header.Get("Referer"); referrer != "" {
-			for i, event := range payload.Events {
-				if value, ok := event.Params.(map[string]any); ok {
-					value["page_location"] = referrer
-					payload.Events[i] = event
+		pageTitle := r.Header.Get("X-Page-Title")
+		pageLocation := r.Header.Get("Referer")
+		pageReferrer := r.Header.Get("X-Page-Referrer")
+		for i, event := range payload.Events {
+			if value, ok := event.Params.(map[string]any); ok {
+				if value["page_title"] == nil && pageTitle != "" {
+					value["page_title"] = pageTitle
 				}
+				if value["page_referrer"] == nil && pageReferrer != "" {
+					value["page_referrer"] = pageReferrer
+				}
+				if value["page_location"] == nil && pageLocation != "" {
+					value["page_location"] = pageLocation
+				}
+				event.Params = value
 			}
+			payload.Events[i] = event
 		}
 		return next(l, w, r, payload)
 	}
