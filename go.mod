@@ -7,7 +7,7 @@ require (
 	github.com/foomo/go v0.0.3
 	github.com/foomo/gostandards v0.2.0
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/snappy v0.0.4
+	github.com/golang/snappy v1.0.0
 	github.com/grafana/dskit v0.0.0-20241115082728-f2a7eb3aa0e9
 	github.com/grafana/loki/pkg/push v0.0.0-20241115232916-df7a8e425951
 	github.com/grafana/loki/v3 v3.4.2
@@ -17,7 +17,7 @@ require (
 	github.com/pperaltaisern/watermillzap v1.0.0
 	github.com/prometheus/common v0.62.0
 	github.com/stretchr/testify v1.10.0
-	go.opentelemetry.io/otel/trace v1.34.0
+	go.opentelemetry.io/otel/trace v1.35.0
 	go.uber.org/zap v1.27.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -112,8 +112,8 @@ require (
 	go.etcd.io/etcd/client/v3 v3.5.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/collector/pdata v1.24.0 // indirect
-	go.opentelemetry.io/otel v1.34.0 // indirect
-	go.opentelemetry.io/otel/metric v1.34.0 // indirect
+	go.opentelemetry.io/otel v1.35.0 // indirect
+	go.opentelemetry.io/otel/metric v1.35.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go4.org/netipx v0.0.0-20230125063823-8449b0a6169f // indirect
