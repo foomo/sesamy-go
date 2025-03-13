@@ -1,7 +1,6 @@
 package client_test
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -27,7 +26,7 @@ func TestNewGtag(t *testing.T) {
 	}))
 
 	c := client.NewGTag(l, s.URL, "GA-XXXXXX")
-	incomingReq, err := http.NewRequestWithContext(context.TODO(), http.MethodGet, "/foo/bar", nil)
+	incomingReq, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/foo/bar", nil)
 	require.NoError(t, err)
 
 	err = c.Send(incomingReq, &gtag.Payload{
