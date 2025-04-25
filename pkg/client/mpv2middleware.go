@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -44,6 +45,12 @@ func MPv2MiddlewarDebugMode(next MPv2Handler) MPv2Handler {
 			payload.DebugMode = session.IsGTMDebug(r)
 		}
 		return next(r, payload)
+	}
+}
+
+func MPv2MiddlewarWithoutCancel(next MPv2Handler) MPv2Handler {
+	return func(r *http.Request, payload *mpv2.Payload[any]) error {
+		return next(r.WithContext(context.WithoutCancel(r.Context())), payload)
 	}
 }
 
