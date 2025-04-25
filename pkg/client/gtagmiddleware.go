@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -55,6 +56,12 @@ func GTagMiddlewarClientID(next GTagHandler) GTagHandler {
 			payload.ClientID = &value
 		}
 		return next(r, payload)
+	}
+}
+
+func GTagMiddlewarWithoutCancel(next GTagHandler) GTagHandler {
+	return func(r *http.Request, payload *gtag.Payload) error {
+		return next(r.WithContext(context.WithoutCancel(r.Context())), payload)
 	}
 }
 
