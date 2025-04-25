@@ -41,7 +41,7 @@ func TestSelectItem(t *testing.T) {
 	var outgoing gtag.Payload
 	err = mpv2encode.GTag(*intermediate, &outgoing)
 	require.NoError(t, err)
-	assert.Equal(t, iso4217.EUR, gtag.Get(outgoing.ECommerce.Currency))
+	assert.Equal(t, iso4217.EUR, gtag.Get(outgoing.Currency))
 }
 
 func TestSelectItem_Pointer(t *testing.T) {
@@ -69,5 +69,5 @@ func TestSelectItem_Pointer(t *testing.T) {
 
 	err = mpv2encode.GTag(*intermediate, &incoming)
 	require.NoError(t, err)
-	assert.Equal(t, iso4217.EUR, gtag.Get(incoming.ECommerce.Currency))
+	assert.Equal(t, iso4217.EUR, gtag.Get(incoming.Currency))
 }
