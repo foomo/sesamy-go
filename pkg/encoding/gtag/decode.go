@@ -74,7 +74,12 @@ func DecodeMapValue(k string, v []string, data Data) (bool, error) {
 			data[parts[0]] = map[string]any{}
 		}
 		if value, ok := data[parts[0]].(map[string]any); ok && len(v) > 0 {
-			value[strings.Join(parts[1:], ".")] = v[0]
+			val := v[0]
+			// gracefully try to unescape value
+			if out, err := url.QueryUnescape(val); err == nil {
+				val = out
+			}
+			value[strings.Join(parts[1:], ".")] = val
 		}
 		return true, nil
 	}
@@ -108,7 +113,12 @@ func DecodeObjectValue(s string) (map[string]any, error) {
 	}
 	ret := map[string]any{}
 	for _, part := range strings.Split(s, "~") {
-		ret[part[0:2]] = part[2:]
+		val := part[2:]
+		// gracefully try to unescape value
+		if out, err := url.QueryUnescape(val); err == nil {
+			val = out
+		}
+		ret[part[0:2]] = val
 	}
 	return ret, nil
 }
