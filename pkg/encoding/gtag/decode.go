@@ -34,23 +34,19 @@ func Decode(values url.Values, target any) error {
 	for key, value := range values {
 		// handle maps
 		if ok, err := DecodeMapValue(key, value, data); err != nil {
-			return err
+			return errors.Wrap(err, "failed to decode map value")
 		} else if ok {
 			continue
 		}
 
 		// handle slices
 		if ok, err := DecodeRegexValue(key, value, RegexProduct, data, ParameterItem); err != nil {
-			return err
+			return errors.Wrap(err, "failed to decode regex value")
 		} else if ok {
 			continue
 		}
 
 		// default
-		// v, err := url.QueryUnescape(value[0])
-		// if err != nil {
-		// 	return errors.Wrap(err, "failed to unescape query parameter")
-		// }
 		data[key] = value[0]
 	}
 
@@ -77,12 +73,13 @@ func DecodeMapValue(k string, v []string, data Data) (bool, error) {
 		if _, ok := data[parts[0]]; !ok {
 			data[parts[0]] = map[string]any{}
 		}
-		if value, ok := data[parts[0]].(map[string]any); ok {
-			v, err := url.QueryUnescape(v[0])
-			if err != nil {
-				return false, err
+		if value, ok := data[parts[0]].(map[string]any); ok && len(v) > 0 {
+			val := v[0]
+			// gracefully try to unescape value
+			if out, err := url.QueryUnescape(val); err == nil {
+				val = out
 			}
-			value[strings.Join(parts[1:], ".")] = v
+			value[strings.Join(parts[1:], ".")] = val
 		}
 		return true, nil
 	}
@@ -116,11 +113,12 @@ func DecodeObjectValue(s string) (map[string]any, error) {
 	}
 	ret := map[string]any{}
 	for _, part := range strings.Split(s, "~") {
-		v, err := url.QueryUnescape(part[2:])
-		if err != nil {
-			return nil, err
+		val := part[2:]
+		// gracefully try to unescape value
+		if out, err := url.QueryUnescape(val); err == nil {
+			val = out
 		}
-		ret[part[0:2]] = v
+		ret[part[0:2]] = val
 	}
 	return ret, nil
 }
