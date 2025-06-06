@@ -86,6 +86,10 @@ func New(l *zap.Logger, opts ...Option) (*Collect, error) {
 func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	// retrieve payload
 	payload := gtaghttp.Handler(w, r)
+	if payload == nil {
+		http.Error(w, "failed to decode payload", http.StatusBadRequest)
+		return
+	}
 
 	// compose middlewares
 	next := c.gtagHandler
