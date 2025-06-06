@@ -1,6 +1,6 @@
 module github.com/foomo/sesamy-go
 
-go 1.24.3
+go 1.24.1
 
 require (
 	github.com/foomo/go v0.0.3
