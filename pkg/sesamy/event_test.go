@@ -9,6 +9,8 @@ import (
 )
 
 func TestDecodeParams(t *testing.T) {
+	t.Parallel()
+
 	type params struct {
 		Title string `json:"title"`
 	}

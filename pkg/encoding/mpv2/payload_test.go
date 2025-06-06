@@ -13,6 +13,7 @@ import (
 )
 
 func TestPayload(t *testing.T) {
+	t.Parallel()
 	v := mpv2.Payload[params.PageView]{
 		ClientID:        "C123456",
 		UserID:          "U123456",
