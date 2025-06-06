@@ -2,6 +2,7 @@ package gtag
 
 import (
 	"net/url"
+	"strings"
 )
 
 // EncodeValues
@@ -13,7 +14,7 @@ func EncodeValues(values url.Values) string {
 		richsstsse = true
 	}
 
-	ret := values.Encode()
+	ret := strings.ReplaceAll(values.Encode(), "+", "%20")
 
 	if richsstsse {
 		ret += "&richsstsse"
