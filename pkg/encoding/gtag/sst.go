@@ -19,4 +19,10 @@ type SST struct {
 	GCD *string `json:"gcd,omitempty" gtag:"gcd,omitempty"`
 	// Example: 0
 	UDE *string `json:"ude,omitempty" gtag:"ude,omitempty"`
+	// Example: 223090308
+	LPC *string `json:"lpc,omitempty" gtag:"lpc,omitempty"`
+	// Example: 223090308
+	NAVT *string `json:"navt,omitempty" gtag:"navt,omitempty"`
+	// Example: 1
+	SWExp *string `json:"sw_exp,omitempty" gtag:"sw_exp,omitempty"`
 }
