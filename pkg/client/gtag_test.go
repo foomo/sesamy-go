@@ -15,6 +15,7 @@ import (
 )
 
 func TestNewGtag(t *testing.T) {
+	t.Parallel()
 	l := zaptest.NewLogger(t)
 
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

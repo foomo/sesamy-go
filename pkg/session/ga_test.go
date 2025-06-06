@@ -9,6 +9,7 @@ import (
 )
 
 func TestGARegex(t *testing.T) {
+	t.Parallel()
 	ga1 := "GA1.1.584335997.1746564151"
 
 	{
@@ -22,6 +23,7 @@ func TestGARegex(t *testing.T) {
 }
 
 func TestGSRegex(t *testing.T) {
+	t.Parallel()
 	gs1 := "GS1.1.1746524658.33.0.1746524658.0.0.0"
 	gs2 := "GS2.1.s1746524658$o1$g0$t1746562809$j0$l0$h596732783"
 

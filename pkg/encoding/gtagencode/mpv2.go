@@ -34,7 +34,7 @@ func MPv2(source gtag.Payload, target any) error {
 
 	// consent
 	targetConsentData := map[string]any{
-		"add_storage":        mpv2.ConsentText(source.AdStorage()),
+		"ad_storage":         mpv2.ConsentText(source.AdStorage()),
 		"ad_user_data":       mpv2.ConsentText(source.AdUserData()),
 		"ad_personalization": mpv2.ConsentText(source.AdPersonalization()),
 		"analytics_storage":  mpv2.ConsentText(source.AnalyticsStorage()),
