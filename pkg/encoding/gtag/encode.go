@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"sort"
+	"slices"
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
@@ -110,7 +110,7 @@ func EncodeObjectValue(s map[string]any) string {
 	for k := range s {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	ret := make([]string, 0, len(keys))
 	for _, k := range keys {
 		ret = append(ret, k+fmt.Sprintf("%s", s[k]))

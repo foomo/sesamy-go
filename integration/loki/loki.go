@@ -117,7 +117,7 @@ func New(l *zap.Logger, addr string, opts ...Option) *Loki {
 func (l *Loki) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	l.cancel = cancel
-	utils.Batch(ctx, l.entries, l.batchSize, l.process)
+	batch.Batch(ctx, l.entries, l.batchSize, l.process)
 }
 
 func (l *Loki) Write(payload mpv2.Payload[any]) {

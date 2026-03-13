@@ -103,7 +103,7 @@ func TestCollect_GTagHTTPHandler(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create test request
-			req := httptest.NewRequest(http.MethodPost, "/collect?"+tt.query, nil)
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/collect?"+tt.query, nil)
 			req.Header.Set("User-Agent", "test-agent")
 
 			// Create response recorder
