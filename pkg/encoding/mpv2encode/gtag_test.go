@@ -29,9 +29,9 @@ func TestSelectItem(t *testing.T) {
 	var intermediate *mpv2.Payload[params.RemoveFromCart[params.Item]]
 	err = gtagencode.MPv2(incoming, &intermediate)
 	require.NoError(t, err)
-	assert.Equal(t, iso4217.USD, intermediate.Events[0].Params.Currency)
+	assert.Equal(t, iso4217.CodeUSD, intermediate.Events[0].Params.Currency)
 
-	intermediate.Events[0].Params.Currency = iso4217.EUR
+	intermediate.Events[0].Params.Currency = iso4217.CodeEUR
 
 	{
 		out, err := json.MarshalIndent(intermediate, "", "  ")
@@ -42,7 +42,7 @@ func TestSelectItem(t *testing.T) {
 	var outgoing gtag.Payload
 	err = mpv2encode.GTag(*intermediate, &outgoing)
 	require.NoError(t, err)
-	assert.Equal(t, iso4217.EUR, gtag.Get(outgoing.Currency))
+	assert.Equal(t, iso4217.CodeEUR, gtag.Get(outgoing.Currency))
 }
 
 func TestSelectItem_Pointer(t *testing.T) {
@@ -58,10 +58,10 @@ func TestSelectItem_Pointer(t *testing.T) {
 	var intermediate *mpv2.Payload[params.RemoveFromCart[params.Item]]
 	err = gtagencode.MPv2(*incoming, &intermediate)
 	require.NoError(t, err)
-	assert.Equal(t, iso4217.USD, intermediate.Events[0].Params.Currency)
+	assert.Equal(t, iso4217.CodeUSD, intermediate.Events[0].Params.Currency)
 
 	// override value
-	intermediate.Events[0].Params.Currency = iso4217.EUR
+	intermediate.Events[0].Params.Currency = iso4217.CodeEUR
 
 	// {
 	// 	out, err := json.MarshalIndent(intermediate, "", "  ")
@@ -71,5 +71,5 @@ func TestSelectItem_Pointer(t *testing.T) {
 
 	err = mpv2encode.GTag(*intermediate, &incoming)
 	require.NoError(t, err)
-	assert.Equal(t, iso4217.EUR, gtag.Get(incoming.Currency))
+	assert.Equal(t, iso4217.CodeEUR, gtag.Get(incoming.Currency))
 }

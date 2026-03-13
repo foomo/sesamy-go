@@ -1,10 +1,10 @@
 module github.com/foomo/sesamy-go
 
-go 1.24.1
+go 1.25
 
 require (
 	github.com/foomo/go v0.0.3
-	github.com/foomo/gostandards v0.2.0
+	github.com/foomo/gostandards v0.3.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/snappy v1.0.0
 	github.com/grafana/dskit v0.0.0-20250605175458-8a9c353edab7
@@ -14,7 +14,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.1-0.20220423185008-bf980b35cac4
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/common v0.64.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	go.opentelemetry.io/otel/trace v1.36.0
 	go.uber.org/zap v1.27.0
 	gopkg.in/yaml.v2 v2.4.0

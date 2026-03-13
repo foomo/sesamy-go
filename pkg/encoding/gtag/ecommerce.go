@@ -7,7 +7,7 @@ import (
 type ECommerce struct {
 	// Currency Code. ISO 4217
 	// Example: JPY
-	Currency *iso4217.Currency `json:"currency,omitempty" gtag:"cu,omitempty"`
+	Currency *iso4217.Code `json:"currency,omitempty" gtag:"cu,omitempty"`
 	// Example:
 	Items []*Item `json:"items,omitempty" gtag:"pr,omitempty"`
 	// Promotion Impression/Click Tracking. Promotion Id
