@@ -9,8 +9,8 @@ import (
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
-	gtaghttp "github.com/foomo/sesamy-go/pkg/http/gtag"
-	mpv2http "github.com/foomo/sesamy-go/pkg/http/mpv2"
+	gtaghttp "github.com/foomo/sesamy-go/pkg/sesamyhttp/gtag"
+	mpv2http "github.com/foomo/sesamy-go/pkg/sesamyhttp/mpv2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )

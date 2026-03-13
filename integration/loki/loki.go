@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/foomo/sesamy-go/pkg/batch"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
-	"github.com/foomo/sesamy-go/pkg/utils"
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/grafana/dskit/backoff"
