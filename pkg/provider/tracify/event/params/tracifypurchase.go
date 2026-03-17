@@ -5,8 +5,8 @@ import (
 )
 
 type TracifyPurchase[I any] struct {
-	Currency      iso4217.Currency `json:"currency,omitempty"`
-	Value         float64          `json:"value,omitempty"`
-	TransactionID string           `json:"transaction_id,omitempty"`
-	Items         []I              `json:"items,omitempty"`
+	Currency      iso4217.Code `json:"currency,omitempty"`
+	Value         float64      `json:"value,omitempty"`
+	TransactionID string       `json:"transaction_id,omitempty"`
+	Items         []I          `json:"items,omitempty"`
 }

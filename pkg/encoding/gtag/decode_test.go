@@ -41,6 +41,7 @@ func TestDecode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			var event gtag.Payload
 			require.NoError(t, gtag.DecodeQuery(tt.args, &event))
 
@@ -56,6 +57,7 @@ func TestDecode(t *testing.T) {
 
 func TestDecodeMapValue(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		name string
 		args string
@@ -77,6 +79,7 @@ func TestDecodeMapValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			d := gtag.Data{}
 			values, err := url.ParseQuery(tt.name)
 			require.NoError(t, err)
@@ -93,6 +96,7 @@ func TestDecodeMapValue(t *testing.T) {
 
 func TestDecodeProductValue(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		name string
 		args string
@@ -110,9 +114,11 @@ func TestDecodeProductValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			d := gtag.Data{}
 			values, err := url.ParseQuery(tt.name)
 			require.NoError(t, err)
+
 			for k, v := range values {
 				if got, err := gtag.DecodeRegexValue(k, v, gtag.RegexProduct, d, "pr"); assert.NoError(t, err) && got != tt.want {
 					t.Errorf("decodeMapValue() = %v, want %v", got, tt.want)
@@ -125,6 +131,7 @@ func TestDecodeProductValue(t *testing.T) {
 
 func TestDecodeObjectValue(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		name string
 		args string
@@ -146,6 +153,7 @@ func TestDecodeObjectValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			if got, err := gtag.DecodeObjectValue(tt.name); assert.NoError(t, err) && !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("decodeObjectValue() = %v, want %v", got, tt.want)
 				t.Log(got)

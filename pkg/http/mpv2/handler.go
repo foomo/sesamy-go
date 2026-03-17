@@ -15,6 +15,7 @@ func Handler(w http.ResponseWriter, r *http.Request) *mpv2.Payload[any] {
 
 	// read request body
 	var payload *mpv2.Payload[any]
+
 	err := json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -26,6 +27,7 @@ func Handler(w http.ResponseWriter, r *http.Request) *mpv2.Payload[any] {
 		http.Error(w, "missing events", http.StatusBadRequest)
 		return nil
 	}
+
 	for _, event := range payload.Events {
 		if event.Name == "" {
 			http.Error(w, "missing event name", http.StatusBadRequest)

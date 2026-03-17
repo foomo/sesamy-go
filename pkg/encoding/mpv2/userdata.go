@@ -4,5 +4,5 @@ package mpv2
 type UserData struct {
 	SHA256EmailAddress SHA256Hash      `json:"sha256_email_address,omitempty"`
 	SHA256PhoneNumber  SHA256Hash      `json:"sha256_phone_number,omitempty"`
-	Address            UserDataAddress `json:"address,omitempty"`
+	Address            UserDataAddress `json:"address,omitempty"` //nolint:modernize // keep for now
 }

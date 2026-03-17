@@ -20,6 +20,7 @@ func TestNewMPv2(t *testing.T) {
 
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Helper()
+
 		out, err := httputil.DumpRequest(r, true)
 		if assert.NoError(t, err) {
 			t.Log(string(out))

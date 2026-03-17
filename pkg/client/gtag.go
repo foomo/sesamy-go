@@ -71,6 +71,7 @@ func NewGTag(l *zap.Logger, host, trackingID string, opts ...GTagOption) *GTag {
 	for _, opt := range opts {
 		opt(inst)
 	}
+
 	inst.middlewares = append(inst.middlewares,
 		GTagMiddlewareRichsstsse,
 		GTagMiddlewareTrackingID(inst.trackingID),
@@ -79,6 +80,7 @@ func NewGTag(l *zap.Logger, host, trackingID string, opts ...GTagOption) *GTag {
 		GTagMiddlewarClientID,
 		GTagMiddlewarSessionID(inst.trackingID),
 	)
+
 	return inst
 }
 
@@ -99,6 +101,7 @@ func (c *GTag) Send(r *http.Request, payload *gtag.Payload) error {
 	for _, middleware := range c.middlewares {
 		next = middleware(next)
 	}
+
 	return next(r, payload)
 }
 
@@ -136,11 +139,13 @@ func (c *GTag) SendRaw(r *http.Request, payload *gtag.Payload) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var body string
+
 		if out, err := io.ReadAll(resp.Body); err != nil {
 			c.l.With(zap.Error(err)).Warn(err.Error())
 		} else {
 			body = string(out)
 		}
+
 		return errors.Errorf("unexpected response status: %d (%s)", resp.StatusCode, body)
 	}
 

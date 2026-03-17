@@ -19,6 +19,7 @@ func MPv2(source gtag.Payload, target any) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal source")
 	}
+
 	if err = json.Unmarshal(out, &sourceData); err != nil {
 		return errors.Wrap(err, "failed to unmarshal source")
 	}
@@ -43,40 +44,47 @@ func MPv2(source gtag.Payload, target any) error {
 
 	// combine user properties
 	targetUserProperties := map[string]any{}
+
 	if node, ok := sourceData["user_property"].(map[string]string); ok {
 		for s, s2 := range node {
 			targetUserProperties[s] = s2
 		}
 	}
+
 	if node, ok := sourceData["user_property_number"].(map[string]string); ok {
 		for s, s2 := range node {
 			targetUserProperties[s] = s2
 		}
 	}
+
 	targetData["user_properties"] = targetUserProperties
 
 	// transform event
 	targetEventData := map[string]any{
 		"name": source.EventName,
 	}
+
 	targetEventDataParams := map[string]any{}
 	if value, ok := sourceData["document_title"]; ok {
 		targetEventDataParams["page_title"] = value
 	}
+
 	if value, ok := sourceData["document_referrer"]; ok {
 		targetEventDataParams["page_referrer"] = value
 	}
+
 	if value, ok := sourceData["document_location"]; ok {
 		targetEventDataParams["page_location"] = value
 	}
+
 	if node, ok := sourceData["ecommerce"].(map[string]any); ok {
 		maps.Copy(targetEventDataParams, node)
 	}
+
 	if node, ok := sourceData["event_parameter"].(map[string]any); ok {
-		for s, s2 := range node {
-			targetEventDataParams[s] = s2
-		}
+		maps.Copy(targetEventDataParams, node)
 	}
+
 	if node, ok := sourceData["event_parameter_number"].(map[string]any); ok {
 		for s, s2 := range node {
 			if value, err := strconv.ParseFloat(fmt.Sprintf("%s", s2), 64); err == nil {
@@ -86,6 +94,7 @@ func MPv2(source gtag.Payload, target any) error {
 			}
 		}
 	}
+
 	targetEventData["params"] = targetEventDataParams
 	targetData["events"] = []any{targetEventData}
 

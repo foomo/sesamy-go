@@ -90,9 +90,11 @@ func NewMPv2(l *zap.Logger, host string, opts ...MPv2Option) *MPv2 {
 	for _, opt := range opts {
 		opt(inst)
 	}
+
 	inst.middlewares = append(inst.middlewares,
 		MPv2MiddlewarClientID,
 	)
+
 	return inst
 }
 
@@ -113,6 +115,7 @@ func (c *MPv2) Collect(r *http.Request, events ...sesamy.AnyEvent) error {
 	for _, event := range events {
 		payload.Events = append(payload.Events, event.AnyEvent())
 	}
+
 	return c.SendPayload(r, payload)
 }
 
@@ -121,6 +124,7 @@ func (c *MPv2) SendPayload(r *http.Request, payload *mpv2.Payload[any]) error {
 	for _, middleware := range c.middlewares {
 		next = middleware(next)
 	}
+
 	return next(r, payload)
 }
 
@@ -145,9 +149,11 @@ func (c *MPv2) SendRaw(r *http.Request, payload *mpv2.Payload[any]) error {
 	if len(c.apiSecret) > 0 {
 		qry.Add("api_secret", c.apiSecret)
 	}
+
 	if len(c.measurementID) > 0 {
 		qry.Add("measurement_id", c.measurementID)
 	}
+
 	req.URL.RawQuery = qry.Encode()
 
 	// TODO valiate: copy headers
@@ -169,11 +175,13 @@ func (c *MPv2) SendRaw(r *http.Request, payload *mpv2.Payload[any]) error {
 
 	if resp.StatusCode != http.StatusOK {
 		var body string
+
 		if out, err := io.ReadAll(resp.Body); err != nil {
 			c.l.With(zap.Error(err)).Warn(err.Error())
 		} else {
 			body = string(out)
 		}
+
 		return errors.Errorf("unexpected response status: %d (%s)", resp.StatusCode, body)
 	}
 

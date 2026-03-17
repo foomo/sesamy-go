@@ -26,8 +26,10 @@ func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 				if err := h(l, r, &event); err != nil {
 					return err
 				}
+
 				payload.Events[i] = event
 			}
+
 			return next(l, w, r, payload)
 		}
 	}
@@ -35,6 +37,7 @@ func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 
 func MiddlewareSessionID(measurementID string) Middleware {
 	measurementID = strings.Split(measurementID, "-")[1]
+
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 			if payload.SessionID == "" {
@@ -55,9 +58,11 @@ func MiddlewareSessionID(measurementID string) Middleware {
 						value["ga_session_number"] = number
 						event.Params = value
 					}
+
 					payload.Events[i] = event
 				}
 			}
+
 			return next(l, w, r, payload)
 		}
 	}
@@ -70,8 +75,10 @@ func MiddlewareClientID(next MiddlewareHandler) MiddlewareHandler {
 			if err != nil && !errors.Is(err, http.ErrNoCookie) {
 				return err
 			}
+
 			payload.ClientID = value
 		}
+
 		return next(l, w, r, payload)
 	}
 }
@@ -81,6 +88,7 @@ func MiddlewareDebugMode(next MiddlewareHandler) MiddlewareHandler {
 		if !payload.DebugMode && session.IsGTMDebug(r) {
 			payload.DebugMode = true
 		}
+
 		return next(l, w, r, payload)
 	}
 }
@@ -93,8 +101,10 @@ func MiddlewareUserID(cookieName string) Middleware {
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
 					return err
 				}
+
 				payload.UserID = value.Value
 			}
+
 			return next(l, w, r, payload)
 		}
 	}
@@ -105,6 +115,7 @@ func MiddlewareTimestamp(next MiddlewareHandler) MiddlewareHandler {
 		if payload.TimestampMicros == 0 {
 			payload.TimestampMicros = time.Now().UnixMicro()
 		}
+
 		return next(l, w, r, payload)
 	}
 }
@@ -117,11 +128,14 @@ func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 					if value["user_agent"] == nil {
 						value["user_agent"] = userAgent
 					}
+
 					event.Params = value
 				}
+
 				payload.Events[i] = event
 			}
 		}
+
 		return next(l, w, r, payload)
 	}
 }
@@ -129,23 +143,28 @@ func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		var ipOverride string
+
 		for _, key := range []string{"CF-Connecting-IP", "X-Original-Forwarded-For", "X-Forwarded-For", "X-Real-Ip"} {
 			if value := r.Header.Get(key); value != "" {
 				ipOverride = value
 				break
 			}
 		}
+
 		if ipOverride != "" {
 			for i, event := range payload.Events {
 				if value, ok := event.Params.(map[string]any); ok {
 					if value["ip_override"] == nil {
 						value["ip_override"] = ipOverride
 					}
+
 					event.Params = value
 				}
+
 				payload.Events[i] = event
 			}
 		}
+
 		return next(l, w, r, payload)
 	}
 }
@@ -157,10 +176,13 @@ func MiddlewareEngagementTime(next MiddlewareHandler) MiddlewareHandler {
 				if value["engagement_time_msec"] == nil {
 					value["engagement_time_msec"] = 100
 				}
+
 				event.Params = value
 			}
+
 			payload.Events[i] = event
 		}
+
 		return next(l, w, r, payload)
 	}
 }
@@ -169,21 +191,27 @@ func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 		pageTitle := r.Header.Get("X-Page-Title")
 		pageLocation := r.Header.Get("Referer")
 		pageReferrer := r.Header.Get("X-Page-Referrer")
+
 		for i, event := range payload.Events {
 			if value, ok := event.Params.(map[string]any); ok {
 				if value["page_title"] == nil && pageTitle != "" {
 					value["page_title"] = pageTitle
 				}
+
 				if value["page_referrer"] == nil && pageReferrer != "" {
 					value["page_referrer"] = pageReferrer
 				}
+
 				if value["page_location"] == nil && pageLocation != "" {
 					value["page_location"] = pageLocation
 				}
+
 				event.Params = value
 			}
+
 			payload.Events[i] = event
 		}
+
 		return next(l, w, r, payload)
 	}
 }
@@ -193,6 +221,7 @@ func MiddlewareWithTimeout(timeout time.Duration) Middleware {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 			ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), timeout)
 			defer cancel()
+
 			return next(l, w, r.WithContext(ctx), payload)
 		}
 	}
@@ -208,18 +237,21 @@ func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
 		if spanCtx := trace.SpanContextFromContext(r.Context()); spanCtx.IsValid() && spanCtx.IsSampled() {
 			l = l.With(zap.String("trace_id", spanCtx.TraceID().String()), zap.String("span_id", spanCtx.SpanID().String()))
 		}
+
 		l = l.With(
 			zap.String("event_names", strings.Join(eventNames, ",")),
 			zap.String("event_user_id", payload.UserID),
 			zap.String("event_client_id", payload.ClientID),
 			zap.String("event_session_id", payload.SessionID),
 		)
+
 		err := next(l, w, r, payload)
 		if err != nil {
 			l.Error("handled event", zap.Error(err))
 		} else {
 			l.Info("handled event")
 		}
+
 		return err
 	}
 }

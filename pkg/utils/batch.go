@@ -10,17 +10,20 @@ func Batch[T any](ctx context.Context, ch <-chan T, batchSize int, fn func([]T))
 		for v := range ch {
 			fn([]T{v})
 		}
+
 		return
 	}
 
 	// batchSize > 1
 	var batch = make([]T, 0, batchSize)
+
 	for {
 		select {
 		case <-ctx.Done():
 			if len(batch) > 0 {
 				fn(batch)
 			}
+
 			return
 		case v, ok := <-ch:
 			if !ok { // closed

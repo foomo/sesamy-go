@@ -20,6 +20,7 @@ func TestNewGtag(t *testing.T) {
 
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		t.Helper()
+
 		out, err := httputil.DumpRequest(r, true)
 		if assert.NoError(t, err) {
 			t.Log(string(out))
@@ -31,7 +32,7 @@ func TestNewGtag(t *testing.T) {
 	require.NoError(t, err)
 
 	err = c.Send(incomingReq, &gtag.Payload{
-		EventName: gtag.Set(sesamy.EventName("page_view")),
+		EventName: new(sesamy.EventName("page_view")),
 	})
 	require.NoError(t, err)
 }

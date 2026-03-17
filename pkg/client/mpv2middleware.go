@@ -12,6 +12,7 @@ import (
 
 func MPv2MiddlewarSessionID(measurementID string) MPv2Middleware {
 	measurementID = strings.Split(measurementID, "-")[1]
+
 	return func(next MPv2Handler) MPv2Handler {
 		return func(r *http.Request, payload *mpv2.Payload[any]) error {
 			if payload.SessionID == "" {
@@ -19,8 +20,10 @@ func MPv2MiddlewarSessionID(measurementID string) MPv2Middleware {
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
 					return errors.Wrap(err, "failed to parse client cookie")
 				}
+
 				payload.SessionID = value
 			}
+
 			return next(r, payload)
 		}
 	}
@@ -33,8 +36,10 @@ func MPv2MiddlewarClientID(next MPv2Handler) MPv2Handler {
 			if err != nil && !errors.Is(err, http.ErrNoCookie) {
 				return errors.Wrap(err, "failed to parse client cookie")
 			}
+
 			payload.ClientID = value
 		}
+
 		return next(r, payload)
 	}
 }
@@ -44,6 +49,7 @@ func MPv2MiddlewarDebugMode(next MPv2Handler) MPv2Handler {
 		if !payload.DebugMode {
 			payload.DebugMode = session.IsGTMDebug(r)
 		}
+
 		return next(r, payload)
 	}
 }
@@ -62,8 +68,10 @@ func MPv2MiddlewareUserID(cookieName string) MPv2Middleware {
 				if err != nil && !errors.Is(err, http.ErrNoCookie) {
 					return err
 				}
+
 				payload.UserID = value.Value
 			}
+
 			return next(r, payload)
 		}
 	}

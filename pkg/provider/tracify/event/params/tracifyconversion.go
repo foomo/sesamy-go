@@ -5,7 +5,7 @@ import (
 )
 
 type TracifyConversion struct {
-	Currency     iso4217.Currency `json:"currency,omitempty"`
-	Value        float64          `json:"value,omitempty"`
-	ConversionID string           `json:"conversion_id,omitempty"`
+	Currency     iso4217.Code `json:"currency,omitempty"`
+	Value        float64      `json:"value,omitempty"`
+	ConversionID string       `json:"conversion_id,omitempty"`
 }

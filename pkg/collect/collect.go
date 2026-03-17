@@ -131,7 +131,7 @@ func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, fmt.Sprintf("%s%s?%s", c.taggingURL, "/g/collect", gtag.EncodeValues(values)), body)
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, fmt.Sprintf("%s%s?%s", c.taggingURL, "/g/collect", gtag.EncodeValues(values)), body) //nolint:gosec // taggingURL is a trusted config value set at construction time
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
 	}
@@ -139,7 +139,7 @@ func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 	// copy headers
 	req.Header = r.Header.Clone()
 
-	resp, err := c.taggingClient.Do(req)
+	resp, err := c.taggingClient.Do(req) //nolint:gosec // taggingURL is a trusted config value set at construction time
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 	// copy raw query
 	req.URL.RawQuery = r.URL.RawQuery
 
-	resp, err := c.taggingClient.Do(req)
+	resp, err := c.taggingClient.Do(req) //nolint:gosec // taggingURL is a trusted config value set at construction time
 	if err != nil {
 		return err
 	}

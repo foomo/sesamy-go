@@ -33,6 +33,7 @@ func Handler(w http.ResponseWriter, r *http.Request) *gtag.Payload {
 				http.Error(w, fmt.Sprintf("failed to parse extended url: %s", err.Error()), http.StatusInternalServerError)
 				return nil
 			}
+
 			for s2, i := range v {
 				values.Set(s2, i[0])
 			}

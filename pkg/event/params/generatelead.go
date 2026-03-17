@@ -6,6 +6,6 @@ import (
 
 // GenerateLead https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference/events#generate_lead
 type GenerateLead struct {
-	Currency iso4217.Currency `json:"currency,omitempty"`
-	Value    float64          `json:"value,omitempty"`
+	Currency iso4217.Code `json:"currency,omitempty"`
+	Value    float64      `json:"value,omitempty"`
 }

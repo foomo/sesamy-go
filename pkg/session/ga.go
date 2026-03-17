@@ -9,9 +9,13 @@ import (
 
 // see https://www.bbccss.com/explanation-of-cookie-values-used-by-ga4.html/comment-page-1#comment-6684
 var (
+
+	// GA1Regex is a compiled regular expression that matches GA1 cookie patterns with segments capturing numeric values.
 	GA1Regex = regexp.MustCompile(`^GA1\.(\d+)\.(\d+)\.(\d+)$`)
+	// GS1Regex is a compiled regular expression that matches GS1 cookie patterns with segments capturing numeric values.
 	// GS1.<domain_level>.<session_id>.<session_count>.<engagement_session>.<timestamp>.<countdown>.<enhanced_client_id>
 	GS1Regex = regexp.MustCompile(`^GS1\.(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)\.(\d+)$`)
+	// GS2Regex is a compiled regular expression that matches GS2 cookie patterns with segments capturing numeric values.
 	// GS2.<domain_level>.s<session_id>$o<session_count>$g<engagement_session>$t<timestamp>$j<countdown>$l<undefined>$h<enhanced_client_id>
 	GS2Regex = regexp.MustCompile(`^GS2\.(\d+)\.s(\d+)\$o(\d+)\$g(\d+)\$t(\d+)\$j(\d+)\$l(\d+)\$h(\d+)$`)
 )

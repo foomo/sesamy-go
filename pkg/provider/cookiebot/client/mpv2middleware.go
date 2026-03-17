@@ -44,6 +44,7 @@ func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 				if b {
 					ret = mpv2.ConsentGranted
 				}
+
 				return &ret
 			}
 

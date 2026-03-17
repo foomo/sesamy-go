@@ -11,5 +11,6 @@ func ConsentText(v bool) Consent {
 	if v {
 		return ConsentGranted
 	}
+
 	return ConsentDenied
 }

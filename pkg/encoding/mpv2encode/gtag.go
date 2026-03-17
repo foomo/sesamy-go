@@ -19,6 +19,7 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 	{ // user_property
 		targetUserProperty := map[string]any{}
 		targetUserPropertyNumber := map[string]any{}
+
 		for k, v := range source.UserProperties {
 			if s, ok := v.(string); ok {
 				if f, err := strconv.ParseFloat(s, 64); err == nil {
@@ -30,6 +31,7 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 				targetUserProperty[k] = fmt.Sprintf("%s", v)
 			}
 		}
+
 		targetData["user_property"] = targetUserProperty
 		targetData["user_property_number"] = targetUserPropertyNumber
 	}
@@ -40,6 +42,7 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal event")
 	}
+
 	if err = json.Unmarshal(out, &sourceData); err != nil {
 		return errors.Wrap(err, "failed to unmarshal source events")
 	}
@@ -69,6 +72,7 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 			{ // user_property
 				targetEventProperty := map[string]any{}
 				targetEventPropertyNumber := map[string]any{}
+
 				for k, v := range params {
 					switch t := v.(type) {
 					case float64:
@@ -83,6 +87,7 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 						targetEventProperty[k] = fmt.Sprintf("%s", v)
 					}
 				}
+
 				targetData["event_parameter"] = targetEventProperty
 				targetData["event_parameter_number"] = targetEventPropertyNumber
 			}
