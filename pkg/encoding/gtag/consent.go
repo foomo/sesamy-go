@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Consent represents the structure of the consent object used in Google Tag Manager (GTM) for managing user consent.
 // See https://developers.google.com/tag-platform/security/concepts/consent-mode
 type Consent struct {
 	// Current Google Consent Status. Format 'G1'+'AdsStorageBoolStatus'`+'AnalyticsStorageBoolStatus'
@@ -37,13 +38,16 @@ func (c Consent) AdStorage() bool {
 			return slices.Contains([]string{"l", "t", "r", "n", "u", "v"}, gcd[2])
 		}
 	}
+
 	if c.GoogleConsentUpdate != nil {
 		gcs := *c.GoogleConsentUpdate
 		if strings.HasPrefix(gcs, "G1") && len(gcs) == 4 {
 			return gcs[2:3] == "1"
 		}
+
 		return false
 	}
+
 	return true
 }
 
@@ -54,13 +58,16 @@ func (c Consent) AnalyticsStorage() bool {
 			return slices.Contains([]string{"l", "t", "r", "n", "u", "v"}, gcd[4])
 		}
 	}
+
 	if c.GoogleConsentUpdate != nil {
 		gcs := *c.GoogleConsentUpdate
 		if strings.HasPrefix(gcs, "G1") && len(gcs) == 4 {
 			return gcs[3:4] == "1"
 		}
+
 		return false
 	}
+
 	return true
 }
 
@@ -71,6 +78,7 @@ func (c Consent) AdUserData() bool {
 			return slices.Contains([]string{"l", "t", "r", "n", "u", "v"}, gcd[6])
 		}
 	}
+
 	return c.AdStorage()
 }
 
@@ -81,5 +89,6 @@ func (c Consent) AdPersonalization() bool {
 			return slices.Contains([]string{"l", "t", "r", "n", "u", "v"}, gcd[8])
 		}
 	}
+
 	return c.AdStorage()
 }

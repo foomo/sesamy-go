@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"maps"
 	"net/url"
 	"slices"
 	"strings"
@@ -24,6 +25,7 @@ func Encode(payload *Payload) (url.Values, io.Reader, error) {
 	payload.Remain = nil
 
 	data := Data{}
+
 	var json = jsoniter.Config{
 		TagKey:                        "gtag",
 		EscapeHTML:                    false,
@@ -35,15 +37,15 @@ func Encode(payload *Payload) (url.Values, io.Reader, error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to marshall payload")
 	}
+
 	if err := json.Unmarshal(jsonBytes, &data); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to unmarshall payload")
 	}
 
-	for s, a := range remain {
-		data[s] = a
-	}
+	maps.Copy(data, remain)
 
 	ret := url.Values{}
+
 	for k, v := range data {
 		switch t := v.(type) {
 		case []any:
@@ -76,16 +78,21 @@ func Encode(payload *Payload) (url.Values, io.Reader, error) {
 		}
 	}
 
-	var body []string
-	var reader io.Reader
+	var (
+		body   []string
+		reader io.Reader
+	)
+
 	maxQueryLength := 2048
 	if richsstsse {
 		maxQueryLength -= len("&richsstsse")
 	}
+
 	for len(ret.Encode()) > maxQueryLength {
 		for s, i := range ret {
 			ret.Del(s)
 			body = append(body, s+"="+i[0])
+
 			break
 		}
 	}
@@ -106,14 +113,18 @@ func EncodeObjectValue(s map[string]any) string {
 	if len(s) == 0 {
 		return ""
 	}
+
 	keys := make([]string, 0, len(s))
 	for k := range s {
 		keys = append(keys, k)
 	}
+
 	slices.Sort(keys)
+
 	ret := make([]string, 0, len(keys))
 	for _, k := range keys {
 		ret = append(ret, k+fmt.Sprintf("%s", s[k]))
 	}
+
 	return strings.Join(ret, "~")
 }

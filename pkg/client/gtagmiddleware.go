@@ -12,6 +12,7 @@ import (
 
 func GTagMiddlewareRichsstsse(next GTagHandler) GTagHandler {
 	v := ""
+
 	return func(r *http.Request, payload *gtag.Payload) error {
 		payload.Richsstsse = &v
 		return next(r, payload)
@@ -38,10 +39,12 @@ func GTagMiddlewarProtocolVersion(v string) GTagMiddleware {
 
 func GTagMiddlewarIsDebug(next GTagHandler) GTagHandler {
 	v := "1"
+
 	return func(r *http.Request, payload *gtag.Payload) error {
 		if session.IsGTMDebug(r) {
 			payload.IsDebug = &v
 		}
+
 		return next(r, payload)
 	}
 }
@@ -52,9 +55,11 @@ func GTagMiddlewarClientID(next GTagHandler) GTagHandler {
 		if err != nil && !errors.Is(err, http.ErrNoCookie) {
 			return errors.Wrap(err, "failed to parse client cookie")
 		}
+
 		if value != "" {
 			payload.ClientID = &value
 		}
+
 		return next(r, payload)
 	}
 }
@@ -67,15 +72,18 @@ func GTagMiddlewarWithoutCancel(next GTagHandler) GTagHandler {
 
 func GTagMiddlewarSessionID(measurementID string) GTagMiddleware {
 	measurementID = strings.Split(measurementID, "-")[1]
+
 	return func(next GTagHandler) GTagHandler {
 		return func(r *http.Request, payload *gtag.Payload) error {
 			value, err := session.ParseGASessionID(r, measurementID)
 			if err != nil && !errors.Is(err, http.ErrNoCookie) {
 				return errors.Wrap(err, "failed to parse session cookie")
 			}
+
 			if value != "" {
 				payload.SessionID = &value
 			}
+
 			return next(r, payload)
 		}
 	}

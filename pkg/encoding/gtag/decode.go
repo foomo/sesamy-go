@@ -15,6 +15,7 @@ func DecodeRequest(r http.Request, target any) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to parse request URI")
 	}
+
 	return Decode(u.Query(), target)
 }
 
@@ -23,6 +24,7 @@ func DecodeQuery(input string, tarteg any) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to parse query")
 	}
+
 	return Decode(values, tarteg)
 }
 
@@ -64,6 +66,7 @@ func Decode(values url.Values, target any) error {
 	if err := decoder.Decode(data); err != nil {
 		return errors.Wrap(err, "failed to weakly decode query")
 	}
+
 	return nil
 }
 
@@ -73,16 +76,20 @@ func DecodeMapValue(k string, v []string, data Data) (bool, error) {
 		if _, ok := data[parts[0]]; !ok {
 			data[parts[0]] = map[string]any{}
 		}
+
 		if value, ok := data[parts[0]].(map[string]any); ok && len(v) > 0 {
 			val := v[0]
 			// gracefully try to unescape value
 			if out, err := url.QueryUnescape(val); err == nil {
 				val = out
 			}
+
 			value[strings.Join(parts[1:], ".")] = val
 		}
+
 		return true, nil
 	}
+
 	return false, nil
 }
 
@@ -93,16 +100,20 @@ func DecodeRegexValue(k string, v []string, r *regexp.Regexp, data Data, key str
 		if err != nil {
 			return false, err
 		}
+
 		if value != nil {
 			v, ok := data[key].([]map[string]any)
 			if !ok {
 				v = []map[string]any{}
 			}
+
 			v = append(v, value)
 			data[key] = v
+
 			return true, nil
 		}
 	}
+
 	return false, nil
 }
 
@@ -111,14 +122,18 @@ func DecodeObjectValue(s string) (map[string]any, error) {
 	if len(s) == 0 {
 		return nil, nil //nolint:nilnil
 	}
+
 	ret := map[string]any{}
-	for _, part := range strings.Split(s, "~") {
+
+	for part := range strings.SplitSeq(s, "~") {
 		val := part[2:]
 		// gracefully try to unescape value
 		if out, err := url.QueryUnescape(val); err == nil {
 			val = out
 		}
+
 		ret[part[0:2]] = val
 	}
+
 	return ret, nil
 }

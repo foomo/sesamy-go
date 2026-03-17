@@ -190,6 +190,7 @@ func (l *Loki) process(entries []logproto.Entry) {
 		"name":   "events",
 		"stream": "sesamy",
 	}
+
 	request, err := proto.Marshal(&logproto.PushRequest{
 		Streams: []logproto.Stream{
 			{
@@ -212,6 +213,7 @@ func (l *Loki) process(entries []logproto.Entry) {
 	// send log with retry
 	for {
 		var status int
+
 		status, err = l.send(context.Background(), payload)
 		if err == nil {
 			break
@@ -226,6 +228,7 @@ func (l *Loki) process(entries []logproto.Entry) {
 			l.l.Error("failed to send entries, retries exhausted, entries will be dropped", zap.Error(err), zap.Int("status", status))
 			break
 		}
+
 		l.l.Warn("failed to send entries, retrying", zap.Error(err), zap.Int("status", status))
 		back.Wait()
 	}
@@ -236,10 +239,12 @@ func (l *Loki) send(ctx context.Context, payload []byte) (int, error) {
 	// Set a timeout for the request
 	ctx, cancel := context.WithTimeout(ctx, l.httpClient.Timeout)
 	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, l.endpoint, bytes.NewReader(payload))
 	if err != nil {
 		return -1, errors.Wrap(err, "failed to create request")
 	}
+
 	req.Header.Set("Content-Type", defaultContentType)
 	req.Header.Set("User-Agent", l.userAgent)
 
@@ -247,13 +252,16 @@ func (l *Loki) send(ctx context.Context, payload []byte) (int, error) {
 	if err != nil {
 		return -1, errors.Wrap(err, "failed to send payload")
 	}
+
 	status := resp.StatusCode
 	if status/100 != 2 {
 		scanner := bufio.NewScanner(io.LimitReader(resp.Body, defaultMaxReponseBufferLen))
+
 		line := ""
 		if scanner.Scan() {
 			line = scanner.Text()
 		}
+
 		err = fmt.Errorf("server returned HTTP status %s (%d): %s", resp.Status, status, line)
 	}
 

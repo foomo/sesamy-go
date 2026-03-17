@@ -2,6 +2,7 @@ package cookiebot
 
 const CookieName = "CookieConsent"
 
+// Cookie represents the structure of the CookieConsent cookie used by Cookiebot.
 // {stamp:'VLZnHUKBPLqZCJyClLLmnGglmUPeZsGxrmiAEZ48i7UH39ptKHY4MA==',necessary:true,preferences:true,statistics:true,marketing:true,method:'explicit',ver:1,utc:1724770548958,region:'de'}
 type Cookie struct {
 	Stamp       string `json:"stamp" yaml:"stamp"`

@@ -14,6 +14,7 @@ import (
 
 func TestPayload(t *testing.T) {
 	t.Parallel()
+
 	v := mpv2.Payload[params.PageView]{
 		ClientID:        "C123456",
 		UserID:          "U123456",
@@ -34,10 +35,12 @@ func TestPayload(t *testing.T) {
 
 	out, err := json.Marshal(v)
 	require.NoError(t, err)
+
 	expected := `{"debug_mode":true,"session_id":"S123456","engagement_time_msec":100,"client_id":"C123456","user_id":"U123456","timestamp_micros":1727701064057701,"events":[{"name":"page_view","params":{"page_title":"Home","page_location":"https://foomo.org"}}]}`
 	assert.JSONEq(t, expected, string(out))
 
 	var in mpv2.Payload[params.PageView]
+
 	err = json.Unmarshal(out, &in)
 	require.NoError(t, err)
 	assert.Equal(t, v, in)

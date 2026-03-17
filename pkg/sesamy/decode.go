@@ -14,5 +14,6 @@ func Decode(input any, output any) error {
 	if err != nil {
 		return err
 	}
+
 	return decoder.Decode(input)
 }

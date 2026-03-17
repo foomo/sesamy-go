@@ -13,6 +13,7 @@ import (
 
 func TestMPv2(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		name    string
 		source  gtag.Payload
@@ -22,15 +23,15 @@ func TestMPv2(t *testing.T) {
 		{
 			name: "basic conversion",
 			source: gtag.Payload{
-				ClientID:           gtag.Set("test-client"),
-				UserID:             gtag.Set("test-user"),
-				SessionID:          gtag.Set("test-session"),
-				NonPersonalizedAds: gtag.Set("1"),
-				IsDebug:            gtag.Set("true"),
-				EventName:          gtag.Set(sesamy.EventName("page_view")),
-				DocumentTitle:      gtag.Set("Test Page"),
-				DocumentLocation:   gtag.Set("https://test.com"),
-				DocumentReferrer:   gtag.Set("https://referrer.com"),
+				ClientID:           new("test-client"),
+				UserID:             new("test-user"),
+				SessionID:          new("test-session"),
+				NonPersonalizedAds: new("1"),
+				IsDebug:            new("true"),
+				EventName:          new(sesamy.EventName("page_view")),
+				DocumentTitle:      new("Test Page"),
+				DocumentLocation:   new("https://test.com"),
+				DocumentReferrer:   new("https://referrer.com"),
 			},
 			want: mpv2.Payload[any]{
 				ClientID:       "test-client",
@@ -49,10 +50,10 @@ func TestMPv2(t *testing.T) {
 					},
 				},
 				Consent: &mpv2.ConsentData{
-					AdStorage:         gtag.Set(mpv2.ConsentGranted),
-					AdUserData:        gtag.Set(mpv2.ConsentGranted),
-					AdPersonalization: gtag.Set(mpv2.ConsentGranted),
-					AnalyticsStorage:  gtag.Set(mpv2.ConsentGranted),
+					AdStorage:         new(mpv2.ConsentGranted),
+					AdUserData:        new(mpv2.ConsentGranted),
+					AdPersonalization: new(mpv2.ConsentGranted),
+					AnalyticsStorage:  new(mpv2.ConsentGranted),
 				},
 			},
 		},
@@ -61,7 +62,9 @@ func TestMPv2(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
 			var got mpv2.Payload[any]
+
 			err := gtagencode.MPv2(tt.source, &got)
 
 			if tt.wantErr {

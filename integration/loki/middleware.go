@@ -22,8 +22,10 @@ func GTagMiddleware(loki *Loki) gtaghttp.Middleware {
 				if err := gtagencode.MPv2(*payload, &mpv2Payload); err != nil {
 					return errors.Wrap(err, "failed to encode gtag to mpv2")
 				}
+
 				loki.Write(mpv2Payload)
 			}
+
 			return err
 		}
 	}
@@ -36,6 +38,7 @@ func MPv2Middleware(loki *Loki) mpv2http.Middleware {
 			if err != nil {
 				loki.Write(*payload)
 			}
+
 			return err
 		}
 	}

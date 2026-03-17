@@ -6,6 +6,7 @@ import (
 	"github.com/foomo/sesamy-go/pkg/sesamy"
 )
 
+// Payload represents the structure of the payload sent to Google Analytics 4 Measurement Protocol v2.
 // https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference?client_type=gtag#payload_post_body
 type Payload[P any] struct {
 	ClientID           string            `json:"client_id,omitempty"`

@@ -13,6 +13,7 @@ import (
 
 func TestNew(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		name    string
 		opts    []collect.Option
@@ -43,11 +44,13 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			l := zaptest.NewLogger(t)
+
 			c, err := collect.New(l, tt.opts...)
 			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}
+
 			require.NoError(t, err)
 			assert.NotNil(t, c)
 		})
@@ -56,6 +59,7 @@ func TestNew(t *testing.T) {
 
 func TestCollect_GTagHTTPHandler(t *testing.T) {
 	t.Parallel()
+
 	tests := []struct {
 		name            string
 		query           string
@@ -68,10 +72,12 @@ func TestCollect_GTagHTTPHandler(t *testing.T) {
 			setupMockServer: func(query string) *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					assert.Equal(t, "/g/collect", r.URL.Path)
+
 					if !assert.Len(t, r.URL.RawQuery, len(query)) {
 						t.Logf("expected: %s", query)
 						t.Logf("actual:   %s", r.URL.RawQuery)
 					}
+
 					w.WriteHeader(http.StatusOK)
 				}))
 			},
