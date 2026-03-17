@@ -159,5 +159,5 @@ type Payload struct {
 
 	// --- Unresolved ---
 
-	Remain map[string]any `json:"-" gtag:"-,omitempy,remain"`
+	Remain map[string]any `json:"-" gtag:"-,omitempty,remain"`
 }
