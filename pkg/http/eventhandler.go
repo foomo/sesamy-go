@@ -1,4 +1,4 @@
-package sesamyhttp
+package http
 
 import (
 	"net/http"

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
-	"github.com/foomo/sesamy-go/pkg/sesamyhttp"
+	sesamyhttp "github.com/foomo/sesamy-go/pkg/http"
 	"github.com/foomo/sesamy-go/pkg/session"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"

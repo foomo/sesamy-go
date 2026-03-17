@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/foomo/sesamy-go/pkg/batch"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
+	"github.com/foomo/sesamy-go/pkg/utils"
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
 	"github.com/grafana/dskit/backoff"
@@ -117,7 +117,7 @@ func New(l *zap.Logger, addr string, opts ...Option) *Loki {
 func (l *Loki) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	l.cancel = cancel
-	batch.Batch(ctx, l.entries, l.batchSize, l.process)
+	utils.Batch(ctx, l.entries, l.batchSize, l.process)
 }
 
 func (l *Loki) Write(payload mpv2.Payload[any]) {

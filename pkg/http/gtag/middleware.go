@@ -9,7 +9,7 @@ import (
 	"github.com/foomo/sesamy-go/pkg/encoding/gtagencode"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2encode"
-	"github.com/foomo/sesamy-go/pkg/sesamyhttp"
+	sesamyhttp "github.com/foomo/sesamy-go/pkg/http"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
