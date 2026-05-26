@@ -4,22 +4,21 @@ updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      day: 'sunday'
-      interval: 'weekly'
+      interval: 'daily'
     groups:
       github-actions:
         patterns:
           - '*'
+    cooldown:
+      default-days: 3
 
   - package-ecosystem: 'gomod'
     directory: '/'
     schedule:
-      day: 'sunday'
-      interval: 'weekly'
+      interval: 'daily'
     groups:
-      gomod-security:
+      security:
         applies-to: security-updates
         patterns: ['*']
-      gomod-update:
-        applies-to: version-updates
-        patterns: ['*']
+    cooldown:
+      default-days: 3
