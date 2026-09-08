@@ -1,4 +1,3 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/foomo/sesamy-go?style=flat-square)](https://goreportcard.com/report/github.com/foomo/sesamy-go)
 [![GoDoc](https://img.shields.io/badge/GoDoc-✓-informational.svg?style=flat-square&logo=go)](https://godoc.org/github.com/foomo/sesamy-go)
 [![GitHub Stars](https://img.shields.io/github/stars/foomo/sesamy-go.svg?style=flat-square&logo=github)](https://github.com/foomo/sesamy-go)
 
