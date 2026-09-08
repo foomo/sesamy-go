@@ -38,13 +38,13 @@ check: tidy generate lint.fix test.race audit
 ## Run linter
 lint:
 	@echo "〉golangci-lint run"
-	@golangci-lint run --max-same-issues 0 --max-issues-per-linter 0
+	@golangci-lint run
 
 .PHONY: lint.fix
 ## Fix lint violations
 lint.fix:
 	@echo "〉golangci-lint run fix"
-	@golangci-lint run --fix --max-same-issues 0 --max-issues-per-linter 0
+	@golangci-lint run --fix
 
 .PHONY: generate
 ## Run go generate
@@ -56,19 +56,13 @@ generate:
 ## Run tests
 test:
 	@echo "〉go test"
-	@GO_TEST_TAGS=-skip go test -coverprofile=coverage.out -tags=safe ./...
+	@GO_TEST_TAGS=-skip go test -tags=safe -shuffle=on -coverprofile=coverage.out ./...
 
 .PHONY: test.race
 ## Run tests with -race
 test.race:
 	@echo "〉go test -race"
-	@GO_TEST_TAGS=-skip go test -coverprofile=coverage.out -tags=safe -race ./...
-
-.PHONY: test.nocache
-## Run tests with -count=1
-test.nocache:
-	@echo "〉go test -count=1"
-	@GO_TEST_TAGS=-skip go test -coverprofile=coverage.out -tags=safe -count=1 ./...
+	@GO_TEST_TAGS=-skip go test -tags=safe -shuffle=on -coverprofile=coverage.out -race ./...
 
 ### Security
 
@@ -76,7 +70,6 @@ test.nocache:
 ## Run security audit
 audit:
 	@echo "〉security audit"
-	@go install golang.org/x/vuln/cmd/govulncheck@latest
 	@govulncheck ./...
 
 ### Dependencies
@@ -91,13 +84,13 @@ tidy:
 ## Show outdated direct dependencies
 outdated:
 	@echo "〉go mod outdated"
-	@go list -u -m -json all | go-mod-outdated -update -direct
+	@go-mod-upgrade --list
 
 .PHONY: upgrade
-## Show outdated direct dependencies
+## Upgrade direct dependencies
 upgrade:
 	@echo "〉go mod upgrade"
-	@go list -u -m -f '{{if and (not .Indirect) .Update}}{{.Path}}{{end}}' all | xargs -n1 -I{} go get {}@latest
+	@go-mod-upgrade
 	@$(MAKE) tidy
 
 ### Documentation
@@ -123,7 +116,7 @@ godocs:
 ### Utils
 
 .PHONY: help
-# https://patorjk.com/software/taag/#p=display&f=Tmplr&t=SESAMY+GO+SDK&x=none&v=4&h=4&w=80&we=false
+# https://patorjk.com/software/taag/#p=display&f=Future+Smooth&t=SESAMY+GO&x=none&v=4&h=4&w=80&we=false
 ## Show help text
 help: g=\033[0;32m
 help: b=\033[0;34m
@@ -131,9 +124,9 @@ help: w=\033[0;90m
 help: e=\033[0m
 help:
 	@echo "$(g)"
-	@echo "┏┓┏┓┏┓┏┓┳┳┓┓┏  ┏┓┏┓  ┏┓┳┓┓┏┓"
-	@echo "┗┓┣ ┗┓┣┫┃┃┃┗┫  ┃┓┃┃  ┗┓┃┃┃┫"
-	@echo "┗┛┗┛┗┛┛┗┛ ┗┗┛  ┗┛┗┛  ┗┛┻┛┛┗┛"
+	@echo "╭─╮╭─╴╭─╮╭─╮╭┬╮╷ ╷   ╭─╴╭─╮"
+	@echo "╰─╮├╴ ╰─╮├─┤│││╰┬╯   │╶╮│ │"
+	@echo "╰─╯╰─╴╰─╯╵ ╵╵ ╵ ╵    ╰─╯╰─╯"
 	@echo "with ❤ foomo by bestbytes"
 	@echo "$(e)"
 	@echo "$(b)Usage:$(e)\n  make [task]"

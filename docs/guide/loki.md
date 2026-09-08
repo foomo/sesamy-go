@@ -28,7 +28,7 @@ defer svc.Close(ctx)
 
 ## Plug into Collect
 
-Wrap a Loki push in a middleware so every inbound event lands in Loki:
+Wrap a Loki push in a middleware so every successfully forwarded event lands in Loki:
 
 ```go
 import (
@@ -38,7 +38,7 @@ import (
 collect.New(l,
 	collect.WithTagging("https://sgtm.example.com"),
 	collect.WithMPv2HTTPMiddlewares(
-		lokimw.Middleware(lk), // see integration/loki/middleware.go
+		lokimw.MPv2Middleware(lk), // see integration/loki/middleware.go
 		mpv2http.MiddlewareLogger,
 	),
 )

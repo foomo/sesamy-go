@@ -1,32 +1,46 @@
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+# yaml-language-server: $schema=https://json.schemastore.org/dependabot-2.0.json
 version: 2
 
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
 updates:
   - package-ecosystem: github-actions
-    directory: '/'
-    schedule:
-      interval: daily
-    groups:
-      github-actions:
-        patterns:
-          - '*'
-    cooldown:
-      default-days: 3
-
-  - package-ecosystem: gomod
-    open-pull-requests-limit: 1
-    commit-message: { prefix: 'sec(deps)' }
+    commit-message: { prefix: sec(gha) }
+    open-pull-requests-limit: 0
     directory: '/'
     schedule:
       interval: daily
     groups:
       security:
         applies-to: security-updates
-        update-types: [ minor, patch ]
+        group-by: dependency-name
         patterns: ['*']
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+    cooldown:
+      default-days: 3
+
+  - package-ecosystem: gomod
+    commit-message: { prefix: sec(gomod) }
+    open-pull-requests-limit: 0
+    directory: '/'
+    schedule:
+      interval: daily
+    groups:
+      security:
+        applies-to: security-updates
+        group-by: dependency-name
+        patterns: ['*']
+    cooldown:
+      default-days: 3
+
+  - package-ecosystem: npm
+    commit-message: { prefix: sec(npm) }
+    open-pull-requests-limit: 0
+    directory: '/docs'
+    schedule:
+      interval: daily
+    groups:
+      security:
+        applies-to: security-updates
+        group-by: dependency-name
+        patterns: ['*']
     cooldown:
       default-days: 3
