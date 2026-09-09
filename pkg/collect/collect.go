@@ -132,6 +132,7 @@ func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
+	// TODO refactor this
 	var bodyReader io.Reader
 	if body != nil {
 		bodyBytes, err := io.ReadAll(body)
