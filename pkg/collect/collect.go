@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
@@ -131,7 +132,17 @@ func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, fmt.Sprintf("%s%s?%s", c.taggingURL, "/g/collect", gtag.EncodeValues(values)), body)
+	// TODO refactor this
+	var bodyReader io.Reader
+	if body != nil {
+		bodyBytes, err := io.ReadAll(body)
+		if err != nil {
+			return errors.Wrap(err, "failed to read body")
+		}
+		bodyReader = bytes.NewReader([]byte(url.PathEscape(string(bodyBytes))))
+	}
+
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, fmt.Sprintf("%s%s?%s", c.taggingURL, "/g/collect", gtag.EncodeValues(values)), bodyReader)
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
 	}
