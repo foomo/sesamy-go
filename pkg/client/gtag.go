@@ -106,7 +106,7 @@ func (c *GTag) Send(r *http.Request, payload *gtag.Payload) error {
 }
 
 func (c *GTag) SendRaw(r *http.Request, payload *gtag.Payload) error {
-	values, body, err := gtag.Encode(payload)
+	query, body, err := gtag.Encode(payload)
 	if err != nil {
 		return errors.Wrap(err, "failed to encode payload")
 	}
@@ -114,7 +114,7 @@ func (c *GTag) SendRaw(r *http.Request, payload *gtag.Payload) error {
 	req, err := http.NewRequestWithContext(
 		r.Context(),
 		http.MethodPost,
-		fmt.Sprintf("%s%s?%s", c.host, c.path, gtag.EncodeValues(values)),
+		fmt.Sprintf("%s%s?%s", c.host, c.path, query),
 		body,
 	)
 	if err != nil {
