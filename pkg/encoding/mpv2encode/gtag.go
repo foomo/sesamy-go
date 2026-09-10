@@ -28,7 +28,7 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 					targetUserProperty[k] = v
 				}
 			} else {
-				targetUserProperty[k] = fmt.Sprintf("%s", v)
+				targetUserProperty[k] = fmt.Sprintf("%v", v)
 			}
 		}
 
@@ -84,7 +84,7 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 							targetEventProperty[k] = v
 						}
 					default:
-						targetEventProperty[k] = fmt.Sprintf("%s", v)
+						targetEventProperty[k] = fmt.Sprintf("%v", v)
 					}
 				}
 

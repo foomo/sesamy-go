@@ -115,16 +115,9 @@ func EncodeObjectValue(s map[string]any) string {
 		return ""
 	}
 
-	keys := make([]string, 0, len(s))
-	for k := range s {
-		keys = append(keys, k)
-	}
-
-	slices.Sort(keys)
-
-	ret := make([]string, 0, len(keys))
-	for _, k := range keys {
-		ret = append(ret, k+fmt.Sprintf("%s", s[k]))
+	ret := make([]string, 0, len(s))
+	for _, k := range slices.Sorted(maps.Keys(s)) {
+		ret = append(ret, k+fmt.Sprintf("%v", s[k]))
 	}
 
 	return strings.Join(ret, "~")
