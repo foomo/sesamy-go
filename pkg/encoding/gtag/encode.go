@@ -1,7 +1,6 @@
 package gtag
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"maps"
@@ -13,7 +12,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-func Encode(payload *Payload) (url.Values, io.Reader, error) {
+// Encode returns the fully percent-encoded query string and, if the query
+// exceeded the maximum length, an encoded body reader holding the overflow
+// parameters. Both use identical escaping.
+func Encode(payload *Payload) (string, io.Reader, error) {
 	var richsstsse bool
 	// NOTE: `richsstsse` seems to be last parameter in the query to let's ensure it stays that way
 	if payload.Richsstsse != nil {
@@ -35,11 +37,11 @@ func Encode(payload *Payload) (url.Values, io.Reader, error) {
 
 	jsonBytes, err := json.Marshal(&payload)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to marshall payload")
+		return "", nil, errors.Wrap(err, "failed to marshall payload")
 	}
 
 	if err := json.Unmarshal(jsonBytes, &data); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to unmarshall payload")
+		return "", nil, errors.Wrap(err, "failed to unmarshall payload")
 	}
 
 	maps.Copy(data, remain)
@@ -78,10 +80,9 @@ func Encode(payload *Payload) (url.Values, io.Reader, error) {
 		}
 	}
 
-	var (
-		body   []string
-		reader io.Reader
-	)
+	body := url.Values{}
+
+	var reader io.Reader
 
 	maxQueryLength := 2048
 	if richsstsse {
@@ -91,7 +92,7 @@ func Encode(payload *Payload) (url.Values, io.Reader, error) {
 	for len(ret.Encode()) > maxQueryLength {
 		for s, i := range ret {
 			ret.Del(s)
-			body = append(body, s+"="+i[0])
+			body[s] = i
 
 			break
 		}
@@ -102,10 +103,10 @@ func Encode(payload *Payload) (url.Values, io.Reader, error) {
 	}
 
 	if len(body) > 0 {
-		reader = bytes.NewReader([]byte(strings.Join(body, "&")))
+		reader = strings.NewReader(EncodeValues(body))
 	}
 
-	return ret, reader, nil
+	return EncodeValues(ret), reader, nil
 }
 
 // EncodeObjectValue e.g. `idSKU_123456` = map["id"]="SKU_123456"
