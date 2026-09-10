@@ -2,7 +2,6 @@
 [![Coverage](https://img.shields.io/codecov/c/github/foomo/sesamy-go?style=flat-square&logo=github)](https://app.codecov.io/gh/foomo/sesamy-go)
 [![GitHub Stars](https://img.shields.io/github/stars/foomo/sesamy-go.svg?style=flat-square&logo=github)](https://github.com/foomo/sesamy-go)
 
-
 <p align="center">
   <img alt="sesamy-go" src="docs/public/logo.png" width="400" height="400"/>
 </p>

@@ -205,3 +205,46 @@ func TestEncode_RichsstsseStaysLast(t *testing.T) {
 		assert.NotContains(t, readBody(t, body), "richsstsse")
 	}
 }
+
+func TestEncodeObjectValue(t *testing.T) {
+	t.Parallel()
+	testingx.Tags(t, tagx.Short)
+
+	tests := []struct {
+		name string
+		args map[string]any
+		want string
+	}{
+		{
+			name: "empty",
+			args: nil,
+			want: "",
+		},
+		{
+			name: "strings are sorted by key",
+			args: map[string]any{
+				"nm": "Stan and Friends Tee",
+				"id": "SKU_12345",
+				"qt": "1",
+			},
+			want: "idSKU_12345~nmStan and Friends Tee~qt1",
+		},
+		{
+			// non-string values reach here via Payload.Remain and the mpv2
+			// conversion, which yields float64 params.
+			name: "numeric values are formatted as values, not %!s verbs",
+			args: map[string]any{
+				"pr": 12.5,
+				"qt": 3,
+			},
+			want: "pr12.5~qt3",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.want, gtag.EncodeObjectValue(tt.args))
+		})
+	}
+}

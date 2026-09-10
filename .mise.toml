@@ -11,7 +11,7 @@ bun = "1.4.2"
 # https://mise-tools.jdx.dev/tools/golangci-lint
 golangci-lint = "2.13.2"
 # https://mise-tools.jdx.dev/tools/goreleaser
-goreleaser = "2.18.0"
+goreleaser = "2.18.1"
 # https://mise-tools.jdx.dev/tools/lefthook
 lefthook = "2.1.12"
 # https://github.com/oligot/go-mod-upgrade/releases

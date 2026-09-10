@@ -87,7 +87,7 @@ func MPv2(source gtag.Payload, target any) error {
 
 	if node, ok := sourceData["event_parameter_number"].(map[string]any); ok {
 		for s, s2 := range node {
-			if value, err := strconv.ParseFloat(fmt.Sprintf("%s", s2), 64); err == nil {
+			if value, err := strconv.ParseFloat(fmt.Sprintf("%v", s2), 64); err == nil {
 				targetEventDataParams[s] = value
 			} else {
 				targetEventDataParams[s] = s2

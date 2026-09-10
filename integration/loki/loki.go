@@ -15,7 +15,6 @@ import (
 	"github.com/golang/snappy"
 	"github.com/grafana/dskit/backoff"
 	"github.com/grafana/loki/pkg/push"
-	"github.com/grafana/loki/v3/pkg/logproto"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"go.uber.org/zap"
@@ -33,7 +32,7 @@ type (
 		endpoint string
 
 		// channel for incoming logs
-		entries chan logproto.Entry
+		entries chan push.Entry
 
 		// shutdown
 		cancel context.CancelFunc
@@ -108,7 +107,7 @@ func New(l *zap.Logger, addr string, opts ...Option) *Loki {
 		}
 	}
 
-	inst.entries = make(chan logproto.Entry, inst.bufferSize) // Use a buffered channel so we can retry failed pushes without blocking WriteEntry
+	inst.entries = make(chan push.Entry, inst.bufferSize) // Use a buffered channel so we can retry failed pushes without blocking WriteEntry
 
 	return inst
 }
@@ -158,7 +157,7 @@ func (l *Loki) Write(payload mpv2.Payload[any]) {
 			timestamp = time.Now()
 		}
 
-		l.entries <- logproto.Entry{
+		l.entries <- push.Entry{
 			Line:      string(lineBytes),
 			Timestamp: timestamp,
 			StructuredMetadata: push.LabelsAdapter{
@@ -183,7 +182,7 @@ func (l *Loki) Stop() {
 // ~ Private methods
 // ------------------------------------------------------------------------------------------------
 
-func (l *Loki) process(entries []logproto.Entry) {
+func (l *Loki) process(entries []push.Entry) {
 	l.l.Debug("processing entries batch", zap.Int("num", len(entries)))
 
 	labels := model.LabelSet{
@@ -191,8 +190,8 @@ func (l *Loki) process(entries []logproto.Entry) {
 		"stream": "sesamy",
 	}
 
-	request, err := proto.Marshal(&logproto.PushRequest{
-		Streams: []logproto.Stream{
+	request, err := proto.Marshal(&push.PushRequest{
+		Streams: []push.Stream{
 			{
 				Labels:  labels.String(),
 				Entries: entries,
