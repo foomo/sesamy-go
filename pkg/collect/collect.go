@@ -126,12 +126,12 @@ func (c *Collect) MPv2HTTPHandler(w http.ResponseWriter, r *http.Request) {
 // ------------------------------------------------------------------------------------------------
 
 func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
-	values, body, err := gtag.Encode(payload)
+	query, body, err := gtag.Encode(payload)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, fmt.Sprintf("%s%s?%s", c.taggingURL, "/g/collect", gtag.EncodeValues(values)), body) //nolint:gosec // taggingURL is a trusted config value set at construction time
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, fmt.Sprintf("%s%s?%s", c.taggingURL, "/g/collect", query), body) //nolint:gosec // G704
 	if err != nil {
 		return errors.Wrap(err, "failed to create request")
 	}
