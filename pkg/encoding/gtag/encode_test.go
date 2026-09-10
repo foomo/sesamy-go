@@ -2,6 +2,7 @@ package gtag_test
 
 import (
 	"net/url"
+	"strings"
 	"testing"
 
 	testingx "github.com/foomo/go/testing"
@@ -44,12 +45,163 @@ func TestEncode(t *testing.T) {
 			require.NoError(t, gtag.Decode(values, &event))
 			assert.NotEmpty(t, event.Remain)
 
-			if actual, _, err := gtag.Encode(&event); assert.NoError(t, err) {
-				if !assert.Len(t, actual.Encode(), len(values.Encode())) {
-					t.Logf("expected: %s", values.Encode())
-					t.Logf("actual:   %s", actual.Encode())
+			if actual, body, err := gtag.Encode(&event); assert.NoError(t, err) {
+				expected := gtag.EncodeValues(values)
+				if !assert.Len(t, actual, len(expected)) {
+					t.Logf("expected: %s", expected)
+					t.Logf("actual:   %s", actual)
+				}
+				// these fixtures fit within the query length limit
+				assert.Nil(t, body)
+
+				// the returned query must be fully encoded and parse back cleanly,
+				// preserving every parameter key
+				parsed, err := url.ParseQuery(actual)
+				require.NoError(t, err)
+				assert.Len(t, parsed, len(values))
+
+				for k, want := range values {
+					// NOTE: EncodeObjectValue sorts item sub-keys, so `pr<n>`
+					// values round-trip with reordered (not lost) content
+					if gtag.RegexProduct.MatchString(k) {
+						assert.ElementsMatch(t,
+							strings.Split(want[0], "~"),
+							strings.Split(parsed.Get(k), "~"),
+							"param %q", k)
+
+						continue
+					}
+
+					assert.Equal(t, want, parsed[k], "param %q", k)
 				}
 			}
 		})
+	}
+}
+
+// TestEncode_Body ensures overflow parameters are moved into a properly
+// percent-encoded POST body.
+func TestEncode_Body(t *testing.T) {
+	t.Parallel()
+	testingx.Tags(t, tagx.Short)
+
+	// force an overflow so that Encode has to spill into the body
+	remain := map[string]any{
+		"filler": strings.Repeat("x", 2048),
+		// value contains reserved characters that must not leak into the wire format
+		"pr2":     "brWine in a Box~id128573~nmPersonalisierbare Weinkiste Moët & Chandon Rosé Impérial 75cl~pr73.91304347826087~qt1",
+		"ep.q":    "a=b&c=d",
+		"ep.plus": "1+2 3",
+	}
+	event := gtag.Payload{Remain: remain}
+
+	query, body, err := gtag.Encode(&event)
+	require.NoError(t, err)
+
+	encoded := readBody(t, body)
+
+	// both query and body must be parseable as query strings
+	values, err := url.ParseQuery(query)
+	require.NoError(t, err)
+	parsed, err := url.ParseQuery(encoded)
+	require.NoError(t, err)
+
+	// nothing may be lost or duplicated between query and body
+	for k, want := range map[string]string{
+		"pr2":     remain["pr2"].(string),
+		"ep.q":    remain["ep.q"].(string),
+		"ep.plus": remain["ep.plus"].(string),
+	} {
+		if _, inQuery := values[k]; inQuery {
+			assert.Equal(t, want, values.Get(k), "query param %q", k)
+			continue
+		}
+
+		assert.Equal(t, want, parsed.Get(k), "body param %q round-trips", k)
+	}
+
+	// the reserved characters must be escaped, not emitted raw
+	assert.NotContains(t, encoded, "& Chandon", "raw & must be escaped in body")
+	assert.NotContains(t, encoded, "a=b&c=d", "raw &/= must be escaped in body")
+	// spaces are encoded as %20, never as "+", to match EncodeValues
+	assert.NotContains(t, encoded, "+", "spaces must be %20 and literal + must be %2B")
+}
+
+// TestEncode_BodyEscapesAmpersand is a regression test: a value containing "&"
+// used to be written to the body unescaped, which split it into a bogus extra
+// parameter and truncated the value.
+func TestEncode_BodyEscapesAmpersand(t *testing.T) {
+	t.Parallel()
+	testingx.Tags(t, tagx.Short)
+
+	const want = "Moët & Chandon Rosé Impérial 75cl"
+
+	event := gtag.Payload{
+		Remain: map[string]any{
+			"filler": strings.Repeat("x", 2048),
+			"pr2":    want,
+		},
+	}
+
+	query, body, err := gtag.Encode(&event)
+	require.NoError(t, err)
+
+	encoded := readBody(t, body)
+	values, err := url.ParseQuery(query)
+	require.NoError(t, err)
+	parsed, err := url.ParseQuery(encoded)
+	require.NoError(t, err)
+
+	// combine query + body, mirroring what the receiving endpoint sees
+	got := values.Get("pr2")
+	if got == "" {
+		got = parsed.Get("pr2")
+	}
+
+	assert.Equal(t, want, got)
+
+	// no bogus parameter created by an unescaped "&"
+	for k := range parsed {
+		assert.NotContains(t, k, " ", "unescaped & created bogus key %q", k)
+	}
+}
+
+// TestEncode_NoBodyWhenShort verifies that a short payload produces no body.
+func TestEncode_NoBodyWhenShort(t *testing.T) {
+	t.Parallel()
+	testingx.Tags(t, tagx.Short)
+
+	event := gtag.Payload{Remain: map[string]any{"en": "page_view"}}
+
+	query, body, err := gtag.Encode(&event)
+	require.NoError(t, err)
+	assert.Nil(t, body)
+	assert.Equal(t, "en=page_view", query)
+}
+
+// TestEncode_RichsstsseStaysLast verifies richsstsse remains the last query
+// parameter and is never spilled into the body.
+func TestEncode_RichsstsseStaysLast(t *testing.T) {
+	t.Parallel()
+	testingx.Tags(t, tagx.Short)
+
+	richsstsse := ""
+	event := gtag.Payload{
+		Richsstsse: &richsstsse,
+		Remain: map[string]any{
+			"filler": strings.Repeat("x", 2048),
+		},
+	}
+
+	query, body, err := gtag.Encode(&event)
+	require.NoError(t, err)
+
+	assert.True(t, strings.HasSuffix(query, "richsstsse"), "got: %s", query)
+	assert.Equal(t, 1, strings.Count(query, "richsstsse"))
+	// bare flag, never "richsstsse="
+	assert.NotContains(t, query, "richsstsse=")
+
+	if body != nil {
+		assert.NotContains(t, readBody(t, body), "richsstsse")
 	}
 }
