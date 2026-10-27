@@ -20,6 +20,7 @@ type (
 		l                   *zap.Logger
 		taggingURL          string
 		taggingClient       *http.Client
+		measurementID       string
 		gtagHTTPMiddlewares []gtaghttp.Middleware
 		mpv2HTTPMiddlewares []mpv2http.Middleware
 	}
@@ -44,6 +45,17 @@ func WithTaggingClient(v *http.Client) Option {
 	}
 }
 
+// WithMeasurementID sets the default `measurement_id` for MPv2 requests that do not provide one.
+func WithMeasurementID(v string) Option {
+	return func(c *Collect) error {
+		c.measurementID = v
+		return nil
+	}
+}
+
+// WithGTagHTTPMiddlewares appends middlewares to the gtag handler.
+// Middlewares wrap in list order, so the last one runs first (outermost).
+// Put e.g. MiddlewareLogger before the middlewares that fill the payload.
 func WithGTagHTTPMiddlewares(v ...gtaghttp.Middleware) Option {
 	return func(c *Collect) error {
 		c.gtagHTTPMiddlewares = append(c.gtagHTTPMiddlewares, v...)
@@ -51,6 +63,9 @@ func WithGTagHTTPMiddlewares(v ...gtaghttp.Middleware) Option {
 	}
 }
 
+// WithMPv2HTTPMiddlewares appends middlewares to the MPv2 handler.
+// Middlewares wrap in list order, so the last one runs first (outermost).
+// Put e.g. MiddlewareLogger before the middlewares that fill the payload.
 func WithMPv2HTTPMiddlewares(v ...mpv2http.Middleware) Option {
 	return func(c *Collect) error {
 		c.mpv2HTTPMiddlewares = append(c.mpv2HTTPMiddlewares, v...)
@@ -152,6 +167,8 @@ func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 		}
 	}
 
+	w.WriteHeader(resp.StatusCode)
+
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
 	}
@@ -174,6 +191,10 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 	req.Header = r.Header.Clone()
 	// copy raw query
 	req.URL.RawQuery = r.URL.RawQuery
+	if query := r.URL.Query(); c.measurementID != "" && query.Get("measurement_id") == "" {
+		query.Set("measurement_id", c.measurementID)
+		req.URL.RawQuery = query.Encode()
+	}
 
 	resp, err := c.taggingClient.Do(req) //nolint:gosec // taggingURL is a trusted config value set at construction time
 	if err != nil {
@@ -187,6 +208,8 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 			w.Header().Add(key, value)
 		}
 	}
+
+	w.WriteHeader(resp.StatusCode)
 
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
