@@ -56,13 +56,13 @@ generate:
 ## Run tests
 test:
 	@echo "〉go test"
-	@GO_TEST_TAGS=-skip go test -tags=safe -shuffle=on -coverprofile=coverage.out ./...
+	@GO_TEST_TAGS=-skip gotestsum -- -tags=safe -shuffle=on -coverprofile=coverage.out ./...
 
 .PHONY: test.race
 ## Run tests with -race
 test.race:
 	@echo "〉go test -race"
-	@GO_TEST_TAGS=-skip go test -tags=safe -shuffle=on -coverprofile=coverage.out -race ./...
+	@GO_TEST_TAGS=-skip gotestsum -- -tags=safe -shuffle=on -coverprofile=coverage.out -race ./...
 
 ### Security
 
