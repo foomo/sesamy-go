@@ -15,10 +15,14 @@ import (
 )
 
 type (
+	// MiddlewareHandler handles a decoded Measurement Protocol v2 payload of request r.
 	MiddlewareHandler func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error
-	Middleware        func(next MiddlewareHandler) MiddlewareHandler
+	// Middleware wraps a [MiddlewareHandler].
+	Middleware func(next MiddlewareHandler) MiddlewareHandler
 )
 
+// MiddlewareEventHandler calls h for each event of the payload.
+// An error from h aborts the chain.
 func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
@@ -35,6 +39,10 @@ func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 	}
 }
 
+// MiddlewareSessionID sets an empty session ID and the ga_session_id and
+// ga_session_number event params from the _ga_<suffix> cookie, where suffix is
+// measurementID without its prefix (see [session.MeasurementIDSuffix]).
+// A missing cookie is ignored; an invalid cookie value returns an error.
 func MiddlewareSessionID(measurementID string) Middleware {
 	measurementID = session.MeasurementIDSuffix(measurementID)
 
@@ -68,6 +76,8 @@ func MiddlewareSessionID(measurementID string) Middleware {
 	}
 }
 
+// MiddlewareClientID sets an empty client ID from the _ga cookie.
+// A missing cookie is ignored; an invalid cookie value returns an error.
 func MiddlewareClientID(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if payload.ClientID == "" {
@@ -83,6 +93,7 @@ func MiddlewareClientID(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
+// MiddlewareDebugMode enables debug mode if the request has a gtm_debug cookie.
 func MiddlewareDebugMode(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if !payload.DebugMode && session.IsGTMDebug(r) {
@@ -93,6 +104,8 @@ func MiddlewareDebugMode(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
+// MiddlewareUserID sets an empty user ID from the cookie cookieName.
+// A missing cookie is ignored.
 func MiddlewareUserID(cookieName string) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
@@ -112,6 +125,7 @@ func MiddlewareUserID(cookieName string) Middleware {
 	}
 }
 
+// MiddlewareTimestamp sets an empty timestamp to the current time.
 func MiddlewareTimestamp(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if payload.TimestampMicros == 0 {
@@ -122,6 +136,8 @@ func MiddlewareTimestamp(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
+// MiddlewareUserAgent sets the user_agent event param from the User-Agent
+// header unless already set.
 func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		if userAgent := r.Header.Get("User-Agent"); userAgent != "" {
@@ -142,6 +158,9 @@ func MiddlewareUserAgent(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
+// MiddlewareIPOverride sets the ip_override event param unless already set.
+// The value is the first non-empty header of CF-Connecting-IP,
+// X-Original-Forwarded-For, X-Forwarded-For and X-Real-Ip.
 func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		var ipOverride string
@@ -171,6 +190,8 @@ func MiddlewareIPOverride(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
+// MiddlewareEngagementTime sets the engagement_time_msec event param to 100
+// unless already set.
 func MiddlewareEngagementTime(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		for i, event := range payload.Events {
@@ -188,6 +209,10 @@ func MiddlewareEngagementTime(next MiddlewareHandler) MiddlewareHandler {
 		return next(l, w, r, payload)
 	}
 }
+
+// MiddlewarePageLocation sets the page_title, page_referrer and page_location
+// event params from the X-Page-Title, X-Page-Referrer and Referer headers
+// unless already set.
 func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		pageTitle := r.Header.Get("X-Page-Title")
@@ -218,6 +243,8 @@ func MiddlewarePageLocation(next MiddlewareHandler) MiddlewareHandler {
 	}
 }
 
+// MiddlewareWithTimeout replaces the request context with one that ignores
+// cancellation of the incoming request and expires after timeout.
 func MiddlewareWithTimeout(timeout time.Duration) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
@@ -229,6 +256,8 @@ func MiddlewareWithTimeout(timeout time.Duration) Middleware {
 	}
 }
 
+// MiddlewareLogger adds event and trace fields to the logger passed down the
+// chain and logs the result of next.
 func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
 		eventNames := make([]string, len(payload.Events))

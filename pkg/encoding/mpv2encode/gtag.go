@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// GTag converts the Measurement Protocol v2 payload source into gtag.js format
+// and decodes the result into target, typically a pointer to a [gtag.Payload].
 func GTag[P any](source mpv2.Payload[P], target any) error {
 	targetData := map[string]any{
 		"client_id": source.ClientID,

@@ -11,6 +11,8 @@ import (
 )
 
 type (
+	// GTag sends gtag.js payloads to a server-side tagging endpoint.
+	// Create one with [NewGTag].
 	GTag struct {
 		l               *zap.Logger
 		path            string
@@ -21,8 +23,11 @@ type (
 		httpClient      *http.Client
 		middlewares     []GTagMiddleware
 	}
-	GTagOption     func(*GTag)
-	GTagHandler    func(r *http.Request, payload *gtag.Payload) error
+	// GTagOption configures a [GTag] client.
+	GTagOption func(*GTag)
+	// GTagHandler sends payload in the context of the incoming request r.
+	GTagHandler func(r *http.Request, payload *gtag.Payload) error
+	// GTagMiddleware wraps a [GTagHandler], typically to enrich the payload.
 	GTagMiddleware func(next GTagHandler) GTagHandler
 )
 
@@ -30,18 +35,24 @@ type (
 // ~ Options
 // ------------------------------------------------------------------------------------------------
 
+// GTagWithHTTPClient sets the HTTP client used for upstream requests.
+// The default is [http.DefaultClient].
 func GTagWithHTTPClient(v *http.Client) GTagOption {
 	return func(o *GTag) {
 		o.httpClient = v
 	}
 }
 
+// GTagWithPath sets the collect path appended to the host.
+// The default is "/g/collect".
 func GTagWithPath(v string) GTagOption {
 	return func(o *GTag) {
 		o.path = v
 	}
 }
 
+// GTagWithCookies appends names of cookies forwarded from the incoming request.
+// The defaults are gtm_auth, gtm_debug and gtm_preview.
 func GTagWithCookies(v ...string) GTagOption {
 	return func(o *GTag) {
 		o.cookies = append(o.cookies, v...)
@@ -60,6 +71,10 @@ func GTagWithMiddlewares(v ...GTagMiddleware) GTagOption {
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
 
+// NewGTag returns a [GTag] client that sends to host with the GA4 measurement ID
+// trackingID. Custom middlewares from [GTagWithMiddlewares] run inside the
+// built-in ones, which set richsstsse, tracking ID, protocol version, debug flag,
+// client ID and session ID.
 func NewGTag(l *zap.Logger, host, trackingID string, opts ...GTagOption) *GTag {
 	inst := &GTag{
 		l:               l,
@@ -90,6 +105,7 @@ func NewGTag(l *zap.Logger, host, trackingID string, opts ...GTagOption) *GTag {
 // ~ Getter
 // ------------------------------------------------------------------------------------------------
 
+// HTTPClient returns the HTTP client used for upstream requests.
 func (c *GTag) HTTPClient() *http.Client {
 	return c.httpClient
 }
@@ -98,6 +114,8 @@ func (c *GTag) HTTPClient() *http.Client {
 // ~ Public methods
 // ------------------------------------------------------------------------------------------------
 
+// Send runs payload through the middlewares and sends it with [GTag.SendRaw].
+// r is the incoming request whose context, headers and cookies are used.
 func (c *GTag) Send(r *http.Request, payload *gtag.Payload) error {
 	next := c.SendRaw
 	for _, middleware := range c.middlewares {
@@ -107,6 +125,10 @@ func (c *GTag) Send(r *http.Request, payload *gtag.Payload) error {
 	return next(r, payload)
 }
 
+// SendRaw encodes payload and posts it to the tagging endpoint without running
+// middlewares. It copies the headers of r except Cookie and Authorization and
+// forwards only the configured cookies. It returns an error if the upstream
+// response status is not 200 OK.
 func (c *GTag) SendRaw(r *http.Request, payload *gtag.Payload) error {
 	query, body, err := gtag.Encode(payload)
 	if err != nil {

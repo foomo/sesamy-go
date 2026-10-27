@@ -31,6 +31,9 @@ func MeasurementIDSuffix(id string) string {
 	return id
 }
 
+// ParseGAClientID returns the client ID from the _ga cookie of r, e.g.
+// `GA1.1.1234.5678` yields `1234.5678`. The error wraps [http.ErrNoCookie] if
+// the cookie is missing.
 func ParseGAClientID(r *http.Request) (string, error) {
 	cookie, err := r.Cookie("_ga")
 	if err != nil {
@@ -47,6 +50,9 @@ func ParseGAClientID(r *http.Request) (string, error) {
 	return parts[2] + "." + parts[3], nil
 }
 
+// ParseGASessionID returns the session ID from the _ga_<id> cookie of r, where
+// id is a measurement ID suffix (see [MeasurementIDSuffix]). It supports the GS1
+// and GS2 formats. The error wraps [http.ErrNoCookie] if the cookie is missing.
 func ParseGASessionID(r *http.Request, id string) (string, error) {
 	cookie, err := r.Cookie("_ga_" + id)
 	if err != nil {
@@ -63,6 +69,10 @@ func ParseGASessionID(r *http.Request, id string) (string, error) {
 	}
 }
 
+// ParseGASessionNumber returns the session count from the _ga_<id> cookie of r,
+// where id is a measurement ID suffix (see [MeasurementIDSuffix]). It supports
+// the GS1 and GS2 formats. The error wraps [http.ErrNoCookie] if the cookie is
+// missing.
 func ParseGASessionNumber(r *http.Request, id string) (string, error) {
 	cookie, err := r.Cookie("_ga_" + id)
 	if err != nil {

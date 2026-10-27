@@ -16,6 +16,8 @@ import (
 )
 
 type (
+	// Collect receives gtag.js and Measurement Protocol v2 requests and forwards
+	// them to a server-side tagging endpoint. Create one with [New].
 	Collect struct {
 		l                   *zap.Logger
 		taggingURL          string
@@ -24,6 +26,7 @@ type (
 		gtagHTTPMiddlewares []gtaghttp.Middleware
 		mpv2HTTPMiddlewares []mpv2http.Middleware
 	}
+	// Option configures a [Collect].
 	Option func(*Collect) error
 )
 
@@ -31,6 +34,8 @@ type (
 // ~ Options
 // ------------------------------------------------------------------------------------------------
 
+// WithTagging sets the base URL of the server-side tagging endpoint.
+// The request path is appended to it.
 func WithTagging(v string) Option {
 	return func(c *Collect) error {
 		c.taggingURL = v
@@ -38,6 +43,8 @@ func WithTagging(v string) Option {
 	}
 }
 
+// WithTaggingClient sets the HTTP client used for upstream requests.
+// The default is [http.DefaultClient].
 func WithTaggingClient(v *http.Client) Option {
 	return func(c *Collect) error {
 		c.taggingClient = v
@@ -77,6 +84,8 @@ func WithMPv2HTTPMiddlewares(v ...mpv2http.Middleware) Option {
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
 
+// New returns a [Collect] configured by opts. Nil options are skipped.
+// It returns the first error an option returns.
 func New(l *zap.Logger, opts ...Option) (*Collect, error) {
 	inst := &Collect{
 		l:             l,
@@ -98,6 +107,9 @@ func New(l *zap.Logger, opts ...Option) (*Collect, error) {
 // ~ Public methods
 // ------------------------------------------------------------------------------------------------
 
+// GTagHTTPHandler decodes a gtag.js request into one payload per event (see
+// [gtaghttp.HandlerBatch]), runs each through the gtag middlewares and forwards
+// it upstream. Only the first upstream response is written to w.
 func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	// retrieve payloads
 	payloads := gtaghttp.HandlerBatch(w, r)
@@ -126,6 +138,8 @@ func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// MPv2HTTPHandler decodes a Measurement Protocol v2 request, runs it through the
+// MPv2 middlewares and forwards it upstream, writing the upstream response to w.
 func (c *Collect) MPv2HTTPHandler(w http.ResponseWriter, r *http.Request) {
 	// retrieve payload
 	payload := mpv2http.Handler(w, r)
@@ -229,6 +243,8 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 // ~ Private types
 // ------------------------------------------------------------------------------------------------
 
+// discardResponseWriter is an [http.ResponseWriter] that drops everything
+// written to it.
 type discardResponseWriter struct {
 	header http.Header
 }

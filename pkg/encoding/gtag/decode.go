@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DecodeRequest decodes the query of r.RequestURI into target with [Decode].
 func DecodeRequest(r http.Request, target any) error {
 	u, err := url.ParseRequestURI(r.RequestURI)
 	if err != nil {
@@ -19,16 +20,19 @@ func DecodeRequest(r http.Request, target any) error {
 	return Decode(u.Query(), target)
 }
 
-func DecodeQuery(input string, tarteg any) error {
+// DecodeQuery parses input as a URL query and decodes it into target with [Decode].
+func DecodeQuery(input string, target any) error {
 	values, err := url.ParseQuery(input)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse query")
 	}
 
-	return Decode(values, tarteg)
+	return Decode(values, target)
 }
 
-// Decode an incoming request into an Payload
+// Decode decodes gtag.js query values into target, typically a pointer to a
+// [Payload]. Dotted keys become nested maps (see [DecodeMapValue]) and product
+// keys such as pr1 become items (see [DecodeRegexValue]).
 func Decode(values url.Values, target any) error {
 	data := Data{}
 
@@ -70,6 +74,8 @@ func Decode(values url.Values, target any) error {
 	return nil
 }
 
+// DecodeMapValue stores a dotted key in data as a nested map, e.g. `ep.foo=bar`
+// becomes data["ep"]["foo"]="bar". It reports whether k is a dotted key.
 func DecodeMapValue(k string, v []string, data Data) (bool, error) {
 	if strings.Contains(k, ".") {
 		parts := strings.Split(k, ".")
@@ -93,7 +99,9 @@ func DecodeMapValue(k string, v []string, data Data) (bool, error) {
 	return false, nil
 }
 
-// DecodeRegexValue e.g. `pr1=idSKU_123456` = map["pr"][]map["id"]="SKU_123456"
+// DecodeRegexValue appends the object value of a key matching r to the slice
+// data[key], e.g. `pr1=idSKU_123456` becomes data[key][]{"id": "SKU_123456"}.
+// It reports whether a value was appended.
 func DecodeRegexValue(k string, v []string, r *regexp.Regexp, data Data, key string) (bool, error) {
 	if r.MatchString(k) {
 		value, err := DecodeObjectValue(v[0])
@@ -117,7 +125,9 @@ func DecodeRegexValue(k string, v []string, r *regexp.Regexp, data Data, key str
 	return false, nil
 }
 
-// DecodeObjectValue e.g. `idSKU_123456` = map["id"]="SKU_123456"
+// DecodeObjectValue decodes a ~ separated list of two-letter keys and values,
+// e.g. `idSKU_123456~nmShirt` becomes {"id": "SKU_123456", "nm": "Shirt"}.
+// It returns nil for an empty s.
 func DecodeObjectValue(s string) (map[string]any, error) {
 	if len(s) == 0 {
 		return nil, nil //nolint:nilnil

@@ -12,6 +12,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+// MPv2 converts the gtag.js payload source into Measurement Protocol v2 format
+// and decodes the result into target, typically a pointer to an
+// [mpv2.Payload]. source holds a single event.
 func MPv2(source gtag.Payload, target any) error {
 	var sourceData map[string]any
 

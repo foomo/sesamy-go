@@ -11,7 +11,8 @@ import (
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 )
 
-// Handler returns the first payload of the request, use HandlerBatch for batched requests.
+// Handler returns the first payload of r. Use [HandlerBatch] for batched requests.
+// On failure it writes an error response to w and returns nil.
 func Handler(w http.ResponseWriter, r *http.Request) *gtag.Payload {
 	payloads := HandlerBatch(w, r)
 	if payloads == nil {
@@ -21,8 +22,10 @@ func Handler(w http.ResponseWriter, r *http.Request) *gtag.Payload {
 	return payloads[0]
 }
 
-// HandlerBatch returns one payload per event. gtag.js batches events as
-// newline separated body lines, sharing the parameters from the query.
+// HandlerBatch returns one payload per event of r. gtag.js batches events as
+// newline separated body lines that share the parameters of the query.
+// It accepts GET and POST requests. On failure it writes an error response
+// to w and returns nil.
 func HandlerBatch(w http.ResponseWriter, r *http.Request) []*gtag.Payload {
 	query := r.URL.Query()
 	lines := []string{""}
