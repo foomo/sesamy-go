@@ -208,7 +208,7 @@ func TestDecodeQuery_Errors(t *testing.T) {
 func TestDecodeRequest(t *testing.T) {
 	t.Parallel()
 
-	r := httptest.NewRequest(http.MethodGet, "/g/collect?v=2&tid=G-123456&cid=123.456&en=page_view&ep.foo=bar", nil)
+	r := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/g/collect?v=2&tid=G-123456&cid=123.456&en=page_view&ep.foo=bar", nil)
 
 	var payload gtag.Payload
 	require.NoError(t, gtag.DecodeRequest(*r, &payload))
