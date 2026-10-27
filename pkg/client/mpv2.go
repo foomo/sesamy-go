@@ -68,6 +68,8 @@ func MPv2WithMeasurementID(v string) MPv2Option {
 	}
 }
 
+// MPv2WithMiddlewares appends middlewares.
+// Middlewares wrap in list order, so the last one runs first (outermost).
 func MPv2WithMiddlewares(v ...MPv2Middleware) MPv2Option {
 	return func(o *MPv2) {
 		o.middlewares = append(o.middlewares, v...)
@@ -156,8 +158,10 @@ func (c *MPv2) SendRaw(r *http.Request, payload *mpv2.Payload[any]) error {
 
 	req.URL.RawQuery = qry.Encode()
 
-	// TODO valiate: copy headers
+	// copy headers without credentials, cookies are forwarded explicitly below
 	req.Header = r.Header.Clone()
+	req.Header.Del("Cookie")
+	req.Header.Del("Authorization")
 	req.Header.Set("Content-Type", "application/json")
 
 	// forward cookies

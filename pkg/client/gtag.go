@@ -48,6 +48,8 @@ func GTagWithCookies(v ...string) GTagOption {
 	}
 }
 
+// GTagWithMiddlewares appends middlewares.
+// Middlewares wrap in list order, so the last one runs first (outermost).
 func GTagWithMiddlewares(v ...GTagMiddleware) GTagOption {
 	return func(o *GTag) {
 		o.middlewares = append(o.middlewares, v...)
@@ -121,8 +123,10 @@ func (c *GTag) SendRaw(r *http.Request, payload *gtag.Payload) error {
 		return errors.Wrap(err, "failed to create request")
 	}
 
-	// TODO valiate: copy headers
+	// copy headers without credentials, cookies are forwarded explicitly below
 	req.Header = r.Header.Clone()
+	req.Header.Del("Cookie")
+	req.Header.Del("Authorization")
 
 	// forward cookies
 	for _, cookie := range c.cookies {
