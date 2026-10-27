@@ -48,7 +48,7 @@ func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 func MiddlewareUserID(cookieName string) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
-			if cookie, err := r.Cookie(cookieName); err == nil {
+			if cookie, err := r.Cookie(cookieName); err == nil && cookie.Value != "" {
 				payload.UserID = new(cookie.Value)
 			}
 

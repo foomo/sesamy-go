@@ -102,7 +102,9 @@ func MiddlewareUserID(cookieName string) Middleware {
 					return err
 				}
 
-				payload.UserID = value.Value
+				if value != nil {
+					payload.UserID = value.Value
+				}
 			}
 
 			return next(l, w, r, payload)
