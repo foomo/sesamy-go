@@ -3,6 +3,7 @@ package session
 import (
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -19,6 +20,16 @@ var (
 	// GS2.<domain_level>.s<session_id>$o<session_count>$g<engagement_session>$t<timestamp>$j<countdown>$l<undefined>$h<enhanced_client_id>
 	GS2Regex = regexp.MustCompile(`^GS2\.(\d+)\.s(\d+)\$o(\d+)\$g(\d+)\$t(\d+)\$j(\d+)\$l(\d+)\$h(\d+)$`)
 )
+
+// MeasurementIDSuffix returns the measurement ID without its prefix, e.g. `G-F9XM71K45T` becomes `F9XM71K45T`.
+// IDs without a prefix are returned unchanged.
+func MeasurementIDSuffix(id string) string {
+	if _, after, found := strings.Cut(id, "-"); found {
+		return after
+	}
+
+	return id
+}
 
 func ParseGAClientID(r *http.Request) (string, error) {
 	cookie, err := r.Cookie("_ga")

@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/session"
@@ -11,7 +10,7 @@ import (
 )
 
 func MPv2MiddlewarSessionID(measurementID string) MPv2Middleware {
-	measurementID = strings.Split(measurementID, "-")[1]
+	measurementID = session.MeasurementIDSuffix(measurementID)
 
 	return func(next MPv2Handler) MPv2Handler {
 		return func(r *http.Request, payload *mpv2.Payload[any]) error {
@@ -69,7 +68,9 @@ func MPv2MiddlewareUserID(cookieName string) MPv2Middleware {
 					return err
 				}
 
-				payload.UserID = value.Value
+				if value != nil {
+					payload.UserID = value.Value
+				}
 			}
 
 			return next(r, payload)

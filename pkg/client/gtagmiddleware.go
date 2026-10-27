@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"net/http"
-	"strings"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/session"
@@ -71,7 +70,7 @@ func GTagMiddlewarWithoutCancel(next GTagHandler) GTagHandler {
 }
 
 func GTagMiddlewarSessionID(measurementID string) GTagMiddleware {
-	measurementID = strings.Split(measurementID, "-")[1]
+	measurementID = session.MeasurementIDSuffix(measurementID)
 
 	return func(next GTagHandler) GTagHandler {
 		return func(r *http.Request, payload *gtag.Payload) error {

@@ -36,7 +36,7 @@ func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 }
 
 func MiddlewareSessionID(measurementID string) Middleware {
-	measurementID = strings.Split(measurementID, "-")[1]
+	measurementID = session.MeasurementIDSuffix(measurementID)
 
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {
