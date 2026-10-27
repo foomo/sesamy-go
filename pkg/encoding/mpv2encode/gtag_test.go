@@ -12,6 +12,7 @@ import (
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2encode"
 	"github.com/foomo/sesamy-go/pkg/event/params"
+	"github.com/foomo/sesamy-go/pkg/sesamy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -79,4 +80,136 @@ func TestSelectItem_Pointer(t *testing.T) {
 	err = mpv2encode.GTag(*intermediate, &incoming)
 	require.NoError(t, err)
 	assert.Equal(t, iso4217.CodeEUR, gtag.Get(incoming.Currency))
+}
+
+func TestGTag_MissingEvents(t *testing.T) {
+	t.Parallel()
+
+	var payload gtag.Payload
+	assert.Error(t, mpv2encode.GTag(mpv2.Payload[any]{ClientID: "123.456"}, &payload))
+}
+
+// TestTrackingURL converts a gtag.js tracking query into a Measurement
+// Protocol v2 payload and back into a tracking query.
+func TestTrackingURL(t *testing.T) {
+	t.Parallel()
+
+	const (
+		query = "_dbg=1&cid=123.456&cu=EUR&dl=https%3A%2F%2Fexample.com%2Fcart%3Fa%3D1&dr=https%3A%2F%2Fexample.com%2F&dt=Cart%20Page&en=add_to_cart&ep.coupon=SUMMER&epn.value=21&gcs=G111&npa=0&pr1=idSKU_1~nmShirt%20%26%20Tie~pr10.5~qt2&sid=789&tid=G-123456&uid=U1&up.tier=gold&upn.age=42&v=2&richsstsse"
+		// NOTE: mpv2 payloads do not carry v, tid, npa and richsstsse back into gtag.js
+		wantQuery = "_dbg=1&cid=123.456&cu=EUR&dl=https%3A%2F%2Fexample.com%2Fcart%3Fa%3D1&dr=https%3A%2F%2Fexample.com%2F&dt=Cart%20Page&en=add_to_cart&ep.coupon=SUMMER&epn.value=21&gcd=13t3t3t2t5l1&gcs=G111&pr1=idSKU_1~nmShirt%20%26%20Tie~pr10.5~qt2&sid=789&uid=U1&up.tier=gold&upn.age=42"
+		wantMPv2  = `{
+			"client_id": "123.456",
+			"user_id": "U1",
+			"session_id": "789",
+			"debug_mode": true,
+			"user_properties": {"age": "42", "tier": "gold"},
+			"consent": {
+				"ad_storage": "GRANTED",
+				"ad_user_data": "GRANTED",
+				"ad_personalization": "GRANTED",
+				"analytics_storage": "GRANTED"
+			},
+			"events": [{
+				"name": "add_to_cart",
+				"params": {
+					"coupon": "SUMMER",
+					"currency": "EUR",
+					"items": [{"item_id": "SKU_1", "item_name": "Shirt & Tie", "price": "10.5", "quantity": "2"}],
+					"page_location": "https://example.com/cart?a=1",
+					"page_referrer": "https://example.com/",
+					"page_title": "Cart Page",
+					"value": 21
+				}
+			}]
+		}`
+	)
+
+	var incoming gtag.Payload
+	require.NoError(t, gtag.DecodeQuery(query, &incoming))
+
+	var intermediate mpv2.Payload[any]
+	require.NoError(t, gtagencode.MPv2(incoming, &intermediate))
+
+	out, err := json.Marshal(intermediate)
+	require.NoError(t, err)
+	assert.JSONEq(t, wantMPv2, string(out))
+
+	var outgoing gtag.Payload
+	require.NoError(t, mpv2encode.GTag(intermediate, &outgoing))
+
+	actual, body, err := gtag.Encode(&outgoing)
+	require.NoError(t, err)
+	assert.Nil(t, body)
+	assert.Equal(t, wantQuery, actual)
+}
+
+func TestGTag_Consent(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		consent *mpv2.ConsentData
+		wantGCS string
+		wantGCD string
+	}{
+		{
+			name: "granted",
+			consent: &mpv2.ConsentData{
+				AdStorage:         new(mpv2.ConsentGranted),
+				AdUserData:        new(mpv2.ConsentGranted),
+				AdPersonalization: new(mpv2.ConsentGranted),
+				AnalyticsStorage:  new(mpv2.ConsentGranted),
+			},
+			wantGCS: "G111",
+			wantGCD: "13t3t3t2t5l1",
+		},
+		{
+			name: "mixed",
+			consent: &mpv2.ConsentData{
+				AdStorage:         new(mpv2.ConsentDenied),
+				AdUserData:        new(mpv2.ConsentDenied),
+				AdPersonalization: new(mpv2.ConsentGranted),
+				AnalyticsStorage:  new(mpv2.ConsentGranted),
+			},
+			wantGCS: "G101",
+			wantGCD: "13p3t3p2t5l1",
+		},
+		{
+			name:    "unset",
+			consent: &mpv2.ConsentData{},
+			wantGCS: "G111",
+			wantGCD: "13l3l3l2l5l1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			source := mpv2.Payload[any]{
+				Consent: tt.consent,
+				Events:  []sesamy.Event[any]{{Name: "page_view"}},
+			}
+
+			var outgoing gtag.Payload
+			require.NoError(t, mpv2encode.GTag(source, &outgoing))
+			assert.Equal(t, tt.wantGCS, gtag.Get(outgoing.GoogleConsentStatus))
+			assert.Equal(t, tt.wantGCD, gtag.Get(outgoing.GoogleConsentDefault))
+
+			// the gtag consent must convert back into the same mpv2 consent
+			var back mpv2.Payload[any]
+			require.NoError(t, gtagencode.MPv2(outgoing, &back))
+
+			for _, c := range []struct{ want, got *mpv2.Consent }{
+				{tt.consent.AdStorage, back.Consent.AdStorage},
+				{tt.consent.AdUserData, back.Consent.AdUserData},
+				{tt.consent.AdPersonalization, back.Consent.AdPersonalization},
+				{tt.consent.AnalyticsStorage, back.Consent.AnalyticsStorage},
+			} {
+				if c.want != nil {
+					assert.Equal(t, *c.want, *c.got)
+				}
+			}
+		})
+	}
 }
