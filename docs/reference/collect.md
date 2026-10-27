@@ -13,6 +13,7 @@ func New(l *zap.Logger, opts ...Option) (*Collect, error)
 ```go
 WithTagging(url string)                                  // downstream tagging server URL
 WithTaggingClient(c *http.Client)                        // override HTTP client
+WithMeasurementID(id string)                             // default MPv2 measurement_id
 WithGTagHTTPMiddlewares(v ...gtaghttp.Middleware)        // /g/collect middleware chain
 WithMPv2HTTPMiddlewares(v ...mpv2http.Middleware)        // /mp/collect middleware chain
 ```
@@ -30,10 +31,11 @@ Both have signature `http.HandlerFunc` so they mount on any router.
 
 For each request:
 
-1. Decode payload using the per-protocol `Handler(...)` — invalid requests get an HTTP error and never reach middleware.
-2. Run the configured middleware chain.
-3. Re-encode the payload and `POST` it to `${taggingURL}${path}`, where path is `/g/collect` for GTag and `/mp/collect` for MPv2. Inbound `r.Header` is cloned to the upstream request.
-4. Map upstream non-200 responses to `500 Internal Server Error` on the inbound side.
+1. Decode payload using the per-protocol handler — invalid requests get an HTTP error and never reach middleware. GTag uses `HandlerBatch`, so a batched `POST` body (one event per line) yields one payload per line.
+2. Run the configured middleware chain once per payload.
+3. Re-encode the payload and `POST` it to `${taggingURL}${path}`, where path is `/g/collect` for GTag and `/mp/collect` for MPv2. Inbound `r.Header` is cloned to the upstream request. For MPv2 the inbound query is kept; if it has no `measurement_id`, the value from `WithMeasurementID` is set.
+4. Copy the upstream status code, headers and body to the inbound response. For batched GTag requests only the first payload's upstream response is written.
+5. Errors from middleware or the upstream call map to `500 Internal Server Error`.
 
 ## Defaults
 

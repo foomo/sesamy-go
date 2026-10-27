@@ -34,10 +34,12 @@ Defaults:
 ```go
 func (c *MPv2) Collect(r *http.Request, events ...sesamy.AnyEvent) error
 func (c *MPv2) SendPayload(r *http.Request, payload *mpv2.Payload[any]) error
+func (c *MPv2) SendRaw(r *http.Request, payload *mpv2.Payload[any]) error
 func (c *MPv2) HTTPClient() *http.Client
 ```
 
-`Collect` builds a `*mpv2.Payload[any]` from the events and runs `SendPayload`.
+`Collect` builds a `*mpv2.Payload[any]` from the events and runs `SendPayload`. `SendPayload` runs the middleware chain then `SendRaw`.
+`SendRaw` copies the inbound headers except `Cookie` and `Authorization`, and forwards only the configured cookies.
 
 ### Middleware types
 
@@ -84,6 +86,7 @@ func (c *GTag) HTTPClient() *http.Client
 ```
 
 `Send` runs the middleware chain then `SendRaw`. `SendRaw` POSTs the encoded payload to `${host}${path}`.
+It copies the inbound headers except `Cookie` and `Authorization`, and forwards only the configured cookies.
 
 ### Middleware types
 

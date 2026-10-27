@@ -21,6 +21,7 @@ Options:
 | -------------------------- | ---------------------------------------------------------- |
 | `WithTagging(url)`         | Downstream tagging server URL (sGTM, vendor endpoint, GA4).|
 | `WithTaggingClient(c)`     | Custom `*http.Client` for the upstream call.               |
+| `WithMeasurementID(id)`    | Default `measurement_id` for MPv2 requests without one.    |
 | `WithGTagHTTPMiddlewares`  | Middleware chain for `/g/collect` (gtag.js).               |
 | `WithMPv2HTTPMiddlewares`  | Middleware chain for `/mp/collect` (MPv2).                 |
 
@@ -63,6 +64,9 @@ The terminal forward handler:
 - Clones inbound `r.Header` to the upstream request.
 - Re-encodes the payload (GTag → form values, MPv2 → JSON body).
 - POSTs to `${taggingURL}/g/collect` or `${taggingURL}/mp/collect`.
+- Writes the upstream status code, headers and body back to the client.
+
+Batched GTag requests (one event per line in the `POST` body) run the middleware chain and forward once per event.
 
 ## Cross-protocol event hooks
 
