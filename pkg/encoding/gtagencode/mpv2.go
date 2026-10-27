@@ -48,16 +48,12 @@ func MPv2(source gtag.Payload, target any) error {
 	// combine user properties
 	targetUserProperties := map[string]any{}
 
-	if node, ok := sourceData["user_property"].(map[string]string); ok {
-		for s, s2 := range node {
-			targetUserProperties[s] = s2
-		}
+	if node, ok := sourceData["user_property"].(map[string]any); ok {
+		maps.Copy(targetUserProperties, node)
 	}
 
-	if node, ok := sourceData["user_property_number"].(map[string]string); ok {
-		for s, s2 := range node {
-			targetUserProperties[s] = s2
-		}
+	if node, ok := sourceData["user_property_number"].(map[string]any); ok {
+		maps.Copy(targetUserProperties, node)
 	}
 
 	targetData["user_properties"] = targetUserProperties
