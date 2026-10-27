@@ -32,7 +32,7 @@ endif
 
 .PHONY: check
 ## Run lint & tests
-check: tidy generate lint.fix test.race audit
+check: tidy generate actionlint lint.fix test.race audit
 
 .PHONY: lint
 ## Run linter
@@ -70,7 +70,7 @@ test.race:
 ## Run security audit
 audit:
 	@echo "〉security audit"
-	@govulncheck ./...
+	@osv-scanner --call-analysis=all --config=.osv-scanner.toml $(if $(GITHUB_ACTIONS),--format=gh-annotations) -r .
 
 ### Dependencies
 
@@ -114,6 +114,11 @@ godocs:
 	@go doc -http
 
 ### Utils
+
+.PHONY: actionlint
+## Run actionlint
+actionlint:
+	@actionlint
 
 .PHONY: help
 # https://patorjk.com/software/taag/#p=display&f=Future+Smooth&t=SESAMY+GO&x=none&v=4&h=4&w=80&we=false
