@@ -5,7 +5,7 @@
     "": {
       "name": "dockprox",
       "devDependencies": {
-        "@catppuccin/vitepress": "0.1.2",
+        "@catppuccin/vitepress": "0.1.4",
         "vitepress": "1.6.4",
       },
     },
@@ -55,7 +55,7 @@
 
     "@babel/types": ["@babel/types@7.29.7", "", { "dependencies": { "@babel/helper-string-parser": "^7.29.7", "@babel/helper-validator-identifier": "^7.29.7" } }, "sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA=="],
 
-    "@catppuccin/vitepress": ["@catppuccin/vitepress@0.1.2", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-dqhgo6U6GWbgh3McAgwemUC8Y2Aj48rRcQx/9iuPzBPAgo7NA3yi7ZcR0wolAENMmoOMAHBV+rz/5DfiGxtZLA=="],
+    "@catppuccin/vitepress": ["@catppuccin/vitepress@0.1.4", "", { "peerDependencies": { "typescript": "^5.0.0 || ^6.0.0 || ^7.0.0" } }, "sha512-jWCMNAtmo3L8QZeae1sL6Z0IfHqtEKoLXrTvQlfLdYkf1OD3cUlveKJfXe4sUWjfuxDB90aRg4jWrIqmFmcetQ=="],
 
     "@docsearch/css": ["@docsearch/css@3.8.2", "", {}, "sha512-y05ayQFyUmCXze79+56v/4HpycYF3uFqB78pLPrSV5ZKAlDuIAAJNhaRi8tTdRNXh05yxX/TyNnzD6LwSM89vQ=="],
 
