@@ -46,6 +46,16 @@ func Encode(payload *Payload) (string, io.Reader, error) {
 
 	maps.Copy(data, remain)
 
+	if payload.SST != nil && len(payload.SST.Remain) > 0 {
+		sst, ok := data["sst"].(map[string]any)
+		if !ok {
+			sst = map[string]any{}
+			data["sst"] = sst
+		}
+
+		maps.Copy(sst, payload.SST.Remain)
+	}
+
 	ret := url.Values{}
 
 	for k, v := range data {

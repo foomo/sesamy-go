@@ -8,6 +8,7 @@ import (
 	testingx "github.com/foomo/go/testing"
 	tagx "github.com/foomo/go/testing/tag"
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
+	"github.com/foomo/sesamy-go/pkg/sesamy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -247,4 +248,33 @@ func TestEncodeObjectValue(t *testing.T) {
 			assert.Equal(t, tt.want, gtag.EncodeObjectValue(tt.args))
 		})
 	}
+}
+
+func TestEncode_SSTRemain(t *testing.T) {
+	t.Parallel()
+
+	var payload *gtag.Payload
+	require.NoError(t, gtag.DecodeQuery("en=page_view&sst.adr=1&sst.gch=x&sst.em_event=1&sst.sp=1", &payload))
+
+	query, _, err := gtag.Encode(payload)
+	require.NoError(t, err)
+
+	values, err := url.ParseQuery(query)
+	require.NoError(t, err)
+
+	for _, key := range []string{"sst.adr", "sst.gch", "sst.em_event", "sst.sp"} {
+		assert.True(t, values.Has(key), key)
+	}
+}
+
+func TestEncode_UserID(t *testing.T) {
+	t.Parallel()
+
+	query, _, err := gtag.Encode(&gtag.Payload{EventName: new(sesamy.EventNamePageView)})
+	require.NoError(t, err)
+	assert.NotContains(t, query, "uid=")
+
+	query, _, err = gtag.Encode(&gtag.Payload{EventName: new(sesamy.EventNamePageView), UserID: new("")})
+	require.NoError(t, err)
+	assert.Contains(t, query, "uid=")
 }

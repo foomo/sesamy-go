@@ -25,4 +25,6 @@ type SST struct {
 	NAVT *string `json:"navt,omitempty" gtag:"navt,omitempty"`
 	// Example: 1
 	SWExp *string `json:"sw_exp,omitempty" gtag:"sw_exp,omitempty"`
+	// Remain keeps unknown sst.* parameters e.g. gch, em_event, sp
+	Remain map[string]any `json:"-" gtag:"-,omitempty,remain"`
 }
