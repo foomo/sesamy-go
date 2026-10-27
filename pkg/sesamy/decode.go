@@ -1,7 +1,7 @@
 package sesamy
 
 import (
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 )
 
 func Decode(input any, output any) error {

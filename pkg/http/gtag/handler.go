@@ -40,6 +40,7 @@ func HandlerBatch(w http.ResponseWriter, r *http.Request) []*gtag.Payload {
 
 		if body := strings.TrimSpace(string(out)); body != "" {
 			lines = lines[:0]
+
 			for line := range strings.SplitSeq(body, "\n") {
 				if line = strings.TrimSpace(line); line != "" {
 					lines = append(lines, line)

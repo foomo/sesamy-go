@@ -8,7 +8,7 @@ import (
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/pkg/errors"
 )
 

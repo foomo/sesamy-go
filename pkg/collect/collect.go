@@ -114,7 +114,7 @@ func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
 
 	// run handler per event, only the first upstream response reaches the client
 	for i, payload := range payloads {
-		var rw http.ResponseWriter = w
+		var rw = w
 		if i > 0 {
 			rw = &discardResponseWriter{header: http.Header{}}
 		}
