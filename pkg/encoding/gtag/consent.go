@@ -39,8 +39,8 @@ func (c Consent) AdStorage() bool {
 		}
 	}
 
-	if c.GoogleConsentUpdate != nil {
-		gcs := *c.GoogleConsentUpdate
+	if c.GoogleConsentStatus != nil {
+		gcs := *c.GoogleConsentStatus
 		if strings.HasPrefix(gcs, "G1") && len(gcs) == 4 {
 			return gcs[2:3] == "1"
 		}
@@ -59,8 +59,8 @@ func (c Consent) AnalyticsStorage() bool {
 		}
 	}
 
-	if c.GoogleConsentUpdate != nil {
-		gcs := *c.GoogleConsentUpdate
+	if c.GoogleConsentStatus != nil {
+		gcs := *c.GoogleConsentStatus
 		if strings.HasPrefix(gcs, "G1") && len(gcs) == 4 {
 			return gcs[3:4] == "1"
 		}
