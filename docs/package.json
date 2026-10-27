@@ -8,6 +8,14 @@
   },
   "devDependencies": {
     "vitepress": "1.6.4",
-		"@catppuccin/vitepress": "0.1.4"
+    "@catppuccin/vitepress": "0.1.4"
+  },
+  "overrides": {
+    "vite": "6.4.4",
+    "postcss": "8.5.23",
+    "nanoid": "3.3.18",
+    "esbuild": "0.25.0",
+    "source-map-js": "1.2.2",
+    "@vue/server-renderer": "3.5.42"
   }
 }
