@@ -17,7 +17,7 @@ func TestMiddlewareUserID_EmptyCookie(t *testing.T) {
 	t.Parallel()
 
 	r := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/", nil)
-	r.AddCookie(&http.Cookie{Name: "uid", Value: ""})
+	r.Header.Set("Cookie", "uid=")
 
 	payload := &gtag.Payload{}
 	next := func(*zap.Logger, http.ResponseWriter, *http.Request, *gtag.Payload) error { return nil }
