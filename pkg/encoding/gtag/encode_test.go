@@ -278,3 +278,58 @@ func TestEncode_UserID(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, query, "uid=")
 }
+
+// TestEncode_TrackingURL ensures a canonical gtag.js tracking query survives
+// Decode and Encode byte for byte.
+func TestEncode_TrackingURL(t *testing.T) {
+	t.Parallel()
+	testingx.Tags(t, tagx.Short)
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{
+			name:  "page_view",
+			query: "_dbg=1&cid=123.456&dl=https%3A%2F%2Fexample.com%2F%3Futm_source%3Dgoogle&dr=https%3A%2F%2Fexample.com%2F&dt=Home%20Page&en=page_view&gcs=G111&npa=0&sid=789&sst.adr=1&sst.gch=x&tid=G-123456&v=2&richsstsse",
+		},
+		{
+			name:  "add_to_cart",
+			query: "cid=123.456&cu=EUR&en=add_to_cart&ep.coupon=SUMMER&epn.value=21&pr1=idSKU_1~nmShirt%20%26%20Tie~pr10.5~qt2&pr2=idSKU_2~qt1&tid=G-123456&uid=U1&up.tier=gold&upn.age=42&v=2&richsstsse",
+		},
+		{
+			name:  "unknown parameters",
+			query: "_et=12&_s=3&cid=123.456&en=scroll&epn.percent_scrolled=90&tfd=8412&tid=G-123456&v=2",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var payload gtag.Payload
+			require.NoError(t, gtag.DecodeQuery(tt.query, &payload))
+
+			query, body, err := gtag.Encode(&payload)
+			require.NoError(t, err)
+			assert.Nil(t, body)
+			assert.Equal(t, tt.query, query)
+		})
+	}
+}
+
+func TestEncode_RemainValues(t *testing.T) {
+	t.Parallel()
+	testingx.Tags(t, tagx.Short)
+
+	query, _, err := gtag.Encode(&gtag.Payload{Remain: map[string]any{"a": 1, "b": 1.5, "c": true}})
+	require.NoError(t, err)
+	assert.Equal(t, "a=1&b=1.5&c=true", query)
+}
+
+func TestEncode_UnsupportedSliceValue(t *testing.T) {
+	t.Parallel()
+	testingx.Tags(t, tagx.Short)
+
+	_, _, err := gtag.Encode(&gtag.Payload{Remain: map[string]any{"pr": []any{"idSKU_1"}}})
+	require.Error(t, err)
+}

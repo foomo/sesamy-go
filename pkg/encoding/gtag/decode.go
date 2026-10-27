@@ -1,9 +1,12 @@
 package gtag
 
 import (
+	"cmp"
+	"maps"
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/go-viper/mapstructure/v2"
@@ -36,8 +39,13 @@ func DecodeQuery(input string, target any) error {
 func Decode(values url.Values, target any) error {
 	data := Data{}
 
-	// decode values
-	for key, value := range values {
+	// decode values in length then lexical key order to keep items in pr1, pr2, …, pr10 order
+	keys := slices.SortedFunc(maps.Keys(values), func(a, b string) int {
+		return cmp.Or(cmp.Compare(len(a), len(b)), strings.Compare(a, b))
+	})
+
+	for _, key := range keys {
+		value := values[key]
 		// handle maps
 		if ok, err := DecodeMapValue(key, value, data); err != nil {
 			return errors.Wrap(err, "failed to decode map value")
@@ -136,6 +144,14 @@ func DecodeObjectValue(s string) (map[string]any, error) {
 	ret := map[string]any{}
 
 	for part := range strings.SplitSeq(s, "~") {
+		if part == "" {
+			continue
+		}
+
+		if len(part) < 2 {
+			return nil, errors.Errorf("invalid object value part %q", part)
+		}
+
 		val := part[2:]
 		// gracefully try to unescape value
 		if out, err := url.QueryUnescape(val); err == nil {

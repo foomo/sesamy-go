@@ -53,6 +53,9 @@ func Encode(payload *Payload) (string, io.Reader, error) {
 			data["sst"] = sst
 		}
 
+		// drop the marshaled Remain field itself
+		delete(sst, "-")
+
 		maps.Copy(sst, payload.SST.Remain)
 	}
 
@@ -66,7 +69,7 @@ func Encode(payload *Payload) (string, io.Reader, error) {
 				case map[string]any:
 					ret[fmt.Sprintf("%s%d", k, key+1)] = []string{EncodeObjectValue(tt)}
 				default:
-					panic("unhandled")
+					return "", nil, errors.Errorf("unsupported value type %T for %s", value, k)
 				}
 			}
 		case map[string]string:
@@ -86,7 +89,7 @@ func Encode(payload *Payload) (string, io.Reader, error) {
 		case nil:
 			continue
 		default:
-			panic("unhandled")
+			ret[k] = []string{fmt.Sprintf("%v", t)}
 		}
 	}
 

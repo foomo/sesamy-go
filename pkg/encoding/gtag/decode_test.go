@@ -2,6 +2,9 @@ package gtag_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"reflect"
 	"testing"
@@ -9,6 +12,7 @@ import (
 	testingx "github.com/foomo/go/testing"
 	tagx "github.com/foomo/go/testing/tag"
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
+	"github.com/foomo/sesamy-go/pkg/sesamy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -133,9 +137,10 @@ func TestDecodeObjectValue(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
-		args string
-		want map[string]any
+		name    string
+		args    string
+		want    map[string]any
+		wantErr bool
 	}{
 		{
 			name: "",
@@ -149,15 +154,90 @@ func TestDecodeObjectValue(t *testing.T) {
 				"qt": "1",
 			},
 		},
+		{
+			name: "idSKU_12345~~qt1~",
+			want: map[string]any{
+				"id": "SKU_12345",
+				"qt": "1",
+			},
+		},
+		{
+			name:    "idSKU_12345~q",
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, err := gtag.DecodeObjectValue(tt.name); assert.NoError(t, err) && !reflect.DeepEqual(got, tt.want) {
+			got, err := gtag.DecodeObjectValue(tt.name)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+
+			if assert.NoError(t, err) && !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("decodeObjectValue() = %v, want %v", got, tt.want)
 				t.Log(got)
 			}
 		})
+	}
+}
+
+func TestDecodeQuery_Errors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		query string
+	}{
+		{name: "invalid escape", query: "en=page_view&dt=%zz"},
+		{name: "invalid item", query: "en=add_to_cart&pr1=a"},
+		{name: "invalid item part", query: "en=add_to_cart&pr1=idSKU_1~q"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			var payload gtag.Payload
+			assert.Error(t, gtag.DecodeQuery(tt.query, &payload))
+		})
+	}
+}
+
+func TestDecodeRequest(t *testing.T) {
+	t.Parallel()
+
+	r := httptest.NewRequest(http.MethodGet, "/g/collect?v=2&tid=G-123456&cid=123.456&en=page_view&ep.foo=bar", nil)
+
+	var payload gtag.Payload
+	require.NoError(t, gtag.DecodeRequest(*r, &payload))
+	assert.Equal(t, "G-123456", gtag.Get(payload.TrackingID))
+	assert.Equal(t, "123.456", gtag.Get(payload.ClientID))
+	assert.Equal(t, sesamy.EventNamePageView, gtag.Get(payload.EventName))
+	assert.Equal(t, map[string]string{"foo": "bar"}, payload.EventParameter)
+}
+
+func TestDecodeRequest_EmptyURI(t *testing.T) {
+	t.Parallel()
+
+	var payload gtag.Payload
+	assert.Error(t, gtag.DecodeRequest(http.Request{}, &payload))
+}
+
+func TestDecode_ItemOrder(t *testing.T) {
+	t.Parallel()
+
+	values := url.Values{}
+	for i := 1; i <= 12; i++ {
+		values.Set(fmt.Sprintf("pr%d", i), fmt.Sprintf("idSKU_%d", i))
+	}
+
+	var payload gtag.Payload
+	require.NoError(t, gtag.Decode(values, &payload))
+	require.Len(t, payload.Items, 12)
+
+	for i, item := range payload.Items {
+		assert.Equal(t, fmt.Sprintf("SKU_%d", i+1), gtag.Get(item.ItemID))
 	}
 }
