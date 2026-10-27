@@ -208,3 +208,24 @@ func TestCollect_WithMeasurementID(t *testing.T) {
 		assert.Equal(t, want, got, target)
 	}
 }
+
+func TestCollect_GTagHTTPHandler_Batch(t *testing.T) {
+	t.Parallel()
+
+	var events []string
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		events = append(events, r.URL.Query().Get("en"))
+	}))
+	defer s.Close()
+
+	c, err := collect.New(zaptest.NewLogger(t), collect.WithTagging(s.URL))
+	require.NoError(t, err)
+
+	body := "en=page_view&_et=1\nen=scroll&epn.percent_scrolled=90&_et=2"
+	w := httptest.NewRecorder()
+	c.GTagHTTPHandler(w, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/g/collect?v=2&cid=1.2", strings.NewReader(body)))
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, []string{"page_view", "scroll"}, events)
+}

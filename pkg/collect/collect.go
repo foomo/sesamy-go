@@ -99,9 +99,9 @@ func New(l *zap.Logger, opts ...Option) (*Collect, error) {
 // ------------------------------------------------------------------------------------------------
 
 func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
-	// retrieve payload
-	payload := gtaghttp.Handler(w, r)
-	if payload == nil {
+	// retrieve payloads
+	payloads := gtaghttp.HandlerBatch(w, r)
+	if payloads == nil {
 		http.Error(w, "failed to decode payload", http.StatusBadRequest)
 		return
 	}
@@ -112,10 +112,17 @@ func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
 		next = middleware(next)
 	}
 
-	// run handler
-	if err := next(c.l, w, r, payload); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// run handler per event, only the first upstream response reaches the client
+	for i, payload := range payloads {
+		var rw http.ResponseWriter = w
+		if i > 0 {
+			rw = &discardResponseWriter{header: http.Header{}}
+		}
+
+		if err := next(c.l, rw, r, payload); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
@@ -217,3 +224,15 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 
 	return nil
 }
+
+// ------------------------------------------------------------------------------------------------
+// ~ Private types
+// ------------------------------------------------------------------------------------------------
+
+type discardResponseWriter struct {
+	header http.Header
+}
+
+func (w *discardResponseWriter) Header() http.Header         { return w.header }
+func (w *discardResponseWriter) Write(b []byte) (int, error) { return len(b), nil }
+func (w *discardResponseWriter) WriteHeader(int)             {}
