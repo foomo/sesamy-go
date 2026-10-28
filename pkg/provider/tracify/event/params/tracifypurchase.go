@@ -4,6 +4,7 @@ import (
 	"github.com/foomo/gostandards/iso4217"
 )
 
+// TracifyPurchase holds the parameters of the tracify_purchase event.
 type TracifyPurchase[I any] struct {
 	Currency      iso4217.Code `json:"currency,omitempty"`
 	Value         float64      `json:"value,omitempty"`

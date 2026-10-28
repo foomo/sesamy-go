@@ -1,5 +1,7 @@
 package gtag
 
+// ClientHints holds the gtag.js browser and User-Agent Client Hints parameters,
+// embedded in [Payload].
 type ClientHints struct {
 	// Is a random hash generated on the page load.
 	// Examole: 456193680

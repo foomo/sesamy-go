@@ -1,5 +1,7 @@
 package mpv2
 
+// ConsentData holds the consent state per Google consent mode type.
+// A nil field means the state is unknown.
 type ConsentData struct {
 	AdStorage              *Consent `json:"ad_storage,omitempty"`
 	AdUserData             *Consent `json:"ad_user_data,omitempty"`

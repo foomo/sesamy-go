@@ -1,5 +1,7 @@
 package gtag
 
+// Campaign holds the gtag.js campaign attribution parameters (cm, cs, cn, ...),
+// embedded in [Payload].
 type Campaign struct {
 	// Campaign Medium ( utm_medium ), this will override the current values read from the url
 	// Example: cpc

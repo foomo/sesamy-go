@@ -1,5 +1,7 @@
 package params
 
+// Item is a product in the items array of GA4 ecommerce events.
+// See https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference/events#add_to_cart_item.
 type Item struct {
 	Affiliation   string  `json:"affiliation,omitempty"`
 	Coupon        string  `json:"coupon,omitempty"`

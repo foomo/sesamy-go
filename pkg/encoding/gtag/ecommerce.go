@@ -4,6 +4,7 @@ import (
 	"github.com/foomo/gostandards/iso4217"
 )
 
+// ECommerce holds the gtag.js ecommerce parameters, embedded in [Payload].
 type ECommerce struct {
 	// Currency Code. ISO 4217
 	// Example: JPY

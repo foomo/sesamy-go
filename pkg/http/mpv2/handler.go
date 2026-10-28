@@ -7,6 +7,9 @@ import (
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
 )
 
+// Handler decodes the Measurement Protocol v2 payload from the POST body of r.
+// It validates that the payload has at least one event and that every event
+// has a name. On failure it writes an HTTP error to w and returns nil.
 func Handler(w http.ResponseWriter, r *http.Request) *mpv2.Payload[any] {
 	if r.Method != http.MethodPost {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)

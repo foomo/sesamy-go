@@ -13,6 +13,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// MPv2MiddlewarConsent sets the payload consent from the Cookiebot cookie of
+// the request. Marketing consent maps to the ad and personalization types,
+// statistics to analytics_storage, and necessary to functionality_storage and
+// security_storage. A missing or unreadable cookie leaves the payload
+// unchanged; read errors are logged.
 func MPv2MiddlewarConsent(l *zap.Logger) client.MPv2Middleware {
 	return func(next client.MPv2Handler) client.MPv2Handler {
 		return func(r *http.Request, payload *mpv2.Payload[any]) error {
