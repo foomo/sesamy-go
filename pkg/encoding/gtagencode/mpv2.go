@@ -8,10 +8,13 @@ import (
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/pkg/errors"
 )
 
+// MPv2 converts the gtag.js payload source into Measurement Protocol v2 format
+// and decodes the result into target, typically a pointer to an
+// [mpv2.Payload]. source holds a single event.
 func MPv2(source gtag.Payload, target any) error {
 	var sourceData map[string]any
 
@@ -45,16 +48,12 @@ func MPv2(source gtag.Payload, target any) error {
 	// combine user properties
 	targetUserProperties := map[string]any{}
 
-	if node, ok := sourceData["user_property"].(map[string]string); ok {
-		for s, s2 := range node {
-			targetUserProperties[s] = s2
-		}
+	if node, ok := sourceData["user_property"].(map[string]any); ok {
+		maps.Copy(targetUserProperties, node)
 	}
 
-	if node, ok := sourceData["user_property_number"].(map[string]string); ok {
-		for s, s2 := range node {
-			targetUserProperties[s] = s2
-		}
+	if node, ok := sourceData["user_property_number"].(map[string]any); ok {
+		maps.Copy(targetUserProperties, node)
 	}
 
 	targetData["user_properties"] = targetUserProperties

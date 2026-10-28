@@ -21,6 +21,8 @@ type Payload[P any] struct {
 	EngagementTimeMSec int64             `json:"engagement_time_msec,omitempty"`
 }
 
+// NewPayload returns an empty Payload with TimestampMicros set to the current
+// time.
 func NewPayload[P any]() *Payload[P] {
 	return &Payload[P]{
 		TimestampMicros: time.Now().UnixMicro(),

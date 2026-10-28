@@ -32,7 +32,7 @@ endif
 
 .PHONY: check
 ## Run lint & tests
-check: tidy generate lint.fix test.race audit
+check: tidy generate actionlint lint.fix test.race audit
 
 .PHONY: lint
 ## Run linter
@@ -56,13 +56,13 @@ generate:
 ## Run tests
 test:
 	@echo "〉go test"
-	@GO_TEST_TAGS=-skip go test -tags=safe -shuffle=on -coverprofile=coverage.out ./...
+	@GO_TEST_TAGS=-skip gotestsum -- -tags=safe -shuffle=on -coverprofile=coverage.out ./...
 
 .PHONY: test.race
 ## Run tests with -race
 test.race:
 	@echo "〉go test -race"
-	@GO_TEST_TAGS=-skip go test -tags=safe -shuffle=on -coverprofile=coverage.out -race ./...
+	@GO_TEST_TAGS=-skip gotestsum -- -tags=safe -shuffle=on -coverprofile=coverage.out -race ./...
 
 ### Security
 
@@ -70,7 +70,7 @@ test.race:
 ## Run security audit
 audit:
 	@echo "〉security audit"
-	@govulncheck ./...
+	@osv-scanner --call-analysis=all --config=.osv-scanner.toml $(if $(GITHUB_ACTIONS),--format=gh-annotations) -r .
 
 ### Dependencies
 
@@ -114,6 +114,11 @@ godocs:
 	@go doc -http
 
 ### Utils
+
+.PHONY: actionlint
+## Run actionlint
+actionlint:
+	@actionlint
 
 .PHONY: help
 # https://patorjk.com/software/taag/#p=display&f=Future+Smooth&t=SESAMY+GO&x=none&v=4&h=4&w=80&we=false

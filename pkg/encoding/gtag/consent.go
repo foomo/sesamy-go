@@ -31,6 +31,8 @@ type Consent struct {
 // ~ Public methods
 // ------------------------------------------------------------------------------------------------
 
+// AdStorage reports whether ad_storage consent is granted, read from the gcd
+// value or else from gcs. Missing consent counts as granted.
 func (c Consent) AdStorage() bool {
 	if c.GoogleConsentDefault != nil {
 		gcd := strings.Split(*c.GoogleConsentDefault, "")
@@ -39,8 +41,8 @@ func (c Consent) AdStorage() bool {
 		}
 	}
 
-	if c.GoogleConsentUpdate != nil {
-		gcs := *c.GoogleConsentUpdate
+	if c.GoogleConsentStatus != nil {
+		gcs := *c.GoogleConsentStatus
 		if strings.HasPrefix(gcs, "G1") && len(gcs) == 4 {
 			return gcs[2:3] == "1"
 		}
@@ -51,6 +53,8 @@ func (c Consent) AdStorage() bool {
 	return true
 }
 
+// AnalyticsStorage reports whether analytics_storage consent is granted, read from the gcd
+// value or else from gcs. Missing consent counts as granted.
 func (c Consent) AnalyticsStorage() bool {
 	if c.GoogleConsentDefault != nil {
 		gcd := strings.Split(*c.GoogleConsentDefault, "")
@@ -59,8 +63,8 @@ func (c Consent) AnalyticsStorage() bool {
 		}
 	}
 
-	if c.GoogleConsentUpdate != nil {
-		gcs := *c.GoogleConsentUpdate
+	if c.GoogleConsentStatus != nil {
+		gcs := *c.GoogleConsentStatus
 		if strings.HasPrefix(gcs, "G1") && len(gcs) == 4 {
 			return gcs[3:4] == "1"
 		}
@@ -71,6 +75,8 @@ func (c Consent) AnalyticsStorage() bool {
 	return true
 }
 
+// AdUserData reports whether ad_user_data consent is granted, read from the gcd
+// value. Without gcd it falls back to [Consent.AdStorage].
 func (c Consent) AdUserData() bool {
 	if c.GoogleConsentDefault != nil {
 		gcd := strings.Split(*c.GoogleConsentDefault, "")
@@ -82,6 +88,8 @@ func (c Consent) AdUserData() bool {
 	return c.AdStorage()
 }
 
+// AdPersonalization reports whether ad_personalization consent is granted, read from the gcd
+// value. Without gcd it falls back to [Consent.AdStorage].
 func (c Consent) AdPersonalization() bool {
 	if c.GoogleConsentDefault != nil {
 		gcd := strings.Split(*c.GoogleConsentDefault, "")

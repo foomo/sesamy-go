@@ -1,5 +1,6 @@
 package sesamy
 
+// EventName is the name of a GA4 event, such as "page_view".
 type EventName string
 
 // List of standard events
@@ -61,6 +62,7 @@ const (
 	EventNameWorkingLead          EventName = "working_lead"
 )
 
+// String returns the event name as a string.
 func (s EventName) String() string {
 	return string(s)
 }

@@ -1,5 +1,6 @@
 package gtag
 
+// SST holds the server-side tagging parameters prefixed with sst.
 type SST struct {
 	// Example: 1
 	ADR *string `json:"adr,omitempty" gtag:"adr,omitempty"`
@@ -25,4 +26,7 @@ type SST struct {
 	NAVT *string `json:"navt,omitempty" gtag:"navt,omitempty"`
 	// Example: 1
 	SWExp *string `json:"sw_exp,omitempty" gtag:"sw_exp,omitempty"`
+	// Remain holds unknown sst.* parameters, e.g. gch, em_event or sp, and
+	// is written back by [Encode].
+	Remain map[string]any `json:"-" gtag:"-,omitempty,remain"`
 }

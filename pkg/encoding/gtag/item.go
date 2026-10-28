@@ -1,5 +1,6 @@
 package gtag
 
+// Item is an ecommerce item, encoded in gtag.js as one pr<n> parameter.
 type Item struct {
 	// Example: Foo Marketplace
 	Affiliation *string `json:"affiliation,omitempty" gtag:"af,omitempty"`

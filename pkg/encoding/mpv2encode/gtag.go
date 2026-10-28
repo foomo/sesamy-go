@@ -6,14 +6,36 @@ import (
 	"strconv"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
-	"github.com/mitchellh/mapstructure"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/pkg/errors"
 )
 
+// GTag converts the Measurement Protocol v2 payload source into gtag.js format
+// and decodes the result into target, typically a pointer to a [gtag.Payload].
 func GTag[P any](source mpv2.Payload[P], target any) error {
+	if len(source.Events) == 0 {
+		return errors.New("missing events")
+	}
+
 	targetData := map[string]any{
 		"client_id": source.ClientID,
 		"user_id":   source.UserID,
+	}
+
+	if source.SessionID != "" {
+		targetData["session_id"] = source.SessionID
+	}
+
+	if source.DebugMode {
+		targetData["is_debug"] = "1"
+	}
+
+	if c := source.Consent; c != nil {
+		targetData["google_consent_status"] = "G1" + consentBit(c.AdStorage) + consentBit(c.AnalyticsStorage)
+		targetData["google_consent_default"] = "13" + consentLetter(c.AdStorage) +
+			"3" + consentLetter(c.AnalyticsStorage) +
+			"3" + consentLetter(c.AdUserData) +
+			"2" + consentLetter(c.AdPersonalization) + "5l1"
 	}
 
 	{ // user_property
@@ -111,4 +133,25 @@ func GTag[P any](source mpv2.Payload[P], target any) error {
 	}
 
 	return nil
+}
+
+// consentBit returns the gcs digit of c, treating an unset consent as granted.
+func consentBit(c *mpv2.Consent) string {
+	if c != nil && *c == mpv2.ConsentDenied {
+		return "0"
+	}
+
+	return "1"
+}
+
+// consentLetter returns the gcd letter of c: l (not set), t (granted) or p (denied).
+func consentLetter(c *mpv2.Consent) string {
+	switch {
+	case c == nil:
+		return "l"
+	case *c == mpv2.ConsentDenied:
+		return "p"
+	default:
+		return "t"
+	}
 }

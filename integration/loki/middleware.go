@@ -12,6 +12,8 @@ import (
 	"go.uber.org/zap"
 )
 
+// GTagMiddleware writes the payload to loki as Measurement Protocol v2 after
+// next succeeds.
 func GTagMiddleware(loki *Loki) gtaghttp.Middleware {
 	return func(next gtaghttp.MiddlewareHandler) gtaghttp.MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
@@ -31,6 +33,7 @@ func GTagMiddleware(loki *Loki) gtaghttp.Middleware {
 	}
 }
 
+// MPv2Middleware writes the payload to loki after next succeeds.
 func MPv2Middleware(loki *Loki) mpv2http.Middleware {
 	return func(next mpv2http.MiddlewareHandler) mpv2http.MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *mpv2.Payload[any]) error {

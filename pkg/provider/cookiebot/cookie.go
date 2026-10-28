@@ -1,5 +1,6 @@
 package cookiebot
 
+// CookieName is the name of the cookie in which Cookiebot stores consent.
 const CookieName = "CookieConsent"
 
 // Cookie represents the structure of the CookieConsent cookie used by Cookiebot.

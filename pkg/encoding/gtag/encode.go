@@ -46,6 +46,19 @@ func Encode(payload *Payload) (string, io.Reader, error) {
 
 	maps.Copy(data, remain)
 
+	if payload.SST != nil && len(payload.SST.Remain) > 0 {
+		sst, ok := data["sst"].(map[string]any)
+		if !ok {
+			sst = map[string]any{}
+			data["sst"] = sst
+		}
+
+		// drop the marshaled Remain field itself
+		delete(sst, "-")
+
+		maps.Copy(sst, payload.SST.Remain)
+	}
+
 	ret := url.Values{}
 
 	for k, v := range data {
@@ -56,7 +69,7 @@ func Encode(payload *Payload) (string, io.Reader, error) {
 				case map[string]any:
 					ret[fmt.Sprintf("%s%d", k, key+1)] = []string{EncodeObjectValue(tt)}
 				default:
-					panic("unhandled")
+					return "", nil, errors.Errorf("unsupported value type %T for %s", value, k)
 				}
 			}
 		case map[string]string:
@@ -76,7 +89,7 @@ func Encode(payload *Payload) (string, io.Reader, error) {
 		case nil:
 			continue
 		default:
-			panic("unhandled")
+			ret[k] = []string{fmt.Sprintf("%v", t)}
 		}
 	}
 

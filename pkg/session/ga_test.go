@@ -1,6 +1,8 @@
 package session_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/foomo/sesamy-go/pkg/session"
@@ -62,4 +64,23 @@ func TestGSRegex(t *testing.T) {
 		assert.False(t, session.GS2Regex.MatchString(gs1))
 		assert.Empty(t, session.GS2Regex.FindStringSubmatch(gs1))
 	}
+}
+
+func TestMeasurementIDSuffix(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "F9XM71K45T", session.MeasurementIDSuffix("G-F9XM71K45T"))
+	assert.Equal(t, "F9XM71K45T", session.MeasurementIDSuffix("F9XM71K45T"))
+}
+
+func TestParseGA_NoCookie(t *testing.T) {
+	t.Parallel()
+
+	r := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
+
+	_, err := session.ParseGAClientID(r)
+	require.ErrorIs(t, err, http.ErrNoCookie)
+
+	_, err = session.ParseGASessionID(r, "F9XM71K45T")
+	require.ErrorIs(t, err, http.ErrNoCookie)
 }

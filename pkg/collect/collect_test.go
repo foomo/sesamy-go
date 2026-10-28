@@ -3,6 +3,7 @@ package collect_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/foomo/sesamy-go/pkg/collect"
@@ -158,3 +159,73 @@ func TestCollect_GTagHTTPHandler(t *testing.T) {
 //
 // 	assert.Equal(t, http.StatusOK, w.Code)
 // }
+
+func TestCollect_UpstreamStatus(t *testing.T) {
+	t.Parallel()
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer s.Close()
+
+	c, err := collect.New(zaptest.NewLogger(t), collect.WithTagging(s.URL))
+	require.NoError(t, err)
+
+	{
+		w := httptest.NewRecorder()
+		c.GTagHTTPHandler(w, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/g/collect?en=page_view", nil))
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	}
+
+	{
+		w := httptest.NewRecorder()
+		c.MPv2HTTPHandler(w, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/mp/collect", strings.NewReader(`{"events":[{"name":"page_view"}]}`)))
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+	}
+}
+
+func TestCollect_WithMeasurementID(t *testing.T) {
+	t.Parallel()
+
+	var got string
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.URL.Query().Get("measurement_id")
+	}))
+	defer s.Close()
+
+	c, err := collect.New(zaptest.NewLogger(t), collect.WithTagging(s.URL), collect.WithMeasurementID("G-DEFAULT"))
+	require.NoError(t, err)
+
+	tests := map[string]string{
+		"/mp/collect":                         "G-DEFAULT",
+		"/mp/collect?measurement_id=G-CUSTOM": "G-CUSTOM",
+	}
+	for target, want := range tests {
+		w := httptest.NewRecorder()
+		c.MPv2HTTPHandler(w, httptest.NewRequestWithContext(t.Context(), http.MethodPost, target, strings.NewReader(`{"events":[{"name":"page_view"}]}`)))
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, want, got, target)
+	}
+}
+
+func TestCollect_GTagHTTPHandler_Batch(t *testing.T) {
+	t.Parallel()
+
+	var events []string
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		events = append(events, r.URL.Query().Get("en"))
+	}))
+	defer s.Close()
+
+	c, err := collect.New(zaptest.NewLogger(t), collect.WithTagging(s.URL))
+	require.NoError(t, err)
+
+	body := "en=page_view&_et=1\nen=scroll&epn.percent_scrolled=90&_et=2"
+	w := httptest.NewRecorder()
+	c.GTagHTTPHandler(w, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/g/collect?v=2&cid=1.2", strings.NewReader(body)))
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, []string{"page_view", "scroll"}, events)
+}

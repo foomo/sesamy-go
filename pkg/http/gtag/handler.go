@@ -3,21 +3,36 @@ package gtag
 import (
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/gtag"
 )
 
+// Handler returns the first payload of r. Use [HandlerBatch] for batched requests.
+// On failure it writes an error response to w and returns nil.
 func Handler(w http.ResponseWriter, r *http.Request) *gtag.Payload {
-	var values url.Values
+	payloads := HandlerBatch(w, r)
+	if payloads == nil {
+		return nil
+	}
+
+	return payloads[0]
+}
+
+// HandlerBatch returns one payload per event of r. gtag.js batches events as
+// newline separated body lines that share the parameters of the query.
+// It accepts GET and POST requests. On failure it writes an error response
+// to w and returns nil.
+func HandlerBatch(w http.ResponseWriter, r *http.Request) []*gtag.Payload {
+	query := r.URL.Query()
+	lines := []string{""}
 
 	switch r.Method {
 	case http.MethodGet:
-		values = r.URL.Query()
 	case http.MethodPost:
-		values = r.URL.Query()
-
 		// read request body
 		out, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -26,37 +41,51 @@ func Handler(w http.ResponseWriter, r *http.Request) *gtag.Payload {
 		}
 		defer r.Body.Close()
 
-		// append request body to query
-		if len(out) > 0 {
-			v, err := url.ParseQuery(string(out))
-			if err != nil {
-				http.Error(w, fmt.Sprintf("failed to parse extended url: %s", err.Error()), http.StatusInternalServerError)
-				return nil
-			}
+		if body := strings.TrimSpace(string(out)); body != "" {
+			lines = lines[:0]
 
-			for s2, i := range v {
-				values.Set(s2, i[0])
+			for line := range strings.SplitSeq(body, "\n") {
+				if line = strings.TrimSpace(line); line != "" {
+					lines = append(lines, line)
+				}
 			}
-		} else {
-			values = r.URL.Query()
 		}
 	default:
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return nil
 	}
 
-	// unmarshal event
-	var payload *gtag.Payload
-	if err := gtag.Decode(values, &payload); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return nil
+	payloads := make([]*gtag.Payload, 0, len(lines))
+
+	for _, line := range lines {
+		// append body line to query
+		values := maps.Clone(query)
+
+		v, err := url.ParseQuery(line)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("failed to parse extended url: %s", err.Error()), http.StatusInternalServerError)
+			return nil
+		}
+
+		for s2, i := range v {
+			values.Set(s2, i[0])
+		}
+
+		// unmarshal event
+		var payload *gtag.Payload
+		if err := gtag.Decode(values, &payload); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return nil
+		}
+
+		// validate
+		if payload.EventName == nil || payload.EventName.String() == "" {
+			http.Error(w, "missing event name", http.StatusBadRequest)
+			return nil
+		}
+
+		payloads = append(payloads, payload)
 	}
 
-	// validate
-	if payload.EventName == nil || payload.EventName.String() == "" {
-		http.Error(w, "missing event name", http.StatusBadRequest)
-		return nil
-	}
-
-	return payload
+	return payloads
 }

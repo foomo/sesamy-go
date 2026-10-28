@@ -12,15 +12,17 @@ Protocol-neutral handler. Use it via `MiddlewareEventHandler` in either protocol
 
 ## GTag — `pkg/http/gtag`
 
-### `Handler`
+### `Handler` / `HandlerBatch`
 
 ```go
 func Handler(w http.ResponseWriter, r *http.Request) *gtag.Payload
+func HandlerBatch(w http.ResponseWriter, r *http.Request) []*gtag.Payload
 ```
 
 - Supports `GET` and `POST`.
-- `POST` reads either querystring or form-encoded body.
-- Returns `nil` and writes an HTTP error if the payload is invalid (missing `en` event name).
+- `POST` body holds one form-encoded event per line. Each line is merged over the query string.
+- `HandlerBatch` returns one payload per line; `Handler` returns only the first.
+- Returns `nil` and writes an HTTP error if a payload is invalid (missing `en` event name).
 
 ### Middleware types
 
@@ -34,7 +36,7 @@ type Middleware        func(next MiddlewareHandler) MiddlewareHandler
 | Name                              | Effect                                                              |
 | --------------------------------- | ------------------------------------------------------------------- |
 | `MiddlewareEventHandler(h)`       | Converts payload to MPv2, runs the cross-protocol `EventHandler` per event, re-encodes back to GTag. |
-| `MiddlewareUserID(cookieName)`    | Sets `payload.UserID` from a named cookie if present.               |
+| `MiddlewareUserID(cookieName)`    | Sets `payload.UserID` from a named cookie if present and not empty. |
 | `MiddlewareWithTimeout(d)`        | Wraps the downstream call in a timeout context.                     |
 | `MiddlewareLogger`                | Adds `event_name`, `event_user_id`, `event_client_id`, `event_session_id` to the zap logger. |
 

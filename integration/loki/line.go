@@ -7,6 +7,8 @@ import (
 	"github.com/foomo/sesamy-go/pkg/sesamy"
 )
 
+// Line is the JSON log line written to Loki for a single event, combining the
+// event with the payload fields it belongs to.
 type Line struct {
 	Name               sesamy.EventName  `json:"name"`
 	Params             any               `json:"params,omitempty"`
@@ -20,6 +22,7 @@ type Line struct {
 	EngagementTimeMSec int64             `json:"engagement_time_msec,omitempty"`
 }
 
+// Marshal returns the JSON encoding of l.
 func (l *Line) Marshal() ([]byte, error) {
 	return json.Marshal(l)
 }

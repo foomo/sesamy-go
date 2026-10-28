@@ -27,6 +27,8 @@ const (
 )
 
 type (
+	// Loki batches events and pushes them to a Grafana Loki instance.
+	// Create one with [New], run [Loki.Start] and feed it with [Loki.Write].
 	Loki struct {
 		l        *zap.Logger
 		endpoint string
@@ -44,6 +46,7 @@ type (
 		userAgent  string
 		httpClient *http.Client
 	}
+	// Option configures a [Loki].
 	Option func(*Loki)
 )
 
@@ -51,30 +54,35 @@ type (
 // ~ Options
 // ------------------------------------------------------------------------------------------------
 
+// WithHTTPClient sets the HTTP client used to push to Loki.
 func WithHTTPClient(v *http.Client) Option {
 	return func(l *Loki) {
 		l.httpClient = v
 	}
 }
 
+// WithBackoffConfig sets the retry backoff for failed pushes.
 func WithBackoffConfig(v *backoff.Config) Option {
 	return func(l *Loki) {
 		l.backoff = v
 	}
 }
 
+// WithUserAgent sets the User-Agent header sent to Loki.
 func WithUserAgent(v string) Option {
 	return func(l *Loki) {
 		l.userAgent = v
 	}
 }
 
+// WithBatchSize sets the number of lines pushed per request.
 func WithBatchSize(v int) Option {
 	return func(l *Loki) {
 		l.batchSize = v
 	}
 }
 
+// WithBufferSize sets the number of lines buffered before [Loki.Write] blocks.
 func WithBufferSize(v int) Option {
 	return func(l *Loki) {
 		l.bufferSize = v
@@ -85,7 +93,10 @@ func WithBufferSize(v int) Option {
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
 
-// New creates an instance of `Push` which writes logs directly to given `lokiAddr`
+// New returns a Loki that pushes to the Loki instance at addr.
+// Defaults: batch size 10, buffer size 50, user agent "sesamy",
+// [http.DefaultClient], and exponential backoff from 500ms to 5m with
+// 10 retries.
 func New(l *zap.Logger, addr string, opts ...Option) *Loki {
 	inst := &Loki{
 		l:          l,
@@ -112,13 +123,16 @@ func New(l *zap.Logger, addr string, opts ...Option) *Loki {
 	return inst
 }
 
-// Start pulls lines out of the channel and sends them to Loki
+// Start pushes buffered lines to Loki in batches. It blocks until ctx is done
+// or [Loki.Stop] is called.
 func (l *Loki) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(ctx)
 	l.cancel = cancel
 	utils.Batch(ctx, l.entries, l.batchSize, l.process)
 }
 
+// Write queues one line per event of payload. Events without a name are
+// skipped. It blocks while the buffer is full.
 func (l *Loki) Write(payload mpv2.Payload[any]) {
 	for _, event := range payload.Events {
 		// sanity check
@@ -170,7 +184,7 @@ func (l *Loki) Write(payload mpv2.Payload[any]) {
 	}
 }
 
-// Stop will cancel any ongoing requests and stop the goroutine listening for requests
+// Stop cancels ongoing requests and makes [Loki.Start] return.
 func (l *Loki) Stop() {
 	if l.cancel != nil {
 		l.cancel()

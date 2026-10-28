@@ -16,10 +16,15 @@ import (
 )
 
 type (
-	Middleware        func(next MiddlewareHandler) MiddlewareHandler
+	// Middleware wraps a [MiddlewareHandler].
+	Middleware func(next MiddlewareHandler) MiddlewareHandler
+	// MiddlewareHandler handles a decoded gtag.js payload of request r.
 	MiddlewareHandler func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error
 )
 
+// MiddlewareEventHandler converts the payload to Measurement Protocol v2, calls h
+// for each event and converts the modified events back to gtag.js.
+// An error from h aborts the chain.
 func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
@@ -45,10 +50,12 @@ func MiddlewareEventHandler(h sesamyhttp.EventHandler) Middleware {
 	}
 }
 
+// MiddlewareUserID sets the user ID from the cookie cookieName.
+// A missing or empty cookie is ignored.
 func MiddlewareUserID(cookieName string) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
-			if cookie, err := r.Cookie(cookieName); err == nil {
+			if cookie, err := r.Cookie(cookieName); err == nil && cookie.Value != "" {
 				payload.UserID = new(cookie.Value)
 			}
 
@@ -57,6 +64,8 @@ func MiddlewareUserID(cookieName string) Middleware {
 	}
 }
 
+// MiddlewareWithTimeout replaces the request context with one that ignores
+// cancellation of the incoming request and expires after timeout.
 func MiddlewareWithTimeout(timeout time.Duration) Middleware {
 	return func(next MiddlewareHandler) MiddlewareHandler {
 		return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
@@ -68,6 +77,8 @@ func MiddlewareWithTimeout(timeout time.Duration) Middleware {
 	}
 }
 
+// MiddlewareLogger adds event and trace fields to the logger passed down the
+// chain and logs the result of next.
 func MiddlewareLogger(next MiddlewareHandler) MiddlewareHandler {
 	return func(l *zap.Logger, w http.ResponseWriter, r *http.Request, payload *gtag.Payload) error {
 		if spanCtx := trace.SpanContextFromContext(r.Context()); spanCtx.IsValid() && spanCtx.IsSampled() {

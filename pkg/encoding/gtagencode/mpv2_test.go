@@ -57,6 +57,29 @@ func TestMPv2(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "user properties",
+			source: gtag.Payload{
+				EventName:          new(sesamy.EventName("page_view")),
+				UserProperty:       map[string]string{"tier": "gold"},
+				UserPropertyNumber: map[string]string{"age": "42"},
+			},
+			want: mpv2.Payload[any]{
+				UserProperties: map[string]any{
+					"tier": "gold",
+					"age":  "42",
+				},
+				Events: []sesamy.Event[any]{
+					{Name: "page_view", Params: map[string]any{}},
+				},
+				Consent: &mpv2.ConsentData{
+					AdStorage:         new(mpv2.ConsentGranted),
+					AdUserData:        new(mpv2.ConsentGranted),
+					AdPersonalization: new(mpv2.ConsentGranted),
+					AnalyticsStorage:  new(mpv2.ConsentGranted),
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

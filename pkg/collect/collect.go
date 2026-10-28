@@ -16,13 +16,17 @@ import (
 )
 
 type (
+	// Collect receives gtag.js and Measurement Protocol v2 requests and forwards
+	// them to a server-side tagging endpoint. Create one with [New].
 	Collect struct {
 		l                   *zap.Logger
 		taggingURL          string
 		taggingClient       *http.Client
+		measurementID       string
 		gtagHTTPMiddlewares []gtaghttp.Middleware
 		mpv2HTTPMiddlewares []mpv2http.Middleware
 	}
+	// Option configures a [Collect].
 	Option func(*Collect) error
 )
 
@@ -30,6 +34,8 @@ type (
 // ~ Options
 // ------------------------------------------------------------------------------------------------
 
+// WithTagging sets the base URL of the server-side tagging endpoint.
+// The request path is appended to it.
 func WithTagging(v string) Option {
 	return func(c *Collect) error {
 		c.taggingURL = v
@@ -37,6 +43,8 @@ func WithTagging(v string) Option {
 	}
 }
 
+// WithTaggingClient sets the HTTP client used for upstream requests.
+// The default is [http.DefaultClient].
 func WithTaggingClient(v *http.Client) Option {
 	return func(c *Collect) error {
 		c.taggingClient = v
@@ -44,6 +52,17 @@ func WithTaggingClient(v *http.Client) Option {
 	}
 }
 
+// WithMeasurementID sets the default `measurement_id` for MPv2 requests that do not provide one.
+func WithMeasurementID(v string) Option {
+	return func(c *Collect) error {
+		c.measurementID = v
+		return nil
+	}
+}
+
+// WithGTagHTTPMiddlewares appends middlewares to the gtag handler.
+// Middlewares wrap in list order, so the last one runs first (outermost).
+// Put e.g. MiddlewareLogger before the middlewares that fill the payload.
 func WithGTagHTTPMiddlewares(v ...gtaghttp.Middleware) Option {
 	return func(c *Collect) error {
 		c.gtagHTTPMiddlewares = append(c.gtagHTTPMiddlewares, v...)
@@ -51,6 +70,9 @@ func WithGTagHTTPMiddlewares(v ...gtaghttp.Middleware) Option {
 	}
 }
 
+// WithMPv2HTTPMiddlewares appends middlewares to the MPv2 handler.
+// Middlewares wrap in list order, so the last one runs first (outermost).
+// Put e.g. MiddlewareLogger before the middlewares that fill the payload.
 func WithMPv2HTTPMiddlewares(v ...mpv2http.Middleware) Option {
 	return func(c *Collect) error {
 		c.mpv2HTTPMiddlewares = append(c.mpv2HTTPMiddlewares, v...)
@@ -62,6 +84,8 @@ func WithMPv2HTTPMiddlewares(v ...mpv2http.Middleware) Option {
 // ~ Constructor
 // ------------------------------------------------------------------------------------------------
 
+// New returns a [Collect] configured by opts. Nil options are skipped.
+// It returns the first error an option returns.
 func New(l *zap.Logger, opts ...Option) (*Collect, error) {
 	inst := &Collect{
 		l:             l,
@@ -83,10 +107,13 @@ func New(l *zap.Logger, opts ...Option) (*Collect, error) {
 // ~ Public methods
 // ------------------------------------------------------------------------------------------------
 
+// GTagHTTPHandler decodes a gtag.js request into one payload per event (see
+// [gtaghttp.HandlerBatch]), runs each through the gtag middlewares and forwards
+// it upstream. Only the first upstream response is written to w.
 func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
-	// retrieve payload
-	payload := gtaghttp.Handler(w, r)
-	if payload == nil {
+	// retrieve payloads
+	payloads := gtaghttp.HandlerBatch(w, r)
+	if payloads == nil {
 		http.Error(w, "failed to decode payload", http.StatusBadRequest)
 		return
 	}
@@ -97,13 +124,22 @@ func (c *Collect) GTagHTTPHandler(w http.ResponseWriter, r *http.Request) {
 		next = middleware(next)
 	}
 
-	// run handler
-	if err := next(c.l, w, r, payload); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// run handler per event, only the first upstream response reaches the client
+	for i, payload := range payloads {
+		var rw = w
+		if i > 0 {
+			rw = &discardResponseWriter{header: http.Header{}}
+		}
+
+		if err := next(c.l, rw, r, payload); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
+// MPv2HTTPHandler decodes a Measurement Protocol v2 request, runs it through the
+// MPv2 middlewares and forwards it upstream, writing the upstream response to w.
 func (c *Collect) MPv2HTTPHandler(w http.ResponseWriter, r *http.Request) {
 	// retrieve payload
 	payload := mpv2http.Handler(w, r)
@@ -152,6 +188,8 @@ func (c *Collect) gtagHandler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 		}
 	}
 
+	w.WriteHeader(resp.StatusCode)
+
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
 	}
@@ -174,6 +212,10 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 	req.Header = r.Header.Clone()
 	// copy raw query
 	req.URL.RawQuery = r.URL.RawQuery
+	if query := r.URL.Query(); c.measurementID != "" && query.Get("measurement_id") == "" {
+		query.Set("measurement_id", c.measurementID)
+		req.URL.RawQuery = query.Encode()
+	}
 
 	resp, err := c.taggingClient.Do(req) //nolint:gosec // taggingURL is a trusted config value set at construction time
 	if err != nil {
@@ -188,9 +230,25 @@ func (c *Collect) mpv2Handler(l *zap.Logger, w http.ResponseWriter, r *http.Requ
 		}
 	}
 
+	w.WriteHeader(resp.StatusCode)
+
 	if _, err := io.Copy(w, resp.Body); err != nil {
 		return err
 	}
 
 	return nil
 }
+
+// ------------------------------------------------------------------------------------------------
+// ~ Private types
+// ------------------------------------------------------------------------------------------------
+
+// discardResponseWriter is an [http.ResponseWriter] that drops everything
+// written to it.
+type discardResponseWriter struct {
+	header http.Header
+}
+
+func (w *discardResponseWriter) Header() http.Header         { return w.header }
+func (w *discardResponseWriter) Write(b []byte) (int, error) { return len(b), nil }
+func (w *discardResponseWriter) WriteHeader(int)             {}

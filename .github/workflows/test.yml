@@ -1,9 +1,8 @@
 name: Test Branch
 
 on:
-  push:
-    branches: [ main ]
   pull_request:
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -55,7 +54,7 @@ jobs:
 
       # https://github.com/codecov/codecov-action/releases
       - uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v6.0.1
-        if: success() && github.ref == 'refs/heads/main'
+        if: success()
         with:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
