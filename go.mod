@@ -12,7 +12,7 @@ require (
 	github.com/grafana/loki/pkg/push v0.0.0-20260910053121-d02ca9bbdbcc
 	github.com/json-iterator/go v1.1.12
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/common v0.72.1
+	github.com/prometheus/common v0.73.1
 	github.com/stretchr/testify v1.12.1
 	go.opentelemetry.io/otel/trace v1.47.0
 	go.uber.org/zap v1.28.0
