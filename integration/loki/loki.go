@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/foomo/sesamy-go/pkg/encoding/mpv2"
@@ -24,6 +25,8 @@ const (
 	pushEndpoint               = "/loki/api/v1/push"
 	defaultContentType         = "application/x-protobuf"
 	defaultMaxReponseBufferLen = 1024
+	// dropWarnInterval is the minimum time between two "buffer full" warnings.
+	dropWarnInterval = 10 * time.Second
 )
 
 type (
@@ -38,6 +41,11 @@ type (
 
 		// shutdown
 		cancel context.CancelFunc
+
+		// dropped counts the lines that Write dropped because the buffer was full.
+		dropped atomic.Uint64
+		// lastDropWarn is the unix nano time of the last "buffer full" warning.
+		lastDropWarn atomic.Int64
 
 		// options
 		backoff    *backoff.Config
@@ -82,7 +90,7 @@ func WithBatchSize(v int) Option {
 	}
 }
 
-// WithBufferSize sets the number of lines buffered before [Loki.Write] blocks.
+// WithBufferSize sets the number of lines buffered before [Loki.Write] drops lines.
 func WithBufferSize(v int) Option {
 	return func(l *Loki) {
 		l.bufferSize = v
@@ -118,7 +126,7 @@ func New(l *zap.Logger, addr string, opts ...Option) *Loki {
 		}
 	}
 
-	inst.entries = make(chan push.Entry, inst.bufferSize) // Use a buffered channel so we can retry failed pushes without blocking WriteEntry
+	inst.entries = make(chan push.Entry, inst.bufferSize) // Use a buffered channel so we can retry failed pushes without blocking Write
 
 	return inst
 }
@@ -132,7 +140,8 @@ func (l *Loki) Start(ctx context.Context) {
 }
 
 // Write queues one line per event of payload. Events without a name are
-// skipped. It blocks while the buffer is full.
+// skipped. Write never blocks: it drops a line when the buffer is full, counts it
+// in [Loki.Dropped] and logs a warning at most once per 10 seconds.
 func (l *Loki) Write(payload mpv2.Payload[any]) {
 	for _, event := range payload.Events {
 		// sanity check
@@ -160,10 +169,6 @@ func (l *Loki) Write(payload mpv2.Payload[any]) {
 			continue
 		}
 
-		if len(l.entries) == l.bufferSize {
-			l.l.Warn("buffer size reached", zap.Int("size", l.bufferSize))
-		}
-
 		var timestamp time.Time
 		if payload.TimestampMicros > 0 {
 			timestamp = time.UnixMicro(payload.TimestampMicros)
@@ -171,7 +176,7 @@ func (l *Loki) Write(payload mpv2.Payload[any]) {
 			timestamp = time.Now()
 		}
 
-		l.entries <- push.Entry{
+		entry := push.Entry{
 			Line:      string(lineBytes),
 			Timestamp: timestamp,
 			StructuredMetadata: push.LabelsAdapter{
@@ -181,7 +186,19 @@ func (l *Loki) Write(payload mpv2.Payload[any]) {
 				},
 			},
 		}
+
+		select {
+		case l.entries <- entry:
+		default:
+			l.drop()
+		}
 	}
+}
+
+// Dropped returns the number of lines that [Loki.Write] dropped because the
+// buffer was full.
+func (l *Loki) Dropped() uint64 {
+	return l.dropped.Load()
 }
 
 // Stop cancels ongoing requests and makes [Loki.Start] return.
@@ -195,6 +212,19 @@ func (l *Loki) Stop() {
 // ------------------------------------------------------------------------------------------------
 // ~ Private methods
 // ------------------------------------------------------------------------------------------------
+
+// drop counts one dropped line and logs a warning at most once per dropWarnInterval.
+func (l *Loki) drop() {
+	dropped := l.dropped.Add(1)
+	now := time.Now().UnixNano()
+
+	last := l.lastDropWarn.Load()
+	if now-last < int64(dropWarnInterval) || !l.lastDropWarn.CompareAndSwap(last, now) {
+		return
+	}
+
+	l.l.Warn("buffer full, dropping lines", zap.Int("size", l.bufferSize), zap.Uint64("dropped", dropped))
+}
 
 func (l *Loki) process(entries []push.Entry) {
 	l.l.Debug("processing entries batch", zap.Int("num", len(entries)))
